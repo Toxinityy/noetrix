@@ -280,13 +280,13 @@ export function Hero() {
           className="mt-10 flex flex-col items-center gap-3 sm:flex-row"
         >
           <motion.a
-            href="#composite"
+            href="/leaderboard"
             whileHover={reduced ? undefined : { scale: 1.04 }}
             whileTap={reduced ? undefined : { scale: 0.98 }}
             transition={{ duration: 0.25, ease: EASE }}
             className="group inline-flex h-11 items-center gap-2 rounded-sm bg-[var(--color-accent)] px-5 font-mono text-xs uppercase tracking-[0.18em] text-black transition-all hover:bg-white hover:shadow-[0_0_30px_var(--color-accent-glow)]"
           >
-            View live feed
+            Enter terminal
             <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">
               →
             </span>

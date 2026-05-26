@@ -122,6 +122,102 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-05-26 — Full app frontend (out-of-sequence per user request)
+**Type:** Build (frontend pages 2-N; landing was already done)
+**Touched files:**
+- `frontend/src/lib/format.ts` (new) — number/address/bps/score formatters
+- `frontend/src/lib/mockData.ts` (new) — 8 agents × 2 categories of realistic mock data (agents, predictions, reasoning traces, equity curves, feed history, epochs)
+- `frontend/src/components/ui/{Panel,Stat,AddressChip,StatusPill,CategoryTabs,DataTable,Sparkline,NumberFlow,Skeleton,Collapsible}.tsx` (new) — 10 terminal-style primitives
+- `frontend/src/components/app/{AppHeader,AppFooter}.tsx` (new) — separate chrome from landing's cinematic Nav/Footer
+- `frontend/src/app/(app)/layout.tsx` (new) — route-group layout wrapping all terminal-core pages with AppHeader/AppFooter; landing stays at `app/page.tsx` outside the group
+- `frontend/src/app/(app)/leaderboard/{page,LeaderboardClient}.tsx` (new) — sortable agent table, category tabs, composite feed snapshot card, top-agent panel, 4 KPI tiles, "how it works" collapsible
+- `frontend/src/app/(app)/agent/[id]/{page,AgentDetailClient}.tsx` (new) — identity NFT card, system metadata panel, 4 KPI tiles, reputation radar (Recharts), equity curve (Recharts line), calibration buckets (Recharts bar), expandable reasoning rows with full IPFS payload preview
+- `frontend/src/app/(app)/demo-consumer/{page,DemoConsumerClient}.tsx` (new) — DemoFeedConsumer simulator (live read with auto-refresh + manual refresh), "what is this" panel for protocols, contract address panel, Solidity integration snippet
+- `frontend/src/app/(app)/feed/[category]/{page,FeedClient}.tsx` (new) — 4 KPI tiles, composite feed history Recharts area chart with 24h-ago reference line, contributor table with weight bars
+- `frontend/src/components/landing/{Hero,Nav}.tsx` (edited) — CTAs now link to /leaderboard; nav items link to /leaderboard, /feed/meth-apr-24h, /demo-consumer
+- `masterdoc/09-build-status.md`, `CLAUDE.md`
+
+**What happened:**
+- User asked for "full frontend high-fidelity, get whole image, same color theme" before Prompt 5. Built all four PRD §9.2 hackathon pages plus a bonus `/feed/[category]` page.
+- Reused existing design tokens (`--color-bg`, `--color-accent` #33EAB3, `--color-up/down/warn`, Inter + JetBrains Mono) — no new tokens, no new fonts.
+- Adhered to PRD §9.3 hybrid model: landing stays cinematic (GSAP pin, dithering shader, kinetic title). All other pages are terminal-core (sparse color, mono numbers, low-contrast gridlines, micro-only motion).
+- **Next.js 16 idioms followed:** `params` is awaited as Promise; used the global `PageProps<'/path/[seg]'>` type helper. Server pages do the await + lookup, then forward to a sibling client component (`*Client.tsx`) for interactive surfaces.
+- Mock data is comprehensive: 4 kinds of agents (CLAUDE, ARIMA, QUANT, ENSEMBLE) with realistic reputation deltas, per-bucket calibration arrays, equity curves, IPFS reasoning blob with 4-step trace (frame/search/infer/forecast) for Claude agents only.
+- All Recharts components dark-themed inline (border-strong axes, text-muted ticks, accent line, low-opacity area fills, border dashed gridlines). Tooltips styled to terminal aesthetic.
+- `next build` clean: 6 routes (`/`, `/_not-found`, `/agent/[id]` dynamic, `/demo-consumer`, `/feed/[category]` dynamic, `/leaderboard`), TypeScript pass, static generation ok (Recharts emits a benign width/height warning during SSR — harmless, hydration sizes the chart on client).
+
+**Decisions:**
+- **Route group `(app)` for terminal pages**, landing stays at root. This lets `app/(app)/layout.tsx` mount the AppHeader/AppFooter only on the terminal pages without touching the landing's cinematic chrome.
+- **Split each dynamic page into `page.tsx` (server, awaits params) + `*Client.tsx` (client interactive shell)**. Next.js 16 requires the await; clean separation also keeps the metadata generation in the server file.
+- **No wallet/wagmi mount yet** — Prompt 11 territory. AppHeader's "Connect" button is rendered as a `disabled` stub with explanatory title attribute.
+- **`/feed/[category]` shipped as a bonus** (not in PRD §9.2 must-haves) because it makes the consumer demo concrete: clicking through from leaderboard → composite feed → consumer shows the full data path.
+- **Agent kinds use a 2-char glyph token** (CL/AR/QU/EN) instead of an icon to keep the visual language uniform with the terminal core. Color-coded per kind so the leaderboard scans at a glance.
+- **Calibration bar is a single-direction warn-tone bar** (since values live in [-1e6, 0], closer to 0 is better). Made magnitude-anchored for intuitive sorting.
+- **Reasoning trace expansion is button-row** (not modal). Keeps context — judges can scroll the prediction history and see traces inline.
+- **Composite feed snapshot card uses live oscillation** via `useAnimationFrame` + sine wave so the leaderboard hero strip feels alive. NumberFlow tweens the value between ticks.
+- **Auto-refresh in /demo-consumer is opt-out via checkbox.** Off by default for prefers-reduced-motion users (via `useReducedMotion()`); manual refresh always works.
+
+**Risks / followups:**
+- Mock data is hand-crafted, intentionally narrative-shaped (claude-reasoner-α wins, β trades accuracy for calibration, γ is the aggressive variant). When the indexer wires up in Prompt 11, the visual hierarchy will change — the page layouts handle real data the same way.
+- Wallet integration (wagmi WagmiProvider + chain config + Connect button) is the only missing piece for end-to-end interactivity. Currently judges see a fully static-feel terminal — fine for the visual proof, but submission demo will need at least a read-only wallet connection.
+- The "live read" in `/demo-consumer` is simulated. When CompositeFeed deploys (Prompt 7), swap the `setInterval` for a wagmi `useReadContract` watch. Hook surface is the same.
+- AppHeader nav active-state matching uses `pathname.startsWith(item.href.split("/").slice(0, 2).join("/"))` — works but is brittle for nested routes; if more top-level paths get added, refactor to a proper matcher.
+- Next.js emits a multi-lockfile warning because the workspace has both root and `frontend/` pnpm-workspace.yaml. Filed in existing build-status as a deferred cleanup.
+
+### 2026-05-26 — Prompt 4 (ResolutionEngine + MethAprResolver + MockMethRateOracle)
+**Type:** Build (Prompt 4)
+**Touched files:** `contracts/src/ResolutionEngine.sol` (new), `contracts/src/resolvers/MethAprResolver.sol` (new), `contracts/src/mocks/MockMethRateOracle.sol` (new), `contracts/src/interfaces/{ICategoryResolver,IScoringEngine,IMethRateOracle}.sol` (new), `contracts/test/ResolutionEngine.t.sol` (new), `contracts/test/MethAprResolver.t.sol` (new), `contracts/script/SeedRates.s.sol` (new), `masterdoc/09-build-status.md`, `CLAUDE.md`
+
+**What happened:**
+- Implemented ResolutionEngine per PRD §7.3 + Prompt 4 spec. Single source of truth for `(categoryId → resolver, scorer, configBytes)`. `resolve(predictionId)` is permissionless; the caller becomes `resolverCaller` passed through `IScoringEngine.applyScore` and ultimately earns the 2% gas reward inside `PredictionMarket.settleStake`. Three failure modes encoded with distinct errors: `AlreadyResolved`, `PredictionNotRevealed`, `ResolutionBlockNotReached`. Owner-gated `registerCategory` rejects duplicates and zero addresses; `updateCategory` allows in-place mutation for already-registered ids.
+- Implemented MethAprResolver per PRD §7.3.1 formula `aprBps = ((rateNow * 1e18 / ratePrior - 1e18) * 365 * 10000) / 1e18`. Edge cases: `ratePrior == 0` or `rateNow <= ratePrior` returns 0; `resolutionBlock < BLOCKS_PER_DAY (43200)` short-circuits to 0. Reads from `IMethRateOracle.getRateAt`.
+- Implemented MockMethRateOracle as a minimal admin-seeded `mapping(uint256 => uint256) rates` store with `setRate` / `setRates` batch and `getRateAt` (reverts on unset) + `rateOrZero` (non-reverting). Used for v1 because direct mETH staking-contract reads at arbitrary historical blocks require an archive node.
+- Built `script/SeedRates.s.sol`: env-driven (`MOCK_METH_ORACLE`, `BASE_BLOCK`, `SEED_DAYS`, `DAILY_GROWTH_PPM`) script that populates 15 (= days+1) consecutive daily snapshots into the oracle with a synthetic linear-growth pattern (default 0.0008%/day ≈ 2.92% APR baseline).
+- Tests: 13 ResolutionEngine cases (constructor, register/update happy + reverts, resolve happy with full E2E settle through PredictionMarket via a `MockScoringEngine`, resolve reverts on already-resolved, before-block, unrevealed, scoring-engine-unset, category-not-registered) + 14 MethAprResolver cases (3 hand-verified APR computations: 1.01/1.00 → 36500 bps, 1.0001/1.00 → 365 bps, 1.5/1.2 → 912500 bps; edge: equal rates → 0, negative delta → 0, prior unset → oracle reverts, resolutionBlock below day window → 0, prediction-value irrelevance, oracle access control). Full suite: 94/94 across four contracts.
+
+**Decisions:**
+- **`MockScoringEngine` in tests forwards to `PredictionMarket.settleStake` with a fixed 2%/98%/0% split** so the E2E resolve flow can be observed end-to-end (resolver paid in MNT, agent returned residual, status transitioned to Resolved, score persisted). This lets us assert `AlreadyResolved` revert by attempting a second `resolve()` — the second attempt sees `status == Resolved` and reverts with the matching error.
+- **`AlreadyResolved` check ordered BEFORE `PredictionNotRevealed`.** Both could route through a generic "wrong status" revert, but giving double-resolution attempts a distinct error makes the resolver-bot's failure path debuggable.
+- **`updateCategory` admitted as a separate function** (Prompt 4 spec did not list it). Reason: tying admin to *one-shot* `registerCategory` would lock in any config error and force a full redeploy. Owner-only mutation is acceptable v1 risk.
+- **`MethAprResolver` ignores `predictionValue`** because APR resolution is a global metric — same outcome regardless of any one agent's forecast. Tested explicitly via `test_Resolve_IgnoresPredictionValue`.
+- **Oracle reverts on unset rate** rather than returning 0. The resolver's clamp logic only fires on `ratePrior == 0` and `rateNow <= ratePrior`; if a resolver bot calls `resolve()` for a block range where the oracle isn't seeded, the call should fail loudly so the bot retries after the next `SeedRates` run.
+- **Build-time concern surfaced and noted:** PredictionMarket's `settleStake` currently requires `bonusPool != address(0)` even when `bonusAmount == 0`. The mock scoring engine works around this by ensuring the bonus pool is wired in the test setUp; production ScoringEngine will pass non-zero bonusAmount on imperfect scores so the check stays sensible. No change made.
+
+**Risks / followups:**
+- ScoringEngine (Prompt 5) will need to: (a) read prediction state from PredictionMarket, (b) call ICategoryScorer via the scorer addr passed in, (c) update AgentRegistry reputation, (d) split stake per §7.2.4 formula, (e) call BonusDistributor with both `recordContribution` (storage) and `notifySlash` (ETH) — note PRD §7.4 step 6 wants notifySlash here but the ETH lives in PredictionMarket, so it actually flows via `PredictionMarket.settleStake`'s bonusAmount routing.
+- BonusDistributor stub (`IBonusDistributor`) needs to be expanded to a full contract with `recordContribution(bytes32 categoryId, uint256 agentId, uint256 share)` view-storage method. Will define in Prompt 5/6.
+- The "must use archive RPC" warning for direct mETH reads should be moved into the contract NatSpec block — currently only in CLAUDE.md.
+
+### 2026-05-26 — Prompt 3 (PredictionMarket commit-reveal)
+**Type:** Build (Prompt 3)
+**Touched files:** `contracts/src/PredictionMarket.sol` (new), `contracts/src/interfaces/IPredictionMarket.sol` (new), `contracts/src/interfaces/IBonusDistributor.sol` (new stub), `contracts/test/PredictionMarket.t.sol` (new), `masterdoc/09-build-status.md`, `CLAUDE.md`
+
+**What happened:**
+- Implemented PredictionMarket per PRD §7.2 + Prompt.md Prompt 3 spec. ERC-stake escrow keyed on native MNT (`msg.value`).
+- Constants: `REVEAL_DELAY_BLOCKS=10`, `REVEAL_WINDOW_BLOCKS=100`, `SUBMISSION_CUTOFF_BLOCKS=200`, derived `MIN_RESOLUTION_OFFSET=300`, `CANCEL_REFUND_BPS=9000`, `FORFEIT_CALLER_BPS=50`, `MAX_CONFIDENCE_BPS=10000`.
+- Category registry (`mapping(bytes32 => Category)`): resolver, scorer, minStake, allowedWindowStart, allowedWindowEnd, configBytes, registered flag. `registerCategory` validates `allowedWindowStart >= MIN_RESOLUTION_OFFSET` so any successful commit leaves the full reveal+cutoff buffer.
+- `commit`: validates category registered, `resolutionBlock >= block.number + 300`, delta within category window, stake >= minStake, msg.sender == agentRegistry.controllerOf(agentId). Stores Prediction in `Committed` state.
+- `reveal`: checks status, recomputes `keccak256(abi.encode(agentId, categoryId, value, confidence, nonce))`, asserts reveal window `[commit+10, commit+100]` AND `block.number <= resolutionBlock - 200`, confidence ≤ 10000. Writes value/confidence/status.
+- `cancel`: only controller, only pre-resolution. 90% refund to controller, 10% forwarded to bonus pool via `IBonusDistributor.notifySlash{value}(categoryId)`. Status → Cancelled. Allowed from either Committed or Revealed.
+- `forfeitUnrevealed`: anyone after `commitBlock + REVEAL_WINDOW_BLOCKS`, only on Committed. 0.5% caller reward (push via `call{value}`), 99.5% to pool. Status → Forfeited.
+- `settleStake(predictionId, returnAmount, bonusAmount, resolverReward, address resolver) onlyScoringEngine`: enforces `returnAmount + bonusAmount + resolverReward == p.stake` (StakeConservationViolated revert), pays resolver FIRST per PRD §7.2.4 invariant, then controller, then pool. Status → Resolved. Score is stored via a separate `setScore(uint256, int256) onlyScoringEngine` so ScoringEngine can persist it atomically alongside the settle call.
+- ReentrancyGuard on `commit`, `cancel`, `forfeitUnrevealed`, `settleStake`. Reveal is non-mutating-stake so left guard-free.
+- `IBonusDistributor` interface stub created at `contracts/src/interfaces/IBonusDistributor.sol` with single `notifySlash(bytes32) payable` entrypoint. Full BonusDistributor lives in Prompt 5; using a stub lets PredictionMarket compile and be tested independently.
+- Tests: 39 cases in `PredictionMarket.t.sol`. Covers happy paths + every revert path (category unregistered, stake below min, resolution too soon, outside window, non-controller commit, wrong nonce, reveal too early/late, confidence out of range, already revealed, cancel after resolution, cancel non-controller, cancel already-resolved, forfeit before window, forfeit already-revealed, settle non-scoring-engine, settle pre-reveal, conservation violation, bonus-pool-unset on forfeit), 2 fuzz tests (commit-reveal roundtrip 256 runs, settleStake conservation 256 runs), and 1 reentrancy test (malicious pool's `notifySlash` calls `market.commit` during cancel → reverts with `ReentrancyGuardReentrantCall`). 67/67 across both suites pass.
+
+**Decisions:**
+- **`settleStake` signature extended** beyond PRD §7.2 to include `address resolver` (Prompt.md was already explicit). Prevents the storage roundtrip ScoringEngine would otherwise need to remember the original `resolve()` caller. Score still written via `setScore` rather than as a `settleStake` parameter so ScoringEngine can decouple the two writes if needed.
+- **`MIN_RESOLUTION_OFFSET = REVEAL_WINDOW + SUBMISSION_CUTOFF = 300` is a hard floor independent of category.** Category's `allowedWindowStart` must be ≥ 300 (enforced at registration). This collapses an unreachable subspace of the reveal validation: `block.number > resolutionBlock - 200` and `block.number > commitBlock + 100` always trigger in the same order. The `RevealTooCloseToResolution` branch remains for defense-in-depth but the corresponding test asserts the `RevealTooLate` branch fires first — documented in the test comment block.
+- **`setScore` kept as separate `onlyScoringEngine` setter.** Adding `score` as a `settleStake` parameter would create a four-stage shuffle (resolver/controller/pool/score) inside one nonReentrant function. The two-call pattern lets ScoringEngine commit score even if settle reverts for accounting reasons (and lets ResolutionEngine emit a `Scored` event prior to settlement if desired).
+- **Stake conservation enforced via equality assert**, not subtraction. ScoringEngine is required to pre-compute the three numbers that sum to `stake`. Pushes the math (and any rounding-residue handling) up into ScoringEngine where the score-to-amount formula lives.
+- **Bonus pool slash uses `notifySlash{value}(categoryId)` for all three sources** (cancel slash, forfeit pool, settle bonus). BonusDistributor (Prompt 5) reads `msg.value` as the slash amount and the categoryId as the epoch key. PredictionMarket itself is decoupled from epoch mechanics.
+- **`bonusPool == address(0)` reverts at cancel/forfeit/settle time, not at commit.** Lets the contract be deployed and accept commits before BonusDistributor exists; settlement requires admin to wire the pool. Acceptable for the hackathon deployment order (PredictionMarket → BonusDistributor → ScoringEngine → ResolutionEngine).
+
+**Risks / followups:**
+- ScoringEngine (Prompt 6) must call `setScore` before or atomically with `settleStake`. If it skips `setScore`, the `PredictionResolved` event emits `score = 0`. Document this in Prompt 6 spec.
+- ResolutionEngine (Prompt 4) needs the resolver address passed to ScoringEngine, which passes it to `settleStake`. That dataflow is documented in Prompt 4 already — no schema changes needed.
+- `forfeitUnrevealed`'s push to caller uses `.call{value}`. If a smart-contract caller's fallback OOGs, the whole forfeit reverts and the stake stays escrowed. Acceptable for hackathon; for production, switch caller reward to a pull-claim. Filed mentally for v2.
+
 ### 2026-05-26 — GSAP ScrollTrigger pin (FlowArt) replaces scroll-snap
 **Type:** Build (landing UX correction round 2)
 **Touched files:** `frontend/package.json` (gsap, @gsap/react), `frontend/src/components/ui/story-scroll.tsx` (new), `frontend/src/app/globals.css` (removed scroll-snap rules), `frontend/src/app/page.tsx` (rewrite to FlowArt + StoryFrame wrapper), `frontend/src/components/landing/{Hero,LivePulse,ReasoningReveal,LeaderboardPreview,HowItWorks,Footer}.tsx` (outer class: `h-full overflow-y-auto` → `min-h-screen flex-1` so children fill FlowSection's min-h-screen container)

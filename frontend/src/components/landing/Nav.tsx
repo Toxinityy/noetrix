@@ -30,9 +30,9 @@ export function Nav() {
 
         <div className="hidden items-center gap-7 md:flex">
           {[
-            ["Leaderboard", "#leaderboard"],
-            ["Composite", "#composite"],
-            ["Reasoning", "#reasoning"],
+            ["Leaderboard", "/leaderboard"],
+            ["Feed", "/feed/meth-apr-24h"],
+            ["Consumer", "/demo-consumer"],
             ["How it works", "#how"],
           ].map(([label, href]) => (
             <a
@@ -46,10 +46,10 @@ export function Nav() {
         </div>
 
         <a
-          href="#composite"
+          href="/leaderboard"
           className="group inline-flex items-center gap-2 rounded-sm border border-[var(--color-accent-soft)] bg-[var(--color-accent-glow)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-accent)] transition-all hover:bg-[var(--color-accent)] hover:text-black"
         >
-          <span>Live feed</span>
+          <span>Enter terminal</span>
           <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-accent)] shadow-[0_0_8px_var(--color-accent)] group-hover:bg-black group-hover:shadow-none" />
         </a>
       </div>

@@ -17,7 +17,23 @@ Snapshot: **2026-05-26** (post Prompt 2). Update after each significant change.
 - ✓ Subdir tree per PRD §16 (`src/{interfaces,resolvers,scorers,mocks,examples}`, `test/reference`, `script/`, `config/`, `deployments/`).
 - ✓ `forge build` runs.
 - ✓ **AgentRegistry** (Prompt 2): `src/AgentRegistry.sol` + `src/interfaces/IAgentRegistry.sol`. 28 tests pass; coverage lines 94.5% / statements 90.7% / functions 93.3% / branches 68% (branches gap = unreachable/treasury-revert paths). Lint note: 24h timelock uses `block.timestamp` — manipulation bounded to seconds, not exploitable.
-- ✗ Next: **Prompt 3 — PredictionMarket** (commit-reveal).
+- ✓ **PredictionMarket** (Prompt 3): `src/PredictionMarket.sol` + `src/interfaces/IPredictionMarket.sol` + `src/interfaces/IBonusDistributor.sol` (stub). Commit-reveal with stake escrow, category registry (resolver/scorer/minStake/window), cancel (90% refund / 10% slash), forfeit (0.5% caller / 99.5% pool), settleStake (resolver-first per PRD §7.2.4 invariant, conservation enforced via `require sum==stake`). ReentrancyGuard on all stake-moving functions. Bonus pool slashing forwarded via `IBonusDistributor.notifySlash{value}(categoryId)`. 39 tests pass (incl. 2 fuzz × 256 runs each). Reentrancy attack test (malicious pool re-entering `commit` during `notifySlash`) confirmed reverting with `ReentrancyGuardReentrantCall`.
+- ✓ **ResolutionEngine + MethAprResolver + MockMethRateOracle** (Prompt 4): `src/ResolutionEngine.sol`, `src/resolvers/MethAprResolver.sol`, `src/mocks/MockMethRateOracle.sol` + interfaces (`ICategoryResolver`, `IScoringEngine`, `IMethRateOracle`). ResolutionEngine is single source of truth for (resolver, scorer, configBytes) per categoryId; `resolve()` is permissionless and forwards `msg.sender` to ScoringEngine via `applyScore`. MethAprResolver implements PRD §7.3.1 formula `aprBps = ((rateNow*1e18/ratePrior - 1e18) * 365 * 10000) / 1e18` with clamps on zero/negative delta and on resolutionBlock < BLOCKS_PER_DAY. Mock oracle is admin-seeded via `setRate` / `setRates`. `script/SeedRates.s.sol` populates 14 days of synthetic rates from env-driven config. 27 new tests (13 ResolutionEngine + 14 MethAprResolver), 4 of which are hand-verified APR cases. Full suite now 94/94.
+- ✗ Next: **Prompt 5 — ScoringEngine + RangeCrpsScorer + calibration**.
+
+### frontend/ — app pages (out-of-sequence build before Prompt 11)
+- ✓ `lib/format.ts` — number / address / bps / score formatters
+- ✓ `lib/mockData.ts` — 8 agents × 2 categories with realistic reputation, predictions, reasoning traces, equity curves, feed history, epochs
+- ✓ UI primitives in `components/ui/`: `Panel`, `Stat`, `AddressChip`, `StatusPill`, `CategoryTabs` (Radix Tabs), `DataTable` (sortable), `Sparkline` (SVG), `NumberFlow` (Motion tween), `Skeleton`, `Collapsible` (Radix Accordion)
+- ✓ App chrome in `components/app/`: `AppHeader` (sticky, terminal nav, Sepolia status pill, disabled Connect stub) + `AppFooter` (info-dense 4-column with system pointers)
+- ✓ Route group `app/(app)/` with its own layout (AppHeader/Footer). Landing stays at root `app/page.tsx` outside the group.
+- ✓ `/leaderboard` — sortable agent table, category tabs, composite feed snapshot card with live oscillation, top-agent panel, 4 KPI tiles, "how it works" collapsible with 4 sections.
+- ✓ `/agent/[id]` — identity NFT card with gradient, system metadata panel, 4 KPI tiles, reputation radar (Recharts), equity curve (Recharts line), calibration buckets (Recharts bar), expandable per-prediction reasoning trace with IPFS payload preview (heavy investment per PRD §9.2).
+- ✓ `/demo-consumer` — DemoFeedConsumer simulator with auto-refresh + manual refresh + checkbox, "what is this" panel for protocols, contract pointers, Solidity integration snippet with line numbers, callout cards.
+- ✓ `/feed/[category]` (bonus) — 4 KPI tiles, composite feed history Recharts area chart with 24h-ago reference line, contributor table sorted by weight with inline bars.
+- ✓ Next.js 16 idioms: `await params`, `PageProps<'/path'>` globals, server/client split per dynamic page.
+- ✓ `next build` clean: 6 routes, TypeScript pass.
+- ✗ Next: wallet integration (Prompt 11) — wire wagmi + Connect button + replace mock data hooks with indexer reads.
 
 ### frontend/
 - ✓ `create-next-app` scaffold (Next.js 16.2.6, Tailwind v4, TS, App Router, ESLint, src dir, Turbopack, `@/*` alias).
