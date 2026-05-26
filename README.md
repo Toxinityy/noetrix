@@ -1,4 +1,9 @@
-# Predictor Index — Product Requirements Document (v2.1)
+# Predictor Index — Product Requirements Document (v2.2)
+
+**Changelog v2.1 → v2.2 (frontend stack pivot, 2026-05-26):**
+- §9.1 frontend stack: dropped shadcn/ui; using Radix UI primitives directly + Tailwind + Motion (formerly Framer Motion). Reasoning: shadcn pre-styled wrappers constrain awwwards-tier landing aesthetic. Radix gives same a11y guarantees without visual lock-in.
+- §9.3 design direction: hybrid — terminal core (data surfaces) + cinematic landing (hero). Was: pure Bloomberg-terminal. Reason: differentiated demo for judges + Awwwards consideration.
+- §9.1 typography: explicit pair Inter + JetBrains Mono via next/font.
 
 > An on-chain AI agent forecasting protocol built on Mantle Network. Agents with ERC-8004 identities make verifiable predictions, accumulate reputation, and earn rewards. Their composite forecasts are sold to Mantle protocols as a subscription feed.
 
@@ -579,10 +584,15 @@ Defer post-hackathon. ARIMA + Claude is sufficient.
 
 ### 9.1 Tech stack
 
-- Next.js 14 App Router, TypeScript, Tailwind, shadcn/ui
+- Next.js 14 App Router, TypeScript, Tailwind CSS
+- Radix UI (headless primitives — Dialog, Dropdown, Tooltip, Tabs, Popover, etc.) — used directly, no shadcn CLI; full custom styling
+- Motion (formerly Framer Motion) — animation layer for hero, transitions, micro-interactions
 - wagmi v2 + viem
 - TanStack Query
-- Recharts
+- Recharts (themed to match design system)
+- next/font for typography (Inter + JetBrains Mono or similar pairing)
+
+Stack decision (v2.2): dropped shadcn/ui in favor of Radix-only + custom Tailwind components. Reason: shadcn pre-styled wrappers constrain the awwwards-tier landing aesthetic. Radix gives the same a11y guarantees without visual lock-in. Motion handles all transitions.
 
 ### 9.2 Pages (hackathon scope)
 
@@ -609,11 +619,26 @@ Defer post-hackathon. ARIMA + Claude is sufficient.
 **Ship if Day 13 polish allows:**
 - `/category/[id]`, `/submit`, `/about`.
 
-### 9.3 Design
+### 9.3 Design — hybrid: terminal core + cinematic landing
 
-- Bloomberg-terminal aesthetic: data-dense, monospace numbers, sparse color.
-- Mantle teal as single accent on near-monochrome base.
+Two-mode aesthetic. Don't mix on same surface.
+
+**Terminal core** — `/`, `/agent/[id]`, `/demo-consumer`:
+- Data-dense, monospace numbers (tabular figures), sparse color.
+- Near-monochrome base (dark theme default); Mantle teal as single accent.
+- Recharts themed to match (low-contrast gridlines, mono labels).
+- Motion: subtle only — value flips, sparkline draws, row enter on data update. No bouncy/spring on data.
+
+**Cinematic landing** — hero section of `/` (top of leaderboard) + `/about` (if shipped):
+- Awwwards-tier: oversized kinetic type for project name, scroll-driven composite-feed pulse, Claude reasoning-trace reveal animation as the demo hook.
+- Motion-driven: hero entrance, stagger reveals, shared-element transitions to leaderboard table below.
+- Constrained palette: same teal accent + black/near-black, no rainbow.
+- Respects `prefers-reduced-motion`: cinematic falls back to static composition.
+
+**Cross-cutting:**
 - **QA at 375px width.** Judges screenshot on mobile.
+- A11y non-negotiable: focus rings, 4.5:1 contrast, keyboard nav for all interactive elements (Radix handles primitives).
+- Single font pairing: Inter (body/UI) + JetBrains Mono (numbers, addresses, hashes, contract identifiers).
 
 ---
 

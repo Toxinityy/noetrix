@@ -1,4 +1,9 @@
-# Claude Code Prompt Series — Predictor Index (v2.1)
+# Claude Code Prompt Series — Predictor Index (v2.2)
+
+**Changes v2.1 → v2.2 (frontend stack pivot, 2026-05-26):**
+- Prompt 1: frontend deps = Radix UI + Tailwind + Motion (no shadcn CLI). Add Inter + JetBrains Mono via next/font.
+- Prompt 11: design = hybrid (terminal core + cinematic landing). Use Radix primitives directly. Motion drives hero.
+- Prompt 13: replaces "subtle" landing animation with cinematic-on-hero, subtle-on-terminal-surfaces split.
 
 Sequenced prompts to drive Claude Code through the build. Run them in order. Verify the checklist between each.
 
@@ -44,7 +49,7 @@ Requirements:
 - Two sub-packages under agents/: arima-baseline/, claude-reasoner/
 - (NOTE: specialized-quant is CUT per §14 — do not create)
 - contracts/: Foundry only. NO HARDHAT. foundry.toml configured for Solidity 0.8.24, Mantle Sepolia default. OpenZeppelin remapping.
-- frontend/: Next.js 14 App Router, TypeScript, Tailwind, shadcn/ui
+- frontend/: Next.js 14 App Router, TypeScript, Tailwind CSS, Radix UI (headless primitives, no shadcn CLI), Motion (animation), wagmi v2, viem, TanStack Query, Recharts, next/font (Inter + JetBrains Mono). Stack per README §9.1 v2.2.
 - indexer/: Ponder template
 - agents/sdk/: bare TypeScript package
 - Root .gitignore: node_modules, .env, foundry out/ broadcast/, Next .next/, indexer .ponder/
@@ -716,11 +721,24 @@ Part D — Refresher cron worker (agents/refresher/):
 - Idempotent: rate limit at 100 blocks means second call within window just reverts and is caught
 - Spec'd in PRD §7.5.3
 
-Design:
-- Bloomberg-terminal: data-dense, monospace numbers, sparse color
+Design — hybrid per README §9.3:
+
+Terminal core (leaderboard table, agent detail tables, demo consumer panel):
+- Data-dense, monospace numbers (tabular figures), sparse color
 - Single accent: Mantle teal (#33EAB3 or similar)
 - Dark background, near-monochrome
-- Recharts theming to match
+- Recharts theming to match (low-contrast gridlines, mono labels)
+- Motion: subtle — value flips, sparkline draws, row enter on data update only. No bouncy.
+
+Cinematic landing (hero section above leaderboard on /):
+- Awwwards-tier: oversized kinetic type for "Predictor Index", scroll-driven composite-feed pulse, Claude reasoning-trace reveal as demo hook
+- Motion-driven: hero entrance, stagger reveals, shared-element transition to leaderboard below
+- Same teal accent only; respects prefers-reduced-motion (cinematic → static fallback)
+
+Cross-cutting:
+- Single font pair: Inter (UI) + JetBrains Mono (numbers/addresses/hashes) via next/font
+- Use Radix primitives directly (no shadcn CLI) — Dialog, Dropdown, Tabs, Tooltip, Popover
+- A11y: focus rings, 4.5:1 contrast, keyboard nav for all interactive elements
 - Test at 375px width — if anything breaks, fix it now
 
 Deploy to Vercel.
@@ -791,7 +809,7 @@ Part A — Frontend polish pass:
 - Loading states: skeletons not spinners
 - Empty states for every data-fetching component
 - Error states (e.g., indexer down → "Showing cached data" banner + serve from static JSON fallback)
-- Subtle landing animation on / (Framer Motion, restrained — no bouncy)
+- Cinematic landing animation on / hero (Motion — hero kinetic-type entrance, scroll-driven composite-feed pulse, Claude reasoning-trace reveal). Terminal-core surfaces below remain subtle (value flips, sparkline draws only). Respect prefers-reduced-motion.
 - Typography consistency, spacing audit
 - Make Claude reasoning display the visual peak of the agent detail page (large readable text, code-block-style for the JSON, clear "reasoning →" header)
 

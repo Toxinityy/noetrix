@@ -1,0 +1,36 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# env
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+contracts/.gas-snapshot
+
+# next.js
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+
+# ponder
+indexer/.ponder/
+indexer/generated/
+
+# agents
+agents/**/dist/
+agents/**/agent.state.json
+agents/**/logs/
+
+# editor/os
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log

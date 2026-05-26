@@ -1,0 +1,30 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+solc_version = "0.8.24"
+evm_version = "cancun"
+optimizer = true
+optimizer_runs = 200
+via_ir = false
+fs_permissions = [{ access = "read", path = "./" }]
+ffi = true
+
+[profile.ci]
+verbosity = 4
+fuzz = { runs = 1000 }
+
+[fmt]
+line_length = 120
+tab_width = 4
+bracket_spacing = true
+
+[rpc_endpoints]
+mantle_sepolia = "${MANTLE_SEPOLIA_RPC}"
+mantle_mainnet = "${MANTLE_MAINNET_RPC}"
+
+[etherscan]
+mantle_sepolia = { key = "${MANTLESCAN_API_KEY}", url = "https://api-sepolia.mantlescan.xyz/api" }
+mantle_mainnet = { key = "${MANTLESCAN_API_KEY}", url = "https://api.mantlescan.xyz/api" }

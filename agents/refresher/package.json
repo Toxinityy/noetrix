@@ -1,0 +1,23 @@
+{
+  "name": "@predictor-index/refresher",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@predictor-index/sdk": "workspace:*",
+    "viem": "^2.51.0",
+    "dotenv": "^17.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.20.7",
+    "typescript": "^5.9.0"
+  }
+}

@@ -122,6 +122,29 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-05-26 — Prompt 1 (in-progress) + frontend stack pivot v2.1 → v2.2
+**Type:** Build (Prompt 1) + spec patch
+**Skill:** superpowers:brainstorming, ui-ux-pro-max (consulted, not executed)
+**Touched files:** `README.md` (v2.1 → v2.2), `Prompt.md` (v2.1 → v2.2), `CLAUDE.md` (this entry), root `package.json`, `pnpm-workspace.yaml`, `.gitignore`, `.env.example`, `README.workspace.md`, `contracts/` (forge init + OZ install + foundry.toml + remappings + subdirs)
+
+**What happened:**
+- Installed foundry (forge 1.7.1) via foundryup; added `C:\Users\William A\.foundry\bin` to user PATH (persistent).
+- Initialized pnpm workspace at root (Node 22.20, pnpm 10.33). Workspace covers frontend, indexer, agents/{sdk,arima-baseline,claude-reasoner,refresher}. Note: `refresher/` added to workspace list now (it ships in Prompt 11).
+- Scaffolded `contracts/` with `forge init --no-git`, installed OpenZeppelin contracts v5.6.1, removed template Counter.sol files, wrote `foundry.toml` (Solidity 0.8.24, cancun, optimizer 200, mantle_sepolia + mantle_mainnet RPC endpoints + Mantlescan etherscan config), `remappings.txt`, `contracts/package.json`, and the subdir tree per PRD §16 (`src/{interfaces,resolvers,scorers,mocks,examples}`, `test/reference`, `deployments/`, `config/`).
+- Kept existing `README.md` (PRD) untouched at root; placed workspace package index at `README.workspace.md` to avoid clobbering the PRD. **Open question:** consolidate later (e.g., rename PRD to `docs/PRD.md` and make `README.md` the GitHub README per Prompt 13 Part D).
+- **Frontend stack pivot (PRD §9 patched):** User pushed back on shadcn/ui (concern: limited customization for awwwards-tier aesthetic). Discussed tradeoffs honestly — shadcn is copy-paste Radix, not rigid. Settled on: Radix UI primitives directly (no shadcn CLI) + Tailwind + Motion (formerly Framer Motion). Aesthetic direction also changed from pure Bloomberg-terminal to hybrid: terminal core (data surfaces) + cinematic landing (hero on `/`). Patched README §9.1, §9.3 and Prompt.md Prompt 1 + Prompt 11 + Prompt 13. Bumped both docs to v2.2.
+
+**Still in-progress / blocked on user decision:**
+- Frontend scaffold method (create-next-app full vs manual vs defer).
+- Indexer scaffold method (create-ponder vs manual vs defer).
+- Agents subpackages (just placeholders for now or full TS package.json each).
+- After scaffold: verify `forge build` and `pnpm install` both run clean.
+
+**New invariants to add to §3 next time it's edited:**
+- **No shadcn/ui.** Use Radix UI headless primitives directly + Tailwind + Motion. Reason: visual control for cinematic landing; shadcn pre-styled wrappers fight the aesthetic.
+- **Hybrid aesthetic.** Terminal core (data tables, charts) ≠ cinematic landing (hero only). Don't mix on same surface. `prefers-reduced-motion` falls cinematic back to static.
+- **Type pair:** Inter (UI) + JetBrains Mono (numbers, addresses, hashes) via next/font. No other fonts.
+
 ### 2026-05-25 — Bootstrap + PRD v2.1 patches
 **Type:** Brainstorm / review
 **Skill:** superpowers:brainstorming

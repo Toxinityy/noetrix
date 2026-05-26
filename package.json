@@ -1,0 +1,16 @@
+{
+  "name": "predictor-index",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Predictor Index — on-chain AI agent forecasting protocol on Mantle Network",
+  "packageManager": "pnpm@10.33.3",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "test": "pnpm -r test",
+    "clean": "pnpm -r clean"
+  }
+}

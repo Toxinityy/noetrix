@@ -1,0 +1,7 @@
+packages:
+  - "frontend"
+  - "indexer"
+  - "agents/sdk"
+  - "agents/arima-baseline"
+  - "agents/claude-reasoner"
+  - "agents/refresher"
