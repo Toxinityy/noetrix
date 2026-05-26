@@ -1,26 +1,143 @@
 @import "tailwindcss";
 
+/*
+  Predictor Index design tokens.
+  - Dark by default. Mantle teal as single accent.
+  - Inter for UI, JetBrains Mono for numbers/addresses/hashes.
+  - Terminal-core surfaces stay near-monochrome; cinematic landing layers additive teal glow.
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Greys */
+  --color-bg: #050607;
+  --color-bg-elev-1: #0a0c0e;
+  --color-bg-elev-2: #11141a;
+  --color-border: #1a1f27;
+  --color-border-strong: #2a3140;
+  --color-text: #e7ecf3;
+  --color-text-dim: #98a2b3;
+  --color-text-muted: #5a6273;
+
+  /* Accent — Mantle teal */
+  --color-accent: #33eab3;
+  --color-accent-soft: #1f8a6c;
+  --color-accent-glow: rgba(51, 234, 179, 0.16);
+
+  /* Status */
+  --color-up: #33eab3;
+  --color-down: #ff5b6b;
+  --color-warn: #f8d97a;
+
+  /* Typography */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jbmono), ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+
+  /* Motion */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--color-bg);
+  --color-bg-elev-1: var(--color-bg-elev-1);
+  --color-bg-elev-2: var(--color-bg-elev-2);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-text: var(--color-text);
+  --color-text-dim: var(--color-text-dim);
+  --color-text-muted: var(--color-text-muted);
+  --color-accent: var(--color-accent);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-up: var(--color-up);
+  --color-down: var(--color-down);
+  --color-warn: var(--color-warn);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
+  overflow-x: hidden;
+}
+
+/* Page-stack uses GSAP ScrollTrigger pin instead of CSS scroll-snap.
+   See frontend/src/components/ui/story-scroll.tsx. */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-image:
+    radial-gradient(900px 600px at 12% -10%, rgba(51, 234, 179, 0.06), transparent 70%),
+    radial-gradient(700px 500px at 92% 5%, rgba(51, 234, 179, 0.04), transparent 70%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: #051010;
+}
+
+/* Numeric ergonomics for terminal-core surfaces */
+.num,
+.font-mono,
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "zero", "cv01";
+  letter-spacing: -0.01em;
+}
+
+/* Faint grid background for hero */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+.bg-grid-fine {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Hero radial mask: fades the grid out at the edges */
+.mask-radial-fade {
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 30%, transparent 80%);
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, #000 30%, transparent 80%);
+}
+
+/* Scrollbar — terminal vibe */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-soft);
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+/* Reduce motion: kill cinematic transforms; keep value flips */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

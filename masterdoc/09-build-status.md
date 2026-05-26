@@ -1,6 +1,6 @@
 # 09 — Build Status
 
-Snapshot: **2026-05-26**. Update after each significant change.
+Snapshot: **2026-05-26** (post Prompt 2). Update after each significant change.
 
 ## Per-package state
 
@@ -15,19 +15,37 @@ Snapshot: **2026-05-26**. Update after each significant change.
 - ✓ `remappings.txt` for OZ + forge-std.
 - ✓ OpenZeppelin Contracts v5.6.1 installed.
 - ✓ Subdir tree per PRD §16 (`src/{interfaces,resolvers,scorers,mocks,examples}`, `test/reference`, `script/`, `config/`, `deployments/`).
-- ✓ `forge build` runs (nothing to compile).
-- ✗ No production contracts written. Next: **Prompt 2 — AgentRegistry**.
+- ✓ `forge build` runs.
+- ✓ **AgentRegistry** (Prompt 2): `src/AgentRegistry.sol` + `src/interfaces/IAgentRegistry.sol`. 28 tests pass; coverage lines 94.5% / statements 90.7% / functions 93.3% / branches 68% (branches gap = unreachable/treasury-revert paths). Lint note: 24h timelock uses `block.timestamp` — manipulation bounded to seconds, not exploitable.
+- ✗ Next: **Prompt 3 — PredictionMarket** (commit-reveal).
 
 ### frontend/
 - ✓ `create-next-app` scaffold (Next.js 16.2.6, Tailwind v4, TS, App Router, ESLint, src dir, Turbopack, `@/*` alias).
 - ✓ Deps installed: Radix UI (8 primitives), Motion v12, wagmi 3.6.15, viem 2.51, TanStack Query 5, Recharts 3.8, lucide-react, clsx + tailwind-merge + cva.
-- ✓ Default landing page renders.
-- ✗ No custom design tokens.
-- ✗ No font configuration (Inter + JetBrains Mono via next/font pending).
-- ✗ No app shell, no pages.
-- ✗ No wagmi config (chain + connectors).
-- ⚠ Next 16 has breaking changes (see `frontend/AGENTS.md`). Read `node_modules/next/dist/docs/` before writing app code.
-- Next: **Prompt 11 — 3 must-have pages**.
+- ✓ Fonts: Inter + JetBrains Mono via next/font/google with CSS vars `--font-inter`, `--font-jbmono`.
+- ✓ Design tokens in `app/globals.css`: Mantle teal accent (#33EAB3), near-monochrome dark palette, status colors (up/down/warn), `font-feature-settings: tnum`, grid background utility, `prefers-reduced-motion` global override.
+- ✓ Landing page (`/`) built per PRD §9.3 v2.2 hybrid aesthetic. Sections:
+  - `Nav` — sticky, backdrop-blur on scroll
+  - `Hero` — **WebGL ambient swirl** (`DitheringShader`, deepest layer, Mantle teal on near-black, 4×4 dithering, swirl shape, speed=0.55, `mix-blend-mode: screen`); **cursor-driven spotlight lens** (2nd shader instance with `ripple` shape revealed via radial mask following spring-smoothed cursor); **cursor follower ring + dot** (system cursor hidden over hero, replaced with teal accent ring + 1.5px dot, both spring-tracked); **char hover** (each title letter lifts 8px + tints teal); **title parallax** (subtle magnetic offset toward cursor); kinetic char-stagger title, glow ring, corner meta. Touch devices skip all cursor effects via `(hover: hover) and (pointer: fine)` media query.
+  - `LivePulse` — `requestAnimationFrame`-driven synthetic composite-feed chart (SVG paths animate, value motion-tweens, pulsing latest-dot)
+  - `ReasoningReveal` — scroll-driven Claude trace card with parsed JSON sidebar (4-step trace)
+  - `LeaderboardPreview` — terminal aesthetic, row stagger on viewport enter
+  - `HowItWorks` — 5-step grid with stagger reveal
+  - `Footer`
+- ✓ **Page-stack via GSAP ScrollTrigger pin** (`frontend/src/components/ui/story-scroll.tsx`): each section is `data-flow-section min-h-screen overflow-hidden` with an inner `.flow-art-container` (transform-origin bottom-left). GSAP query selects all sections in document order, then:
+  - Each non-first inner starts at `rotation: 30deg` and scrubs to 0 as it scrolls from `top bottom` → `top 25%`.
+  - Each non-last section pins from `bottom bottom` → `bottom top` with `pinSpacing: false` — section sticks at viewport bottom while next slides in over it.
+  - `z-index` assigned per index so later sections naturally overlay earlier.
+  - Honors `prefers-reduced-motion` (skips GSAP entirely).
+  - `page.tsx` uses a thin `StoryFrame` wrapper around each existing landing component so the section/inner DOM markers are present without imposing the demo template's flex/padding layout.
+- ✗ Previous `SlideSection` (CSS scroll-snap) replaced by FlowArt. SlideSection file kept for reference.
+- ✓ Helper `src/lib/cn.ts` (clsx + tailwind-merge).
+- ✓ Verified: GET / 200 OK in 254ms, content renders.
+- ⚠ Next 16 has breaking changes (see `frontend/AGENTS.md`). Read `node_modules/next/dist/docs/` before further work.
+- ⚠ Cosmetic warnings deferred: extra `frontend/pnpm-workspace.yaml` from create-next-app (remove); `turbopack.root` unset in `next.config.ts`.
+- ✗ All data is mocked. wagmi config + real indexer wiring at Prompt 11.
+- ✗ `/agent/[id]`, `/demo-consumer` not built.
+- Next: **Prompt 11 — agent detail + demo consumer pages + wire to deployed contracts**.
 
 ### indexer/
 - ✓ Ponder empty template scaffolded (`pnpm create ponder`).
@@ -72,7 +90,9 @@ Snapshot: **2026-05-26**. Update after each significant change.
 
 | Check | Status | Date |
 |-------|--------|------|
-| `forge build` | ✓ (nothing to compile) | 2026-05-26 |
+| `forge build` | ✓ (compiles AgentRegistry + IAgentRegistry) | 2026-05-26 |
+| `forge test --match-contract AgentRegistryTest` | ✓ 28/28 pass | 2026-05-26 |
+| `forge coverage` AgentRegistry | ✓ lines 94.5% (target ≥90%) | 2026-05-26 |
 | `pnpm install` (root) | ✓ | 2026-05-26 |
 | `pnpm -C agents/sdk build` | ✓ | 2026-05-26 |
 | No `hardhat.config.*` in own code | ✓ | 2026-05-26 |
@@ -80,16 +100,15 @@ Snapshot: **2026-05-26**. Update after each significant change.
 | `pnpm -C frontend dev` (smoke test) | ⏳ not yet attempted | — |
 | `pnpm -C indexer dev` (smoke test) | ⏳ not yet attempted | — |
 
-## Pre-flight checklist for Prompt 2 (next session)
+## Pre-flight checklist for Prompt 3 (next session)
 
 - [ ] Confirm forge is on PATH (`forge --version`).
-- [ ] Read PRD §7.1 (AgentRegistry full spec).
-- [ ] Read `CLAUDE.md` §3 invariants 4 + 12 (topAgents + registration fee).
-- [ ] Read `03-contracts.md` planned-contracts table.
-- [ ] Write `src/AgentRegistry.sol` + `test/AgentRegistry.t.sol`.
-- [ ] Run `forge test`; report coverage.
-- [ ] Update `09-build-status.md` (this file) when AgentRegistry lands.
-- [ ] Append session entry to `CLAUDE.md` §6.
+- [ ] Read PRD §7.2 (PredictionMarket full spec) — commit-reveal, settlement.
+- [ ] Read `CLAUDE.md` §3 invariants 1, 5 (stake conservation, commit-reveal cutoff).
+- [ ] Re-read `07-conventions.md` (custom errors, ReentrancyGuard required).
+- [ ] Write `src/PredictionMarket.sol` + `src/interfaces/IPredictionMarket.sol` + `test/PredictionMarket.t.sol`.
+- [ ] Cover all reverts (wrong nonce, before delay, after window, near resolution, low stake) + 90/10 cancel + 99.5/0.5 forfeit + fuzz random valid commit-reveal pairs + reentrancy.
+- [ ] Update `09-build-status.md` + append session entry to `CLAUDE.md` §6.
 
 ## Known open questions
 
