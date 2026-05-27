@@ -96,6 +96,8 @@ interface IPredictionMarket {
         address resolver
     ) external;
 
+    function setScore(uint256 predictionId, int256 score) external;
+
     function getPrediction(uint256 predictionId) external view returns (Prediction memory);
 
     function getCategory(bytes32 categoryId) external view returns (Category memory);

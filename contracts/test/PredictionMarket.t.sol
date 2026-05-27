@@ -18,6 +18,8 @@ contract MockBonusPool is IBonusDistributor {
         total += msg.value;
     }
 
+    function recordContribution(bytes32, uint256, uint256) external override {}
+
     receive() external payable {}
 }
 
@@ -42,6 +44,8 @@ contract ReentrantBonusPool is IBonusDistributor {
             attackerAgentId, attackerCategoryId, bytes32(uint256(1)), block.number + 500, bytes32(uint256(2))
         );
     }
+
+    function recordContribution(bytes32, uint256, uint256) external override {}
 
     receive() external payable {}
 }

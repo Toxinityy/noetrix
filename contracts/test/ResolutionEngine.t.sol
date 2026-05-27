@@ -102,6 +102,8 @@ contract NoopBonusPool is IBonusDistributor {
         received[categoryId] += msg.value;
     }
 
+    function recordContribution(bytes32, uint256, uint256) external override {}
+
     receive() external payable {}
 }
 

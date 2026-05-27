@@ -122,6 +122,42 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-05-27 — Prompt 5 (ScoringEngine + RangeCrpsScorer + calibration + 2 Python references)
+**Type:** Build (Prompt 5 — most numerically-sensitive prompt)
+**Touched files:**
+- `contracts/src/scorers/RangeCrpsScorer.sol` (new) — closed-form CRPS for uniform-over-bucket forecast vs point-mass outcome.
+- `contracts/src/ScoringEngine.sol` (new) — wires score → reputation update → stake split → BonusDistributor.recordContribution → PredictionMarket.settleStake.
+- `contracts/src/interfaces/ICategoryScorer.sol` (new).
+- `contracts/src/interfaces/IBonusDistributor.sol` (edited) — added `recordContribution(bytes32, uint256, uint256)`.
+- `contracts/src/interfaces/IPredictionMarket.sol` (edited) — added `setScore(uint256, int256)`.
+- `contracts/test/reference/crps_reference.py` (new) — Python reference for RangeCrpsScorer; generates 10 hand-picked test vectors.
+- `contracts/test/reference/calibration_reference.py` (new) — Python reference for §7.4.2; generates 10 test vectors + EMA spot-checks.
+- `contracts/test/RangeCrpsScorer.t.sol` (new) — 8 tests (Python vector + 4 boundary + fuzz).
+- `contracts/test/Calibration.t.sol` (new) — 5 tests (Python vector + threshold + fuzz).
+- `contracts/test/ScoringEngine.t.sol` (new) — 15 tests (stake settlement at perfect/neutral/worst/positive, reputation updates, access control, fuzz conservation).
+- `contracts/test/PredictionMarket.t.sol` + `contracts/test/ResolutionEngine.t.sol` (edited) — added empty `recordContribution` stub to existing IBonusDistributor mocks so they still compile after the interface extension.
+- `masterdoc/09-build-status.md`, `CLAUDE.md`.
+
+**What happened:**
+- Implemented RangeCrpsScorer per PRD §7.4.1. Forecast = uniform[a, b] with a, b snapped to bucket boundaries from the (predLow, predHigh) input. Outcome = point mass at the outcome bucket's midpoint. Domain split into N=100 equal-width buckets via `categoryConfig = abi.encode(uint256 domainMin, uint256 domainMax)`. Closed-form CRPS in three cases (y<a, y>b, a≤y≤b). Maps to `score = clamp((1 - 2*CRPS/D)*1e6, -1e6, +1e6)`. Computed in doubled coordinates (a'=2a, b'=2b, y'=2y) so the half-bucket-width outcome midpoint stays integer.
+- Implemented ScoringEngine per PRD §7.4. `applyScore(predictionId, outcome, scorer, categoryConfig, resolverCaller) external onlyResolutionEngine`. Flow: (1) read prediction; (2) require status==Revealed; (3) call scorer + clamp result; (4) compute new bucketAccuracy[bucketIdx] via EMA `((9*old + realized_scaled)/10)` where `realized_scaled = (score+1e6)/2`, plus new accuracy_score via same EMA on the raw score; (5) compute new calibration via `_calibration` (§7.4.2 squared-error sum × 4 / total_count / 1e6, negated, clamped to [-1e6, 0], returns 0 if total < 10); (6) `agentRegistry.updateReputation(...)`; (7) compute stake split per §7.2.4 (resolver 2%, then `return_rate_scaled = 5e5 + score/2` clamp [0, 1e6], returned = remaining × rate / 1e6, slashed = remaining - returned, conservation asserted); (8) `predictionMarket.setScore`; (9) optional `bonusDistributor.recordContribution(categoryId, agentId, max(0, score)² × stake / 1e12)`; (10) `predictionMarket.settleStake(returned, slashed, resolverReward, resolverCaller)`; (11) emit `PredictionScored` for indexer.
+- Two Python reference files **exactly mirror** the Solidity integer arithmetic (same operation order, same `//` truncation). Solidity tests hard-code the values printed by the Python scripts and assert **exact equality** (not relative tolerance — the math agrees bit-for-bit). 10 CRPS cases ranging from perfect-centered to inverted-bounds-auto-swap; 10 calibration cases from cold-start through max-miscalibration.
+- 28 new tests on top of the prior 94: **122/122 full suite green**, including three 256-run fuzz tests (CRPS bounds, calibration sign, stake conservation across all valid scores). Stake conservation fuzzed across full `[-1e6, +1e6]` range never fails.
+- Verified by hand against PRD math: perfect score (1e6) → 0.98 stake returned, 0 slashed, contribution = full stake; neutral (0) → 49% / 49% split + 2% resolver, 0 contribution; worst (-1e6) → 0 return, 98% slashed, 0 contribution; +500k → 73.5% return, 24.5% slash, contribution = stake/4.
+
+**Decisions:**
+- **Stack-too-deep refactor in two places.** `RangeCrpsScorer.score` originally had 18+ locals across the case-3 branch; extracted to a `_deduction(a2, b2, y2, D)` helper. `ScoringEngine.applyScore` similarly had too many locals across the tuple destructures + emit; split into `_applyReputation` (returns `(newAccuracy, newCalibration)` only and persists buckets in-place) + `_settleAndEmit`. Kept viaIR off (faster CI) since the refactor was clean.
+- **ICategoryScorer stays `pure`.** Production scorers (RangeCrpsScorer) are pure. Test's `FixedScorer` initially used `view` to read a `canned` state var — Solidity blocked the mutability widening on override. Reworked `FixedScorer` to decode the canned score from `outcome` bytes (`abi.decode(outcome, (int256))`), which keeps it pure. Tests pass the desired score as `abi.encode(int256(...))` to `applyScore`.
+- **Did NOT** pre-compute `score` and pass via `settleStake` parameter as Prompt 5 sketched ("...settleStake(predictionId, returned_to_agent, 0 /* bonus unused */, resolver_reward, resolverCaller)"). That contradicts PredictionMarket's existing `returnAmount + bonusAmount + resolverReward == stake` invariant (otherwise the slashed ETH has no destination). Instead: ScoringEngine passes `slashedToPool` as `bonusAmount` to `settleStake`, and PredictionMarket forwards via `IBonusDistributor.notifySlash{value: slashedToPool}` inside settleStake — ETH conservation maintained, pull-claim semantics preserved (Prompt 5 wording was talking about *agent bonus claims* via `claimBonus`, not the slash-flow). Documented in §6 risks.
+- **bucketCount EMA threshold = 10 total.** Per §7.4.2 — cold-start (total < 10) returns 0. After threshold, full squared-error formula applies. Matches Python reference.
+- **Contribution computed as `(s² × stake) / 1e12` only when `score > 0`.** Saves an SSTORE for zero-or-negative scores and matches PRD §7.2.4 `max(0, score_norm)²`. No contribution → no recordContribution call (skipped to save gas).
+- **Two public pure views: `computeCalibration(buckets, counts)` + `previewStakeSplit(stake, score)`.** Used in tests and intended for indexer/UI parity. Both pure; no storage needed.
+
+**Risks / followups:**
+- BonusDistributor still a 2-method stub interface (`notifySlash` + `recordContribution`). The full contract — epoch closing, pull-claim, finalize-with-rollover, finalize-caller 0.5% reward — lives in Prompt 6 along with CompositeFeed.
+- `_calibration`'s int256 sum could in principle overflow if a single bucket accumulates ≥ ~2^200 count × 1e12 squared-diff. Realistically impossible (the practical cap is ~1e10 resolutions across all agents combined). No defensive saturation; document as v1 simplification.
+- `recordContribution` is called with `share = (score² × stake) / 1e12` — this can be a very large number for big stakes (up to ~stake itself). When BonusDistributor finalizes the epoch and divides `pool × agent_share / total_share`, mind precision: in v1 we use floor div so dust accumulates in the contract (unclaimable). Acceptable.
+
 ### 2026-05-26 — Full app frontend (out-of-sequence per user request)
 **Type:** Build (frontend pages 2-N; landing was already done)
 **Touched files:**
