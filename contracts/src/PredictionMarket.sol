@@ -56,6 +56,8 @@ contract PredictionMarket is IPredictionMarket, Ownable, ReentrancyGuard {
     uint256 public nextPredictionId = 1;
     mapping(uint256 => Prediction) internal _predictions;
     mapping(bytes32 => Category) internal _categories;
+    // agentId => categoryId => most recently revealed predictionId (for CompositeFeed enumeration)
+    mapping(uint256 => mapping(bytes32 => uint256)) internal _latestRevealed;
 
     modifier onlyScoringEngine() {
         if (msg.sender != scoringEngine) revert OnlyScoringEngine();
@@ -156,6 +158,7 @@ contract PredictionMarket is IPredictionMarket, Ownable, ReentrancyGuard {
         p.value = value;
         p.confidence = confidence;
         p.status = PredictionStatus.Revealed;
+        _latestRevealed[p.agentId][p.categoryId] = predictionId;
 
         emit PredictionRevealed(predictionId, value, confidence, block.number);
     }
@@ -241,6 +244,11 @@ contract PredictionMarket is IPredictionMarket, Ownable, ReentrancyGuard {
 
     function getCategory(bytes32 categoryId) external view returns (Category memory) {
         return _categories[categoryId];
+    }
+
+    /// @inheritdoc IPredictionMarket
+    function latestRevealedPrediction(uint256 agentId, bytes32 categoryId) external view returns (uint256) {
+        return _latestRevealed[agentId][categoryId];
     }
 
     // ─── Internal ────────────────────────────────────────────────────────────────

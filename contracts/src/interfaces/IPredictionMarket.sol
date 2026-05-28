@@ -101,4 +101,8 @@ interface IPredictionMarket {
     function getPrediction(uint256 predictionId) external view returns (Prediction memory);
 
     function getCategory(bytes32 categoryId) external view returns (Category memory);
+
+    /// @notice Most recent prediction id this agent revealed in `categoryId` (0 if none). The returned
+    ///         prediction may since have transitioned out of Revealed — callers must re-check status.
+    function latestRevealedPrediction(uint256 agentId, bytes32 categoryId) external view returns (uint256);
 }

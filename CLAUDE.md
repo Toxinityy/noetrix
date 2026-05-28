@@ -122,6 +122,81 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-05-28 — Prompt 6 (BonusDistributor + CompositeFeed + AaveMantleTvlResolver + SubscriptionGate)
+**Type:** Build (Prompt 6)
+**Touched files:**
+- `contracts/src/BonusDistributor.sol` (new) — pull-claim epoch bonus pool, zero iteration.
+- `contracts/src/CompositeFeed.sol` (new) — rank-weighted ensemble + outlier-resistant confidence.
+- `contracts/src/SubscriptionGate.sol` (new) — §7.6 read gate, open in v1.
+- `contracts/src/resolvers/AaveMantleTvlResolver.sol` (new) — §7.3.2 reserve-sum TVL in USD 8-dec.
+- `contracts/src/mocks/{MockAavePool,MockAToken}.sol` (new) — archive-RPC substitute for Aave reads.
+- `contracts/src/interfaces/{ISubscriptionGate,ICompositeFeed,IAaveLike}.sol` (new).
+- `contracts/src/interfaces/IPredictionMarket.sol` (edit) — added `latestRevealedPrediction(agentId, categoryId)`.
+- `contracts/src/PredictionMarket.sol` (edit) — `_latestRevealed[agentId][categoryId]` index written on `reveal`, exposed via the new view.
+- `contracts/test/{BonusDistributor,CompositeFeed,AaveMantleTvlResolver}.t.sol` (new) — 23 tests.
+- `masterdoc/09-build-status.md`, `CLAUDE.md`.
+
+**What happened:**
+- **BonusDistributor** per Prompt 6 Part A + §7.2.4. PULL-CLAIM, no loop over agents. `notifySlash` kept as `(bytes32 categoryId) payable` (NOT the Prompt's `(bytes32, uint256)` form) because the deployed PredictionMarket already calls `notifySlash{value: ...}(categoryId)` — msg.value carries the slashed MNT, which is what conserves native value end-to-end (Prompt 5 already settled this decision). `recordContribution(categoryId, agentId, weight)` and `notifySlash` both gated by a single `authorized` mapping (deploy wires PredictionMarket + ScoringEngine via `setAuthorized`). `finalizeEpoch`: rollover 5% credited to epoch+1, finalizer reward 0.5%, **both deducted off rawPool** (followed Prompt 6's explicit pseudocode, which differs slightly from README §7.2.4 wording that takes the 0.5% off `pool−rollover` — see risk below). `claimBonus`: controller-gated, floor-div `finalPool × share / total`, dust unclaimable. ReentrancyGuard + checks-effects-interactions on finalize/claim.
+- **CompositeFeed** per Part B + §7.5. `refresh` rate-limited to 100 blocks/category (first refresh always allowed since `lastUpdatedBlock==0`). Reads AgentRegistry top-20 (built Prompt 2, **read-only** here — no re-sort), pulls each top agent's latest still-`Revealed` prediction via the new PredictionMarket index, decodes `(low,high)` → midpoint point estimate. Re-ranks contributors after skips; rank `r` weight `(N+1-r)/(N(N+1)/2)`, summing to 1 (fixed-point 1e18). Ensemble = Σ w·midpoint. Confidence = `weightedStated × multiplier`, multiplier = `1 + mean(clip(cal/1e6, -0.5))` ∈ [0.5,1.0], clamped to [0,10000]. Empty contributor set → writes zeros (no div-by-zero). `read` gated by SubscriptionGate when set (unset = fully open).
+- **SubscriptionGate** built now (tiny) so CompositeFeed compiles + `read` works; Prompt 7 just deploys + wires it.
+- **AaveMantleTvlResolver** per Part C + §7.3.2. Iterates `pool.getReservesList()`; per reserve `aToken.totalSupply × oracle.getAssetPrice(asset)8 / 10^aTokenDecimals` (decimal-normalized to clean 8-dec USD). `predictionValue`/`resolutionBlock` ignored (global metric). MockAavePool bundles pool registry + price oracle; MockAToken stubs totalSupply/decimals.
+- **forge test: 145/145 green** (was 122; +23). CompositeFeed + BonusDistributor tested with local interface mocks for deterministic state; ensemble + 3-reserve TVL hand-verified.
+
+**Decisions:**
+- **`notifySlash` signature retained as payable single-arg** (diverges from Prompt 6 literal spec) to match the already-deployed PredictionMarket callsite and preserve native-MNT conservation. The Prompt's `(bytes32, uint256 amount)` form would not move ETH.
+- **`finalizeEpoch` deducts both rollover (5%) + finalizer reward (0.5%) off the raw pool** per Prompt 6's executable pseudocode. README §7.2.4 prose instead implies finalizer 0.5% comes off `(pool − rollover)`. Divergence is ~0.025% of pool; flagged below. Conservation invariant (Σ claimable ≤ finalPool) holds either way.
+- **Added `latestRevealedPrediction` index to PredictionMarket** rather than having CompositeFeed scan all predictions. Written on `reveal`; CompositeFeed re-checks `status == Revealed` at read time (handles the case where the latest revealed prediction has since resolved).
+- **CompositeFeed reads top-20, never sorts** — honors invariant §3.4 (sorting lives only in AgentRegistry `_updateTopAgents`).
+- **SubscriptionGate optional on CompositeFeed** (address(0) = open). Lets the feed be deployed/used before the gate is wired.
+
+**Risks / followups:**
+- **finalizeEpoch math divergence from README §7.2.4** (see Decisions). If a stats-literate judge cross-checks the PRD prose against the contract, the 0.5%-base differs. Recommend reconciling README §7.2.4 to match the contract (off-rawPool) in a future doc pass, or vice-versa if the user prefers the prose.
+- AaveMantleTvlResolver uses placeholder mock pool/oracle. Prompt 7 deploy must pass real Aave-on-Mantle Pool + AaveOracle addresses (contingency INIT Capital per §7.3.2) OR keep the mock for the hackathon demo. Real reserves at historical blocks still need archive RPC — mock is the pragmatic v1.
+- CompositeFeed ensemble currently weights by the band **midpoint**. The scorer (RangeCrpsScorer) treats the prediction as a uniform band; the feed collapses it to a point. Acceptable for a single composite value, but the band width (a confidence signal) is discarded. Note for v2 (could surface band as a feed field).
+- `recordContribution` weight is the `(score²·stake)/1e12` value ScoringEngine already computes; very large stakes → large weights, but BonusDistributor only sums/divides them, so no overflow concern at realistic scale.
+
+### 2026-05-27 — Landing content + UI/UX polish pass
+**Type:** Build (frontend additive — 2 new landing sections + a11y / contrast / states primitives)
+**Touched files:**
+- `frontend/src/components/landing/CategoriesShowcase.tsx` (new) — 2-card grid showcasing the two shipped categories with sample range-band SVG, scorer formula peek, cadence + agent-count metadata.
+- `frontend/src/components/landing/FaqAccordion.tsx` (new) — 8-item Radix Accordion answering the questions judges raise: on-chain vs centralized, oracle vs ensemble, CRPS vs Brier, Sybil deterrence, commit-reveal, revenue, stake split, ERC-8004.
+- `frontend/src/components/ui/EmptyState.tsx` (new) — dashed-border state with optional icon, title, body, action; `role="status"` + `aria-live="polite"`.
+- `frontend/src/components/ui/ErrorState.tsx` (new) — red-tinted state with `role="alert"`, retry slot, status-dot caption.
+- `frontend/src/app/page.tsx` (edit) — inserted Categories + FAQ StoryFrames into the FlowArt sequence (now 8 sections: Hero → LivePulse → Categories → Reasoning → Leaderboard → How → FAQ → Footer).
+- `frontend/src/components/landing/Nav.tsx` (edit) — added Categories + FAQ anchor links, focus-visible ring on link items.
+- `frontend/src/components/app/AppHeader.tsx` (edit) — visually-hidden skip-to-content link (becomes visible on keyboard focus).
+- `frontend/src/app/(app)/layout.tsx` (edit) — `<main id="main" tabIndex={-1}>` so the skip-link can land focus.
+- `frontend/src/components/ui/DataTable.tsx` (edit) — `aria-sort` on sortable `<th>`, descriptive `aria-label` on sort button, focus-visible ring, `aria-hidden` on chevron icon.
+- `frontend/src/app/globals.css` (edit) — global `:focus-visible` outline rule, `.skip-link` styles, lifted `--color-text-muted` from `#5a6273` to `#6b7384` to clear WCAG 4.5:1 against the dark background.
+- `frontend/src/app/(app)/agent/[id]/AgentDetailClient.tsx` (edit) — empty-predictions cell now uses `EmptyState` primitive instead of bare muted text.
+
+**What happened:**
+- User asked: is UI/UX polished? If not, polish it; plus add more content to the landing page. After brainstorming-style scoping (multi-select), user picked new sections (Categories + FAQ) and polish priorities (loading/empty/error states + typography/spacing + accessibility).
+- **Categories showcase**: card per shipped category (`METH_APR_24H`, `AAVE_MANTLE_TVL_24H`) with: domain label, mini-sparkline, range-band SVG showing the agent's predicted [low, high] band against the dashed reference + a solid actual-value line, scorer formula in mono, cadence (~24h / 43200 blocks), agent-count chip, deep-link to /feed/<slug>. Cards stack on mobile, two-col on md+.
+- **FAQ**: 8 hand-written objections. Each Q tagged `Q.01..Q.08` in mono, ChevronDown rotates 180° on open and turns accent. Answer prefixed with `A.` accent. Uses Radix Accordion `type="multiple"` so multiple Q/A can be open at once. `viewport={{ once: true }}` entry transition respects `useReducedMotion`.
+- **Polish layer**:
+  - `:focus-visible` global rule = 2px accent outline + 2px offset, so any native focusable element (anchors, buttons, inputs) gets a visible keyboard ring even when components forget. Components that already define a ring (DataTable sort, Collapsible) keep theirs via `:focus-visible:ring-…` Tailwind utilities.
+  - Skip-link follows WCAG technique G1: hidden at `top: -40px`, slides to `top: 12px` on focus.
+  - `--color-text-muted` was failing contrast at `#5a6273` (≈ 3.4:1) — bumped to `#6b7384` (≈ 4.7:1). Comments inline cite the math so future edits don't regress.
+  - `aria-sort` reports `ascending` / `descending` / `none` on `<th>` for screen-reader users. Sort button `aria-label` includes the active direction.
+- `EmptyState` + `ErrorState` are primitives; integrated `EmptyState` into the agent-detail predictions list as a concrete usage example. Full multi-page integration (skeletons via `useTransition`, error fallbacks on demo-consumer) deferred until real data lands in Prompt 11 — wiring placeholders against mocks would be churn that the indexer integration replaces anyway.
+- `next build` clean: 6 routes, TypeScript pass, only the pre-existing benign Recharts SSR width/height warning (documented in prior session as harmless).
+
+**Decisions:**
+- **Did NOT integrate `ErrorState` into demo-consumer's live-read path.** Mock data never fails; the component is ready for use once a real wagmi `useReadContract` watcher replaces the simulated interval. Adding fake error state under mock data would be theatre, not polish.
+- **Did NOT add skeletons via `useTransition` on category tabs** for the same reason. The tab switch is instant against synchronous mock data; a forced skeleton would feel wrong. When the indexer attaches, `useTransition({ isPending })` lights up automatically.
+- **Categories showcase placement: slot 3 (after LivePulse, before ReasoningReveal).** Reason: LivePulse establishes "what a feed looks like in motion"; Categories then says "and here are the two we ship"; ReasoningReveal then dives into how one agent justifies its forecast. Narrative escalator from abstract → concrete → reasoning.
+- **FAQ placement: slot 7 (after HowItWorks, before Footer).** End of the story is "is this trustworthy?" → FAQ owns that. Footer is just metadata.
+- **FAQ Q&A copy is opinionated, not bland.** Each answer commits to a specific claim with numbers (e.g., "0.1 MNT registration fee", "10–100 blocks", "20 agents per category", "$500–$2,000/mo"). Bland FAQs lose hackathon judges; specific ones win them.
+- **Type pair unchanged** — Inter + JetBrains Mono per PRD §9.1. No new fonts. All new components reuse existing tokens (`--color-bg-elev-1`, `--color-accent`, `--color-border`, etc.).
+
+**Risks / followups:**
+- The Categories sample data is hand-tuned to look narratively right (claude-reasoner-α forecasting mETH APR ≈ 3.42% with a tight ±0.2% band, arima-baseline forecasting Aave-Mantle TVL at $142.6M). When the indexer attaches (Prompt 11), the sample-prediction-per-category fields swap from hand-data to the latest revealed prediction by the top-1 agent per category.
+- FAQ entries reference numbers that must stay in sync with PRD: "20 agents", "0.1 MNT fee", "10–100 block reveal window", "200-block cutoff", "α=0.1", "≥10 resolved", "[0.5, 1.0] multiplier", "2% resolver reward", "$500/$1,000/$2,000 tiers". If PRD changes any of those, update FAQ copy.
+- Skip-link assumes a `<main id="main">` mounted by the `(app)` layout. Landing (`app/page.tsx`) does NOT have a `<main id="main">` because it's a single-purpose marketing route — the skip-link in AppHeader is not rendered there (AppHeader only mounts inside `(app)/layout.tsx`). No bug, but worth knowing.
+- `EmptyState` + `ErrorState` are styled for terminal-core surfaces, not for landing — don't drop them into the landing page without restyling.
+
 ### 2026-05-27 — Prompt 5 (ScoringEngine + RangeCrpsScorer + calibration + 2 Python references)
 **Type:** Build (Prompt 5 — most numerically-sensitive prompt)
 **Touched files:**
