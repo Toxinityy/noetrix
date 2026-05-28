@@ -30,15 +30,17 @@ export function Nav() {
 
         <div className="hidden items-center gap-7 md:flex">
           {[
+            ["Categories", "#categories"],
             ["Leaderboard", "/leaderboard"],
             ["Feed", "/feed/meth-apr-24h"],
             ["Consumer", "/demo-consumer"],
-            ["How it works", "#how"],
+            ["How", "#how"],
+            ["FAQ", "#faq"],
           ].map(([label, href]) => (
             <a
               key={label}
               href={href}
-              className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] transition-colors hover:text-[var(--color-text)]"
+              className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] transition-colors hover:text-[var(--color-text)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
             >
               {label}
             </a>

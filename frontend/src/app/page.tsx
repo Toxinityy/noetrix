@@ -1,9 +1,11 @@
 import { Nav } from "@/components/landing/Nav";
 import { Hero } from "@/components/landing/Hero";
 import { LivePulse } from "@/components/landing/LivePulse";
+import { CategoriesShowcase } from "@/components/landing/CategoriesShowcase";
 import { ReasoningReveal } from "@/components/landing/ReasoningReveal";
 import { LeaderboardPreview } from "@/components/landing/LeaderboardPreview";
 import { HowItWorks } from "@/components/landing/HowItWorks";
+import { FaqAccordion } from "@/components/landing/FaqAccordion";
 import { Footer } from "@/components/landing/Footer";
 import FlowArt from "@/components/ui/story-scroll";
 import type { CSSProperties, ReactNode } from "react";
@@ -62,6 +64,9 @@ export default function Home() {
         <StoryFrame label="Composite feed">
           <LivePulse />
         </StoryFrame>
+        <StoryFrame label="Categories shipped">
+          <CategoriesShowcase />
+        </StoryFrame>
         <StoryFrame label="Claude reasoning">
           <ReasoningReveal />
         </StoryFrame>
@@ -70,6 +75,9 @@ export default function Home() {
         </StoryFrame>
         <StoryFrame label="How it works">
           <HowItWorks />
+        </StoryFrame>
+        <StoryFrame label="FAQ">
+          <FaqAccordion />
         </StoryFrame>
         <StoryFrame label="Footer">
           <Footer />

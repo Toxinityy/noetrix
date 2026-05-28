@@ -89,6 +89,15 @@ export function DataTable<T>({
                     key={c.id}
                     scope="col"
                     style={c.width ? { width: c.width } : undefined}
+                    aria-sort={
+                      sortable
+                        ? active
+                          ? sort?.dir === "asc"
+                            ? "ascending"
+                            : "descending"
+                          : "none"
+                        : undefined
+                    }
                     className={cn(
                       "px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-[var(--color-text-muted)]",
                       c.align === "right" && "text-right",
@@ -101,13 +110,18 @@ export function DataTable<T>({
                       <button
                         type="button"
                         onClick={() => toggleSort(c.id)}
+                        aria-label={
+                          active
+                            ? `Sort by ${typeof c.header === "string" ? c.header : c.id} (${sort?.dir === "asc" ? "ascending" : "descending"})`
+                            : `Sort by ${typeof c.header === "string" ? c.header : c.id}`
+                        }
                         className={cn(
-                          "inline-flex items-center gap-1.5 transition-colors hover:text-[var(--color-text)]",
+                          "inline-flex items-center gap-1.5 rounded-sm transition-colors hover:text-[var(--color-text)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]",
                           active && "text-[var(--color-accent)]",
                         )}
                       >
                         <span>{c.header}</span>
-                        <Icon size={11} className="opacity-70" />
+                        <Icon size={11} aria-hidden className="opacity-70" />
                       </button>
                     ) : (
                       <span>{c.header}</span>

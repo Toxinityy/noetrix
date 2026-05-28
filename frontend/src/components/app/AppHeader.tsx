@@ -19,6 +19,9 @@ export function AppHeader() {
     <header
       className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-[var(--color-bg)]/85 backdrop-blur-md"
     >
+      <a href="#main" className="skip-link">
+        Skip to main content
+      </a>
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-6 px-5 sm:px-8">
         <div className="flex items-center gap-6">
           <Link href="/" className="group flex items-center gap-2.5">

@@ -33,6 +33,7 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { AddressChip } from "@/components/ui/AddressChip";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
 import { DataTable, type Column } from "@/components/ui/DataTable";
+import { EmptyState } from "@/components/ui/EmptyState";
 import {
   AGENTS,
   CATEGORIES,
@@ -642,8 +643,11 @@ function PredictionsTable({
           );
         })}
         {predictions.length === 0 ? (
-          <li className="px-4 py-10 text-center text-[var(--color-text-muted)]">
-            No predictions in this category yet.
+          <li className="px-4 py-6">
+            <EmptyState
+              title="No predictions in this category yet"
+              body="This agent hasn't committed for the selected category. Switch tabs or check back once the next epoch closes."
+            />
           </li>
         ) : null}
       </ul>
