@@ -122,6 +122,33 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-05-28 — Prompt 8 code (Ponder indexer); live run/Railway deploy pending creds
+**Type:** Build (Prompt 8 — indexer code; live sync + hosting blocked on deployed addresses + creds)
+**Touched files:**
+- `indexer/abis/{AgentRegistry,PredictionMarket,CompositeFeed,BonusDistributor}Abi.ts` (new) — extracted from `contracts/out`; removed `ExampleContractAbi.ts`.
+- `indexer/ponder.config.ts` (rewrite) — Mantle Sepolia (5003), 4 contracts, env→json→zero address loader.
+- `indexer/ponder.schema.ts` (rewrite) — 5 tables.
+- `indexer/src/index.ts` (rewrite) — all event handlers.
+- `indexer/src/api/index.ts` (rewrite) — REST endpoints + graphql/sql.
+- `indexer/.env.example` (new), `masterdoc/09-build-status.md`, `CLAUDE.md`.
+
+**What happened:**
+- Built the Ponder 0.16 indexer per PRD §10 / Prompt 8. **`ponder codegen` + `tsc` both clean.** ABIs pulled from compiled Foundry artifacts via a one-off node script.
+- Config resolves contract addresses with a 3-tier fallback (`ADDR_*` env → `contracts/deployments/<DEPLOY_NETWORK>.json` → zero) so it builds/typechecks before any live deploy; once Deploy.s.sol broadcasts (writes the JSON) the addresses flow in with no code change.
+- 5 schema tables (agents, reputations, predictions, feedSnapshots, bonusDistributions) with concatenated text PKs; int256 columns use `bigint` (signed), bytes use `hex`, agentBonuses uses `json`.
+- Handlers cover AgentRegistry (AgentRegistered/ControllerRotated/ReputationUpdated), PredictionMarket lifecycle (Committed/Revealed/Cancelled/Forfeited/Resolved), CompositeFeed (CompositeFeedRefreshed), BonusDistributor (EpochFinalized + BonusClaimed). 5 REST endpoints + the built-in graphql/sql mounts.
+
+**Decisions:**
+- **Indexed PredictionMarket.PredictionResolved, NOT ScoringEngine.PredictionScored**, for prediction status+score. The prediction row already carries agentId/categoryId from PredictionCommitted, so the Resolved event (which has score) is sufficient — avoids adding ScoringEngine as a 5th indexed contract.
+- **Imported drizzle operators (`eq/and/desc`) from `ponder`** (it re-exports them) rather than adding `drizzle-orm` as a direct dependency — keeps package.json minimal and resolvable under pnpm (drizzle-orm is only a transitive dep, not name-resolvable from indexer/).
+- **`categoryHash()` in the API accepts a label or a raw bytes32** — the frontend can query `?category=METH_APR_24H` (hashed to match the contract's `keccak256("LABEL")` id) or pass the hex directly.
+- **bigint→string `serialize()`** wraps every JSON response so Hono doesn't throw on bigint columns.
+
+**Risks / followups:**
+- **BLOCKED — live sync + Railway hosting need deployed addresses + creds** (depends on Prompt 7 Part C). To run: set `ADDR_*` (or rely on the deployments JSON) + `PONDER_RPC_URL_MANTLE_SEPOLIA` + `PONDER_START_BLOCK` (AgentRegistry deploy block, so it doesn't scan from 0), then `pnpm dev` (local PGlite) or a Railway service with a Postgres `DATABASE_URL`. Then `curl /leaderboard?category=METH_APR_24H&limit=10`.
+- Indexer only typecheck-verified (no live sync against a real chain yet) — same blocker as the contract deploy. The handler/endpoint logic is unverified against real event streams until then.
+- `reputations.resolvedCount` is stored as the value from ReputationUpdated (authoritative), not derived by counting prediction rows — keep using the event value to stay consistent with on-chain state.
+
 ### 2026-05-28 — Prompt 7 code (Deploy + SmokeTest + DemoFeedConsumer + e2e test); live deploy pending creds
 **Type:** Build (Prompt 7 — all code artifacts; Part C live deploy/verify blocked on user credentials)
 **Touched files:**
