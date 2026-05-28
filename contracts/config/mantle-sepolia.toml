@@ -1,0 +1,40 @@
+# Predictor Index — Mantle Sepolia deployment configuration
+#
+# v1 uses admin-seeded mock oracles (MockMethRateOracle, MockAavePool) because reading real
+# protocol state at arbitrary historical blocks needs an archive RPC. The real-protocol addresses
+# below are placeholders for the v2 swap — replace the mock wiring in Deploy.s.sol with these once
+# an archive endpoint is available. Verify each address against Mantle docs before mainnet.
+
+[network]
+name = "mantle-sepolia"
+chain_id = 5003
+block_time_seconds = 2
+explorer = "https://sepolia.mantlescan.xyz"
+
+[categories.meth_apr_24h]
+id = "METH_APR_24H"
+min_stake_wei = "100000000000000000"   # 0.1 MNT
+window_start_blocks = 300
+window_end_blocks = 500000
+domain_min = 0
+domain_max = 100000                     # APR bps space, 100 buckets => width 1000
+blocks_per_day = 43200
+
+[categories.aave_mantle_tvl_24h]
+id = "AAVE_MANTLE_TVL_24H"
+min_stake_wei = "100000000000000000"   # 0.1 MNT
+window_start_blocks = 300
+window_end_blocks = 500000
+domain_min = 0
+domain_max = 100000000000000000         # 1e17, USD 8-dec up to ~$1B, width $10M
+blocks_per_day = 43200
+
+# ─── Real-protocol addresses (PLACEHOLDERS — verify before use) ────────────────
+[protocols.meth]
+# mETH staking contract exposing historical exchange rate. v1: MockMethRateOracle instead.
+staking_contract = "0x0000000000000000000000000000000000000000"
+
+[protocols.aave]
+# Aave V3 on Mantle. Contingency: INIT Capital (PRD §7.3.2). v1: MockAavePool instead.
+pool = "0x0000000000000000000000000000000000000000"
+oracle = "0x0000000000000000000000000000000000000000"

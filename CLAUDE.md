@@ -122,6 +122,36 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-05-28 — Prompt 7 code (Deploy + SmokeTest + DemoFeedConsumer + e2e test); live deploy pending creds
+**Type:** Build (Prompt 7 — all code artifacts; Part C live deploy/verify blocked on user credentials)
+**Touched files:**
+- `contracts/src/examples/DemoFeedConsumer.sol` (new) — reference consumer reading CompositeFeed.
+- `contracts/script/Deploy.s.sol` (new) — deploys all 12 contracts + full wiring + writes `deployments/<net>.json`.
+- `contracts/script/SmokeTest.s.sol` (new) — self-contained round-trip with state logging, runs credential-free.
+- `contracts/test/EndToEnd.t.sol` (new) — same round-trip as a deterministic test.
+- `contracts/config/mantle-sepolia.toml` (new) — network + category + placeholder real-protocol addresses.
+- `contracts/.env.example` (edit) — expanded (deployer, verify key, SeedRates + DEPLOY_NETWORK overrides).
+- `contracts/foundry.toml` (edit) — `fs_permissions` write access to `./deployments` for the JSON dump.
+- `masterdoc/09-build-status.md`, `CLAUDE.md`.
+
+**What happened:**
+- **DemoFeedConsumer**: `latest(categoryId)` reads `CompositeFeed.read` and decodes the abi.encode(uint256) point estimate → (value, confidence, contributors, updatedBlock). `valueFresh(categoryId, maxStaleBlocks)` reverts `FeedStale()` if the feed hasn't refreshed recently — the freshness gate a real consumer should use.
+- **Deploy.s.sol**: deploys in PRD order (AgentRegistry → PredictionMarket → BonusDistributor → ScoringEngine → RangeCrpsScorer → ResolutionEngine → MockMethRateOracle → MockAavePool → MethAprResolver → AaveMantleTvlResolver → CompositeFeed → SubscriptionGate → DemoFeedConsumer). Wires everything, registers both categories on ResolutionEngine **and** PredictionMarket, sets CompositeFeed deps. Reads `PRIVATE_KEY` env, owner/treasury = deployer. Writes `deployments/<DEPLOY_NETWORK>.json`. **Dry-run simulation (anvil key) verified**: all 12 deploy + wire + JSON write succeed.
+- **SmokeTest.s.sol**: deploys the scoring path fresh, runs register → seed oracle → commit → reveal → resolve using block cheatcodes, asserts §7.2.4, logs every state change. `forge script script/SmokeTest.s.sol:SmokeTest` **PASSES credential-free**: score 998334, resolver reward 2e16 (exactly 2%), conservation `2e16 + 0.97918366e18 + 0.00081634e18 == 1e18`, resolvedCount 1.
+- **EndToEnd.t.sol**: identical round-trip wired as a test; asserts status Resolved, score>0, resolvedCount==1, accuracy moved, resolver==2%, full conservation, market released full stake, slash credited to the epoch pool, and that the now-Resolved prediction is excluded from the live feed. **Full suite 146/146.**
+
+**Decisions:**
+- **Adapted wiring to actual contract APIs, not the Prompt's literal sketch.** ScoringEngine's `agentRegistry`/`predictionMarket` are constructor immutables (Prompt listed `setAgentRegistry`/`setPredictionMarket` — those setters don't exist). PredictionMarket uses `setBonusPool` (not `setBonusDistributor`) and `registerCategory(...)` (not `setCategoryConfig`). Deploy.s.sol reflects the real surface.
+- **SmokeTest is self-contained (fresh deploy) + credential-free**, run via `forge script` simulation. Live-chain block advancement can't be scripted in one shot (reveal/resolve ~350 blocks ≈ 12 min apart on Sepolia), so the round-trip proof is local; live walk-through must be driven tx-by-tx with `cast`. EndToEnd.t.sol gives the same guarantee in CI.
+- **`address(this)` is rejected in forge scripts** — SmokeTest uses a literal `deployer` EOA + `vm.startPrank(deployer)` around deploy/wire/oracle-seed so owner-gated calls pass.
+- **Category domain configs** (RangeCrpsScorer): METH_APR `[0, 100000]` bps (width 1000), AAVE_TVL `[0, 1e17]` USD-8dec (width $10M). Placeholders bracketing plausible values; documented in `config/mantle-sepolia.toml`.
+- **`deployments/mantle-sepolia.json` NOT committed.** The sim run wrote a chainId-31337 placeholder; deleted it. The real `--broadcast` regenerates the authoritative file with Sepolia (5003) addresses.
+
+**Risks / followups:**
+- **Part C (live deploy + Mantlescan verify) NOT done — needs user creds.** Funded `PRIVATE_KEY`, `MANTLE_SEPOLIA_RPC`, `MANTLESCAN_API_KEY`. Run: `forge script script/Deploy.s.sol:Deploy --rpc-url $MANTLE_SEPOLIA_RPC --private-key $PRIVATE_KEY --broadcast --verify`, then `SeedRates.s.sol --broadcast` to seed the mETH oracle (and seed MockAavePool reserves for the TVL category). Verify all 12 on the explorer, then update `deployments/mantle-sepolia.json` with verification URLs. **Prompt 8 (indexer) needs the real addresses first.**
+- Deploy.s.sol wires the **mock** oracles (MockMethRateOracle, MockAavePool). For a demo with live data, seed them post-deploy; for v2, swap to real Aave/mETH addresses from `config/mantle-sepolia.toml` (needs archive RPC).
+- WINDOW_START hard-set to 300 (== MIN_RESOLUTION_OFFSET). A category whose `allowedWindowStart` < 300 would revert at registerCategory — 300 is the safe floor.
+
 ### 2026-05-28 — Prompt 6 (BonusDistributor + CompositeFeed + AaveMantleTvlResolver + SubscriptionGate)
 **Type:** Build (Prompt 6)
 **Touched files:**
