@@ -88,6 +88,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error("[refresher] fatal:", err);
+  console.error("[refresher] fatal:", (err as Error).message);
   process.exit(1);
 });

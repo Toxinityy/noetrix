@@ -9,7 +9,11 @@
   },
   "scripts": {
     "build": "pnpm -r build",
-    "dev": "pnpm -r --parallel dev",
+    "dev": "pnpm --filter frontend dev",
+    "dev:web": "pnpm --filter frontend dev",
+    "dev:indexer": "pnpm --filter indexer dev",
+    "dev:agents": "pnpm --parallel --filter \"@predictor-index/*\" dev",
+    "dev:all": "pnpm -r --parallel dev",
     "test": "pnpm -r test",
     "clean": "pnpm -r clean"
   }

@@ -153,6 +153,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error("[arima] fatal:", err);
+  console.error("[arima] fatal:", (err as Error).message);
   process.exit(1);
 });

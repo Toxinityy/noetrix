@@ -164,6 +164,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error("[reasoner] fatal:", err);
+  console.error("[reasoner] fatal:", (err as Error).message);
   process.exit(1);
 });
