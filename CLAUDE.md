@@ -122,6 +122,28 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-05-29 — UI/UX polish pass (Prompt 13 Part A subset): reasoning peak + mobile overflow + dead links
+**Type:** Build (frontend polish; guided by the ui-ux-pro-max skill). `next build` clean. Visual/375px verification still needs a browser run.
+**Touched files:**
+- `frontend/src/app/(app)/agent/[id]/AgentDetailClient.tsx` — featured reasoning panel, responsive predictions table, dead-link fixes, `ipfsHref` helper.
+- `frontend/src/components/landing/LeaderboardPreview.tsx` — horizontal-scroll wrapper + min-width.
+- `frontend/src/components/landing/Footer.tsx` — dead CTA link → `/leaderboard`.
+
+**What happened:**
+- **Reasoning = visual peak (Prompt 13 spec item)**: added a prominent `FeaturedReasoning` panel above the predictions table on `/agent/[id]` (Claude agents only) — accent top-rule, "REASONING →" header, model + category + confidence/score chips, the 4-step trace at 15px with a numbered timeline, and the forecast JSON as a code-block `<pre>`. Picks the most recent prediction carrying a reasoning trace.
+- **Mobile overflow (real bug) fixed**: the agent-detail predictions table used a fixed 7-col px grid (~772px) with no scroll container → horizontal break below ~772px. Wrapped in `overflow-x-auto` + `min-w-[760px]`. Same fix for the landing `LeaderboardPreview` 5-col grid (`min-w-[480px]`). Confirmed all other data tables already route through `DataTable`, which wraps in `overflow-x-auto`.
+- **Dead links**: agent metadataURI + "open in viewer" + footer CTA were all `href="#"`. Added an `ipfsHref()` helper (ipfs:// → Pinata gateway), pointed the agent links at it (new tab + focus ring), and pointed the footer CTA at `/leaderboard` ("Enter the terminal"). `grep href="#"` now returns none.
+
+**Decisions:**
+- **Skill grounding, not redesign.** Used ui-ux-pro-max's `ux` rules (horizontal-scroll, table-handling, contrast, typography) to target real issues; did NOT regenerate a design system — the terminal-core + cinematic system (PRD §9, globals.css) stands.
+- **Horizontal-scroll over a full card-layout rewrite** for the dense tables — the skill lists both as acceptable; scroll is lower-risk and the featured panel already gives a mobile-friendly reasoning view. A full responsive card redesign is deferred (not needed for the demo).
+- **Scope held to real bugs + the spec's reasoning-peak item.** Did not churn the broader typography/spacing (already audited in the 2026-05-27 polish session). 375px visual confirmation still pending a browser run (can't drive one here).
+
+**Risks / followups:**
+- **No browser/375px visual verification** — only `next build` + static class review. Walk through each page at 375px once a dev server is up.
+- `ipfsHref` hardcodes the Pinata gateway; fine for the demo. If a different gateway is used, parameterize via env.
+- Inline (in-table) `ReasoningTrace` still renders at 14px; the featured panel is the intended peak, so the inline one was left as the compact power-user view.
+
 ### 2026-05-29 — Prompt 12 (DemoFeedConsumer business logic + local full-pipeline E2E + frontend decision panel); live deploy/screenshots pending creds
 **Type:** Build (Prompt 12 — Part A consumer views + deterministic E2E test; live deploy + visual screenshots blocked on creds)
 **Touched files:**

@@ -69,6 +69,16 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
     [agent.id, categoryId],
   );
 
+  // Most recent prediction that carries a reasoning trace — surfaced as the page's visual peak.
+  const featuredReasoning = React.useMemo(
+    () =>
+      predictions.find((p) => p.reasoning) ??
+      PREDICTIONS.filter((p) => p.agentId === agent.id && p.reasoning).sort(
+        (a, b) => b.commitBlock - a.commitBlock,
+      )[0],
+    [predictions, agent.id],
+  );
+
   const equity = agent.equityCurve;
   const equityCurrent = equity[equity.length - 1].value;
   const equityStart = equity[0].value;
@@ -136,11 +146,13 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
               </Field>
               <Field label="Metadata URI">
                 <a
-                  href="#"
-                  className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[var(--color-text-dim)] hover:text-[var(--color-accent)]"
+                  href={ipfsHref(agent.metadataURI)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-sm font-mono text-[11px] text-[var(--color-text-dim)] hover:text-[var(--color-accent)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
                 >
                   {agent.metadataURI.slice(0, 28)}…
-                  <ExternalLink size={11} />
+                  <ExternalLink size={11} aria-hidden />
                 </a>
               </Field>
               <Field label="Registered">
@@ -440,6 +452,13 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
         </Panel>
       </div>
 
+      {/* Featured reasoning — the visual peak (Claude agents only) */}
+      {agent.kind === "CLAUDE" && featuredReasoning?.reasoning ? (
+        <div className="mt-10">
+          <FeaturedReasoning prediction={featuredReasoning} />
+        </div>
+      ) : null}
+
       {/* Predictions table with expandable rows */}
       <div className="mt-8">
         <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
@@ -529,7 +548,8 @@ function PredictionsTable({
 
   return (
     <div className="overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)]">
-      <div className="grid grid-cols-[40px_120px_1fr_140px_120px_120px_120px] gap-0 border-b border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-2.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+      <div className="overflow-x-auto">
+      <div className="grid min-w-[760px] grid-cols-[40px_120px_1fr_140px_120px_120px_120px] gap-0 border-b border-[var(--color-border)] bg-[var(--color-bg)] px-4 py-2.5 text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
         <div></div>
         <div>Status</div>
         <div>Range · Outcome</div>
@@ -538,7 +558,7 @@ function PredictionsTable({
         <div className="text-right">Resolution</div>
         <div className="text-right">Stake</div>
       </div>
-      <ul>
+      <ul className="min-w-[760px]">
         {predictions.map((p) => {
           const isOpen = expanded.has(p.id);
           const hasReasoning = p.reasoning && agent.kind === "CLAUDE";
@@ -651,7 +671,102 @@ function PredictionsTable({
           </li>
         ) : null}
       </ul>
+      </div>
     </div>
+  );
+}
+
+function FeaturedReasoning({ prediction }: { prediction: Prediction }) {
+  const r = prediction.reasoning!;
+  const cat = CATEGORIES[prediction.categoryId];
+  return (
+    <Panel elevation={2} className="relative overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[var(--color-accent)] opacity-60"
+      />
+      <div className="border-b border-[var(--color-border)] px-6 py-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <Sparkles size={16} className="text-[var(--color-accent)]" aria-hidden />
+            <h2 className="font-mono text-base uppercase tracking-[0.18em] text-[var(--color-text)]">
+              Reasoning <span className="text-[var(--color-accent)]">→</span>
+            </h2>
+            <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+              claude-opus-4-7
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <StatusPill tone="muted">{cat.label}</StatusPill>
+            <StatusPill tone="accent">conf {fmtBps(prediction.confidence, 1)}</StatusPill>
+            {prediction.score !== undefined ? (
+              <StatusPill tone={prediction.score >= 0 ? "up" : "down"}>
+                score {fmtScore(prediction.score, 3)}
+              </StatusPill>
+            ) : (
+              <StatusPill tone="warn">{prediction.status}</StatusPill>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-8 p-6 lg:grid-cols-[1.5fr_1fr]">
+        <div>
+          <ol className="relative space-y-6 border-l-2 border-[var(--color-border-strong)] pl-7">
+            {r.steps.map((s, i) => (
+              <li key={i} className="relative">
+                <span
+                  aria-hidden
+                  className="absolute -left-[34px] top-1 grid h-4 w-4 place-items-center rounded-full border border-[var(--color-accent)] bg-[var(--color-bg)] text-[8px] font-mono text-[var(--color-accent)]"
+                >
+                  {i + 1}
+                </span>
+                <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-[var(--color-accent)]">
+                  {s.kind}
+                </div>
+                <p className="mt-1.5 text-[15px] leading-relaxed text-[var(--color-text)]">
+                  {s.text}
+                </p>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-6 flex flex-wrap gap-x-4 gap-y-1.5">
+            {r.citations.map((c) => (
+              <a
+                key={c.label}
+                href={c.href}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-sm font-mono text-[11px] text-[var(--color-text-dim)] hover:text-[var(--color-accent)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
+              >
+                {c.label}
+                <ExternalLink size={11} aria-hidden />
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div className="min-w-0">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+              forecast payload · json
+            </span>
+            <span className="font-mono text-[10px] text-[var(--color-text-muted)]">IPFS</span>
+          </div>
+          <pre className="max-h-[320px] overflow-auto rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] p-4 font-mono text-[12px] leading-relaxed text-[var(--color-text-dim)]">
+            {r.rawJSON}
+          </pre>
+          <a
+            href={ipfsHref(prediction.contentURI)}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-accent)] hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
+          >
+            {prediction.contentURI} <ExternalLink size={10} aria-hidden />
+          </a>
+        </div>
+      </div>
+    </Panel>
   );
 }
 
@@ -709,13 +824,15 @@ function ReasoningTrace({ prediction }: { prediction: Prediction }) {
         <pre className="mt-3 max-h-[260px] overflow-auto rounded border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-4 font-mono text-[11px] leading-relaxed text-[var(--color-text-dim)]">
           {r.rawJSON}
         </pre>
-        <div className="mt-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-          <span>{prediction.contentURI}</span>
+        <div className="mt-3 flex items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+          <span className="truncate">{prediction.contentURI}</span>
           <a
-            href="#"
-            className="inline-flex items-center gap-1 text-[var(--color-accent)]"
+            href={ipfsHref(prediction.contentURI)}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex shrink-0 items-center gap-1 text-[var(--color-accent)] hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
           >
-            open in viewer <ExternalLink size={10} />
+            open in viewer <ExternalLink size={10} aria-hidden />
           </a>
         </div>
       </div>
@@ -805,6 +922,13 @@ function radarValue(a: Agent, catId: CategoryId, axis: string): number {
     default:
       return 0;
   }
+}
+
+/// Resolve an ipfs:// URI to an HTTP gateway link (falls back to the raw value for http/other).
+function ipfsHref(uri: string): string {
+  return uri.startsWith("ipfs://")
+    ? `https://gateway.pinata.cloud/ipfs/${uri.slice("ipfs://".length)}`
+    : uri;
 }
 
 function isInRange(p: Prediction): boolean {

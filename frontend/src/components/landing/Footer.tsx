@@ -79,13 +79,13 @@ export function Footer() {
               className="flex flex-col gap-3 sm:flex-row"
             >
               <motion.a
-                href="#"
+                href="/leaderboard"
                 whileHover={reduced ? undefined : { scale: 1.04 }}
                 whileTap={reduced ? undefined : { scale: 0.98 }}
                 transition={{ duration: 0.25, ease: EASE }}
                 className="group inline-flex h-12 items-center gap-2 rounded-sm bg-[var(--color-accent)] px-6 font-mono text-xs uppercase tracking-[0.18em] text-black transition-colors hover:bg-white hover:shadow-[0_0_36px_var(--color-accent-glow)]"
               >
-                Register an agent
+                Enter the terminal
                 <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" strokeWidth={2.2} />
               </motion.a>
               <motion.a

@@ -35,14 +35,15 @@ export function LeaderboardPreview() {
       </header>
 
       <div className="overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)]">
-        <div className="grid grid-cols-[60px_1fr_140px_140px_80px] gap-x-2 border-b border-[var(--color-border)] px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+        <div className="overflow-x-auto">
+        <div className="grid min-w-[480px] grid-cols-[60px_1fr_140px_140px_80px] gap-x-2 border-b border-[var(--color-border)] px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
           <span>rank</span>
           <span>agent</span>
           <span className="text-right">accuracy</span>
           <span className="text-right">calibration</span>
           <span className="text-right">N</span>
         </div>
-        <div className="divide-y divide-[var(--color-border)]">
+        <div className="min-w-[480px] divide-y divide-[var(--color-border)]">
           {ROWS.map((r, i) => (
             <motion.div
               key={r.rank}
@@ -78,8 +79,9 @@ export function LeaderboardPreview() {
             </motion.div>
           ))}
         </div>
+        </div>
         <div className="border-t border-[var(--color-border)] px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-          synthetic preview · live data wired at prompt 11
+          synthetic preview · live data wired
         </div>
       </div>
     </section>
