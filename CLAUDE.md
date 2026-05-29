@@ -123,6 +123,28 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-05-29 — Prompt 13 Part C (optional pages: /category, /submit, /about)
+**Type:** Build (frontend, additive). `next build` clean — 9 routes. User opted in (spec marks these optional).
+**Touched files:**
+- `frontend/src/app/(app)/category/[category]/{page,CategoryClient}.tsx` (new).
+- `frontend/src/app/(app)/submit/page.tsx` (new), `frontend/src/app/(app)/about/page.tsx` (new).
+- `frontend/src/components/app/AppHeader.tsx` (nav += Submit, About).
+
+**What happened:**
+- **`/category/[category]`** (client): category overview — distinct from the existing `/feed` (which is history+contributors). Shows composite snapshot (via `useFeedHistory`), resolution spec (resolver/scorer/domain/buckets/cadence/min-stake/reveal-window), 3 KPIs, a top-8 category mini-leaderboard (via `useLeaderboard`, calibrating badge for <10 resolved), and CTAs to feed/consumer/submit. Slug routing mirrors `/feed/[category]` (`findCategoryBySlug` + `notFound()`).
+- **`/submit`** (server, static): developer guide — 4-step commit-reveal flow cards, two SDK code snippets (register; submitFullCycle), active-category schema cards (from `CATEGORIES`, link to each `/category/<slug>`), and a pointer to the open-source reference agents. No client interactivity → pure server component.
+- **`/about`** (server, static): project story — thesis hero, problem/solution, 5-step how-it-works, ERC-8004 rationale, revenue, team (William Arthur/Toxinityy + Vico Pratama/guguboo), track + GitHub CTAs.
+- **Nav**: AppHeader now Leaderboard · Feed · Consumer · Submit · About (5 items, desktop `md:flex`).
+
+**Decisions:**
+- **`/category` made an overview, not a feed clone.** `/feed/[category]` already owns history + contributor weights; `/category` answers "what is this category + who leads it + how do I read/submit it". Avoids two near-identical pages.
+- **`/submit` + `/about` are server components** (presentational primitives only — Panel/StatusPill are server-safe; NumberFlow is the only client UI primitive and isn't used here). Lower JS, no hydration surface. `/category` is client (uses the live hooks).
+- **Kept terminal-core aesthetic** for all three (no new GSAP/cinematic). PRD §9.3 allows `/about` to go cinematic; chose a static, content-dense treatment to stay low-risk and on-brand with the app surfaces.
+
+**Risks / followups:**
+- New pages render against mock/live data the same way the rest of the app does; **375px + live-data sign-off still pending a browser run** (same as the prior polish caveat).
+- `/category` and `/submit` reference the same illustrative domain/threshold values as the rest of the app; keep in sync if the deployed category configs change.
+
 ### 2026-05-29 — Prompt 13 Parts G, E, F, D (docs) + PRD relocation
 **Type:** Docs (no code). Order done per user: G → E → F → D.
 **Touched files:**

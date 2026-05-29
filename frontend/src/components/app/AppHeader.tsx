@@ -11,6 +11,8 @@ const navItems = [
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/feed/meth-apr-24h", label: "Feed" },
   { href: "/demo-consumer", label: "Consumer" },
+  { href: "/submit", label: "Submit" },
+  { href: "/about", label: "About" },
 ];
 
 export function AppHeader() {
