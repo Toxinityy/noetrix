@@ -161,6 +161,26 @@ export function LeaderboardClient() {
         </div>
       </div>
 
+      {/* Cached-data banner — indexer unreachable, serving the static snapshot */}
+      {board.source === "cached" ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mt-6 flex items-center gap-2.5 rounded-md border border-[var(--color-warn)]/40 bg-[color:color-mix(in_srgb,var(--color-warn)_8%,var(--color-bg-elev-1))] px-4 py-2.5"
+        >
+          <span
+            aria-hidden
+            className="inline-block h-2 w-2 rounded-full bg-[var(--color-warn)] shadow-[0_0_8px_var(--color-warn)]"
+          />
+          <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-warn)]">
+            Showing cached data
+          </span>
+          <span className="text-xs text-[var(--color-text-dim)]">
+            Live indexer unreachable — retrying automatically.
+          </span>
+        </div>
+      ) : null}
+
       {/* Composite feed snapshot */}
       <div className="mt-8 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <Panel elevation={2} className="overflow-hidden">

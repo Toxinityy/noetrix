@@ -5,7 +5,7 @@ import { hasIndexer } from "@/lib/env";
 import { getLeaderboard, getFeedHistory, type LeaderRow, type LiveFeedPoint } from "@/lib/indexer";
 import { AGENTS, CATEGORIES, makeFeedHistory, type CategoryId } from "@/lib/mockData";
 
-export type DataSource = "live" | "mock";
+export type DataSource = "live" | "cached" | "mock";
 
 export interface QueryView<T> {
   data: T;
@@ -38,9 +38,32 @@ function mockFeedPoints(category: CategoryId): LiveFeedPoint[] {
   }));
 }
 
-/// Per-category leaderboard. Live from the indexer (30s refresh) when configured; otherwise the
-/// curated mock set. On a live error it falls back to mock so the page still renders.
+interface FallbackFile {
+  generatedAt: string;
+  source: string;
+  categories: Record<string, LeaderRow[]>;
+}
+
+/// Static fallback dataset (public/fallback-leaderboard.json), served when the live indexer is
+/// unreachable. Loaded once, cached forever. Demo-safety per Prompt 13 Part B.
+function useFallbackLeaderboard() {
+  return useQuery({
+    queryKey: ["fallback-leaderboard"],
+    queryFn: async (): Promise<FallbackFile | null> => {
+      const res = await fetch("/fallback-leaderboard.json");
+      if (!res.ok) return null;
+      return (await res.json()) as FallbackFile;
+    },
+    enabled: hasIndexer, // only needed as a safety net when we're attempting live fetches
+    staleTime: Infinity,
+    retry: false,
+  });
+}
+
+/// Per-category leaderboard. Live from the indexer (30s refresh) when configured; on failure it
+/// serves the static cached snapshot (source "cached"); without an indexer it uses curated mock data.
 export function useLeaderboard(category: CategoryId): QueryView<LeaderRow[]> {
+  const fallback = useFallbackLeaderboard();
   const q = useQuery({
     queryKey: ["leaderboard", category],
     queryFn: () => getLeaderboard(category),
@@ -57,7 +80,11 @@ export function useLeaderboard(category: CategoryId): QueryView<LeaderRow[]> {
   if (q.isLoading) {
     return { data: [], source: "live", isLoading: true, isError: false };
   }
-  // Empty live result or error → mock fallback (flag error so the UI can hint).
+  // Live failed/empty → static cached snapshot, else curated mock.
+  const cached = fallback.data?.categories?.[category];
+  if (cached && cached.length > 0) {
+    return { data: cached, source: "cached", isLoading: false, isError: true };
+  }
   return { data: mockLeaderRows(category), source: "mock", isLoading: false, isError: q.isError };
 }
 
