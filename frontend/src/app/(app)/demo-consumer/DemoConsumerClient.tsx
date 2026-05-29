@@ -10,9 +10,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ReferenceLine,
 } from "recharts";
-import { RefreshCw, Cpu, Zap, ShieldCheck, Plug } from "lucide-react";
+import { useReadContract, useWriteContract } from "wagmi";
+import { decodeAbiParameters } from "viem";
+import { RefreshCw, Cpu, Zap, ShieldCheck, Plug, Check, X } from "lucide-react";
 import { Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
 import { Stat } from "@/components/ui/Stat";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -24,11 +25,14 @@ import {
   type CategoryId,
   makeFeedHistory,
 } from "@/lib/mockData";
+import { useFeedHistory } from "@/lib/hooks";
+import { env, hasFeed, explorerAddress } from "@/lib/env";
+import { categoryHash, compositeFeedAbi, demoConsumerAbi, DEMO_THRESHOLDS } from "@/lib/contracts";
 import { fmtBlock, fmtBps } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
-const FEED_ADDRESS = "0xF33D9aA0fEED7c6e21dE4A6B91d2A2c0D8e3F5BA";
-const CONSUMER_ADDRESS = "0xC07b2EA34c8E61f3a1b9eF2c7D9aF4B2c5D3E10C";
+const FEED_ADDRESS = env.addresses.compositeFeed || "0xF33D9aA0fEED7c6e21dE4A6B91d2A2c0D8e3F5BA";
+const CONSUMER_ADDRESS = env.addresses.demoConsumer || "0xC07b2EA34c8E61f3a1b9eF2c7D9aF4B2c5D3E10C";
 
 export function DemoConsumerClient() {
   const reducedMotion = useReducedMotion();
@@ -39,13 +43,75 @@ export function DemoConsumerClient() {
   const [lastReadAt, setLastReadAt] = React.useState<Date>(new Date());
   const [refreshing, setRefreshing] = React.useState(false);
   const [autoRefresh, setAutoRefresh] = React.useState(true);
+  const [refreshError, setRefreshError] = React.useState<string | null>(null);
+
+  // Live chart history from the indexer (falls back to the mock simulation when unconfigured).
+  const feedQuery = useFeedHistory(categoryId);
+  const liveHistory = feedQuery.source === "live" && feedQuery.data.length > 0 ? feedQuery.data : null;
+
+  // Live on-chain read of the composite feed (30s refetch) when CompositeFeed is deployed.
+  const read = useReadContract({
+    address: FEED_ADDRESS as `0x${string}`,
+    abi: compositeFeedAbi,
+    functionName: "read",
+    args: [categoryHash(categoryId)],
+    query: { enabled: hasFeed, refetchInterval: 30_000 },
+  });
+  const liveLatest = React.useMemo(() => {
+    if (!hasFeed || !read.data) return null;
+    const f = read.data as {
+      value: `0x${string}`;
+      confidence: number;
+      contributingAgents: bigint;
+      lastUpdatedBlock: bigint;
+    };
+    let v = 0;
+    try {
+      v = Number((decodeAbiParameters([{ type: "uint256" }], f.value)[0] as bigint));
+    } catch {
+      /* unset feed → 0 */
+    }
+    return {
+      block: Number(f.lastUpdatedBlock),
+      value: v,
+      confidence: f.confidence,
+      contributors: Number(f.contributingAgents),
+    };
+  }, [read.data]);
+
+  const { writeContractAsync } = useWriteContract();
+  const isLive = hasFeed || feedQuery.source === "live";
+
+  // Protocol business-logic decisions — read on-chain from DemoFeedConsumer when deployed, else
+  // derived client-side from the feed value using the same thresholds the contract uses.
+  const hasConsumer = env.addresses.demoConsumer !== "";
+  const allowDepositsRead = useReadContract({
+    address: env.addresses.demoConsumer as `0x${string}`,
+    abi: demoConsumerAbi,
+    functionName: "shouldAllowDeposits",
+    query: { enabled: hasConsumer, refetchInterval: 30_000 },
+  });
+  const throttleRiskRead = useReadContract({
+    address: env.addresses.demoConsumer as `0x${string}`,
+    abi: demoConsumerAbi,
+    functionName: "shouldThrottleRisk",
+    query: { enabled: hasConsumer, refetchInterval: 30_000 },
+  });
+  const allowDeposits = hasConsumer
+    ? Boolean(allowDepositsRead.data)
+    : CATEGORIES.METH_APR_24H.current > DEMO_THRESHOLDS.methAprDepositBps;
+  const throttleRisk = hasConsumer
+    ? Boolean(throttleRiskRead.data)
+    : CATEGORIES.AAVE_MANTLE_TVL_24H.current * 1e8 < DEMO_THRESHOLDS.aaveTvlThrottle;
+  const decisionSource = hasConsumer ? "DemoFeedConsumer.sol · on-chain" : "simulated from feed value";
 
   React.useEffect(() => {
     setHistory(baseHistory);
   }, [baseHistory]);
 
+  // Mock auto-refresh simulation only runs when there's no live indexer feed.
   React.useEffect(() => {
-    if (!autoRefresh || reducedMotion) return;
+    if (isLive || !autoRefresh || reducedMotion) return;
     const id = setInterval(() => {
       setHistory((prev) => {
         const last = prev[prev.length - 1];
@@ -64,33 +130,52 @@ export function DemoConsumerClient() {
       setLastReadAt(new Date());
     }, 5_000);
     return () => clearInterval(id);
-  }, [autoRefresh, cat.id, reducedMotion]);
+  }, [isLive, autoRefresh, cat.id, reducedMotion]);
 
   const refresh = async () => {
     setRefreshing(true);
-    await new Promise((r) => setTimeout(r, 700));
-    setHistory((prev) => {
-      const last = prev[prev.length - 1];
-      const drift = cat.id === "METH_APR_24H" ? 28 : 720_000;
-      const v = last.value + (Math.random() - 0.5) * drift;
-      return [
-        ...prev.slice(1),
-        {
-          block: last.block + 75,
-          value: Math.max(0, v),
-          confidence: last.confidence + Math.round((Math.random() - 0.5) * 400),
-          contributors: 17 + Math.round(Math.random() * 3),
-        },
-      ];
-    });
-    setLastReadAt(new Date());
-    setRefreshing(false);
+    setRefreshError(null);
+    try {
+      if (hasFeed) {
+        // Real on-chain refresh — reverts RateLimited() if called within the 100-block window.
+        await writeContractAsync({
+          address: FEED_ADDRESS as `0x${string}`,
+          abi: compositeFeedAbi,
+          functionName: "refresh",
+          args: [categoryHash(categoryId)],
+        });
+        await read.refetch();
+      } else {
+        await new Promise((r) => setTimeout(r, 700));
+        setHistory((prev) => {
+          const last = prev[prev.length - 1];
+          const drift = cat.id === "METH_APR_24H" ? 28 : 720_000;
+          const v = last.value + (Math.random() - 0.5) * drift;
+          return [
+            ...prev.slice(1),
+            {
+              block: last.block + 75,
+              value: Math.max(0, v),
+              confidence: last.confidence + Math.round((Math.random() - 0.5) * 400),
+              contributors: 17 + Math.round(Math.random() * 3),
+            },
+          ];
+        });
+      }
+      setLastReadAt(new Date());
+    } catch (e) {
+      const msg = (e as Error).message ?? "refresh failed";
+      setRefreshError(msg.includes("RateLimited") ? "Rate-limited — wait ~100 blocks" : "Refresh reverted");
+    } finally {
+      setRefreshing(false);
+    }
   };
 
-  const latest = history[history.length - 1];
-  const prev = history[history.length - 8];
+  const chartHistory = liveHistory ?? history;
+  const latest = liveLatest ?? chartHistory[chartHistory.length - 1];
+  const prev = chartHistory[Math.max(0, chartHistory.length - 8)];
   const delta = latest.value - prev.value;
-  const deltaPct = (delta / prev.value) * 100;
+  const deltaPct = prev.value ? (delta / prev.value) * 100 : 0;
 
   const tabs = Object.values(CATEGORIES).map((c) => ({
     id: c.id,
@@ -131,10 +216,12 @@ contract LeveragedVault {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <StatusPill tone="up" dot pulse>
-            Streaming
+          <StatusPill tone={isLive ? "up" : "muted"} dot pulse={isLive}>
+            {isLive ? "Live on-chain" : "Demo data"}
           </StatusPill>
-          <StatusPill tone="muted">Auto-refresh {autoRefresh ? "ON" : "OFF"}</StatusPill>
+          {!isLive && (
+            <StatusPill tone="muted">Auto-refresh {autoRefresh ? "ON" : "OFF"}</StatusPill>
+          )}
         </div>
       </div>
 
@@ -201,7 +288,7 @@ contract LeveragedVault {
                 <div className="h-[140px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
-                      data={history}
+                      data={chartHistory}
                       margin={{ top: 8, right: 6, left: 0, bottom: 0 }}
                     >
                       <CartesianGrid
@@ -246,7 +333,8 @@ contract LeveragedVault {
               <Stat
                 label="last read"
                 value={lastReadAt.toLocaleTimeString()}
-                sub={refreshing ? "refreshing…" : "auto · 5s"}
+                sub={refreshError ?? (refreshing ? "refreshing…" : isLive ? "on-chain · 30s" : "auto · 5s")}
+                tone={refreshError ? "down" : undefined}
               />
               <Stat
                 label="gas (sim)"
@@ -304,22 +392,47 @@ contract LeveragedVault {
         </Panel>
       </div>
 
+      {/* Protocol decisions read from DemoFeedConsumer's business logic */}
+      <Panel elevation={1} className="mt-4">
+        <PanelHeader
+          caption="business logic"
+          title="What this protocol decides"
+          right={
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+              {decisionSource}
+            </span>
+          }
+        />
+        <PanelBody className="grid gap-3 sm:grid-cols-2">
+          <DecisionCard
+            label="shouldAllowDeposits()"
+            value={allowDeposits}
+            rule={`mETH APR forecast > ${DEMO_THRESHOLDS.methAprDepositBps} bps (4%)`}
+            trueLabel="DEPOSITS ENABLED"
+            falseLabel="DEPOSITS PAUSED"
+            goodWhenTrue
+          />
+          <DecisionCard
+            label="shouldThrottleRisk()"
+            value={throttleRisk}
+            rule="Aave-Mantle TVL forecast < $500M"
+            trueLabel="RISK THROTTLED"
+            falseLabel="RISK NORMAL"
+            goodWhenTrue={false}
+          />
+        </PanelBody>
+      </Panel>
+
       {/* System metadata + code sample */}
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1.4fr]">
         <Panel elevation={1}>
           <PanelHeader caption="contracts" title="System pointers" />
           <PanelBody className="space-y-4 text-sm">
             <FieldRow label="CompositeFeed">
-              <AddressChip
-                address={FEED_ADDRESS}
-                href={`https://sepolia.mantlescan.xyz/address/${FEED_ADDRESS}`}
-              />
+              <AddressChip address={FEED_ADDRESS} href={explorerAddress(FEED_ADDRESS)} />
             </FieldRow>
             <FieldRow label="This consumer">
-              <AddressChip
-                address={CONSUMER_ADDRESS}
-                href={`https://sepolia.mantlescan.xyz/address/${CONSUMER_ADDRESS}`}
-              />
+              <AddressChip address={CONSUMER_ADDRESS} href={explorerAddress(CONSUMER_ADDRESS)} />
             </FieldRow>
             <FieldRow label="Category">
               <span className="font-mono text-[12px] text-[var(--color-text)]">
@@ -418,6 +531,44 @@ function Benefit({
       <div>
         <div className="text-sm font-medium text-[var(--color-text)]">{title}</div>
         <div className="text-[12px] text-[var(--color-text-dim)]">{body}</div>
+      </div>
+    </div>
+  );
+}
+
+function DecisionCard({
+  label,
+  value,
+  rule,
+  trueLabel,
+  falseLabel,
+  goodWhenTrue,
+}: {
+  label: string;
+  value: boolean;
+  rule: string;
+  trueLabel: string;
+  falseLabel: string;
+  goodWhenTrue: boolean;
+}) {
+  const isGood = value === goodWhenTrue;
+  const tone = isGood ? "var(--color-up)" : "var(--color-warn)";
+  return (
+    <div className="flex items-start gap-3 rounded border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
+      <span
+        className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-sm"
+        style={{ color: tone, boxShadow: `inset 0 0 0 1px ${tone}` }}
+        aria-hidden
+      >
+        {value ? <Check size={14} /> : <X size={14} />}
+      </span>
+      <div className="min-w-0">
+        <div className="font-mono text-[12px] text-[var(--color-text-dim)]">{label}</div>
+        <div className="mt-1 font-mono text-lg tabular" style={{ color: tone }}>
+          {value ? trueLabel : falseLabel}
+          <span className="ml-2 text-[var(--color-text-muted)]">→ {String(value)}</span>
+        </div>
+        <div className="mt-1 text-[11px] leading-relaxed text-[var(--color-text-muted)]">{rule}</div>
       </div>
     </div>
   );

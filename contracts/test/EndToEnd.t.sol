@@ -46,6 +46,9 @@ contract EndToEndTest is Test {
 
     address alice = makeAddr("alice"); // agent controller
     address bob = makeAddr("bob"); // resolver caller
+    address carol = makeAddr("carol"); // second agent controller
+
+    uint256 constant QUALIFY_RESOLVED = 10; // AgentRegistry.TOP_AGENT_MIN_RESOLVED
 
     function setUp() public {
         address deployer = address(this);
@@ -157,5 +160,77 @@ contract EndToEndTest is Test {
         feed.refresh(METH);
         (,, uint256 contributors,) = consumer.latest(METH);
         assertEq(contributors, 0, "resolved prediction excluded from feed");
+    }
+
+    // ─── Full pipeline → consumer business logic (Prompt 12 Part B) ─────────────
+
+    /// Two agents reach top-agent qualification (≥10 resolved each), each posts an active revealed
+    /// forecast, the feed refreshes, and the DemoFeedConsumer's business-logic views read it.
+    function test_FullPipeline_FeedDrivesConsumerDecisions() public {
+        uint256 agentA = _registerAgentFor(alice);
+        uint256 agentB = _registerAgentFor(carol);
+
+        // Build each agent to qualification with resolved cycles.
+        for (uint256 i = 0; i < QUALIFY_RESOLVED; i++) {
+            _cycle(agentA, alice, true);
+            _cycle(agentB, carol, true);
+        }
+        assertEq(registry.getReputation(agentA, METH).resolvedCount, QUALIFY_RESOLVED, "A qualified");
+        assertEq(registry.getReputation(agentB, METH).resolvedCount, QUALIFY_RESOLVED, "B qualified");
+
+        // Each posts one more forecast and leaves it Revealed (an active feed contributor).
+        _cycle(agentA, alice, false);
+        _cycle(agentB, carol, false);
+
+        feed.refresh(METH);
+
+        // Consumer reads the live ensemble: midpoint of band [3600,3700] = 3650 bps.
+        (uint256 apr, uint16 conf) = consumer.getCurrentMethApr();
+        assertApproxEqAbs(apr, 3650, 50, "ensemble mETH APR ~ band midpoint");
+        assertGt(conf, 0, "confidence populated");
+        (,, uint256 contributors,) = consumer.latest(METH);
+        assertEq(contributors, 2, "two active contributors");
+
+        // Business logic: 3650 bps > 400 bps floor → deposits allowed.
+        assertTrue(consumer.shouldAllowDeposits(), "deposits allowed when APR clears floor");
+
+        // Aave TVL feed never refreshed → reads 0 → below the $500M floor → throttle (safe default).
+        (uint256 tvl,) = consumer.getCurrentAaveTvl();
+        assertEq(tvl, 0, "unset TVL feed reads zero");
+        assertTrue(consumer.shouldThrottleRisk(), "throttle risk when TVL below floor / unset");
+    }
+
+    function _registerAgentFor(address controller) internal returns (uint256 agentId) {
+        vm.deal(controller, 100 ether);
+        vm.prank(controller);
+        agentId = registry.register{value: MIN_STAKE}("ipfs://agent");
+    }
+
+    /// One commit→reveal cycle; resolves it when `resolveIt`, else leaves it Revealed (active feed
+    /// contributor). Seeds the mETH oracle so the outcome is ~3650 bps, inside the [3600,3700] band.
+    function _cycle(uint256 agentId, address controller, bool resolveIt) internal {
+        uint256 commitBlock = block.number;
+        uint256 resolutionBlock = commitBlock + 350;
+        methOracle.setRate(resolutionBlock - BLOCKS_PER_DAY, 1e18);
+        methOracle.setRate(resolutionBlock, 1e18 + 1e15); // +0.1%/day → ~3650 bps APR
+
+        uint16 confidence = 8000;
+        bytes memory value = abi.encode(uint256(3600), uint256(3700));
+        bytes32 nonce = keccak256(abi.encode(agentId, commitBlock));
+        bytes32 commitHash = keccak256(abi.encode(agentId, METH, value, confidence, nonce));
+
+        vm.prank(controller);
+        uint256 predId = market.commit{value: STAKE}(agentId, METH, commitHash, resolutionBlock, bytes32("content"));
+
+        vm.roll(commitBlock + 15);
+        vm.prank(controller);
+        market.reveal(predId, value, confidence, nonce);
+
+        if (resolveIt) {
+            vm.roll(resolutionBlock);
+            vm.prank(bob);
+            resolution.resolve(predId);
+            vm.roll(resolutionBlock + 1);
+        }
     }
 }

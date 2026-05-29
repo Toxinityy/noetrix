@@ -8,14 +8,61 @@ import {ICompositeFeed} from "../interfaces/ICompositeFeed.sol";
 ///         ensemble forecast for a category, decodes the packed point estimate, and exposes a
 ///         consumer-friendly view plus an optional staleness guard. This is what a Mantle protocol
 ///         (e.g. a lending market adjusting parameters off mETH APR) would embed.
+/// @dev Example business logic a protocol might run off the feed:
+///      - `shouldAllowDeposits()` — enable deposits only when the mETH APR forecast clears a floor.
+///      - `shouldThrottleRisk()`  — de-risk when the Aave-on-Mantle TVL forecast falls below a floor.
+///      These are illustrative thresholds, not financial advice; a real consumer would gate on
+///      `confidence` and freshness (see `valueFresh`) before acting.
 contract DemoFeedConsumer {
     error FeedStale();
+
+    /// Category ids — keccak256 of the labels, matching the on-chain registration (Deploy.s.sol).
+    bytes32 public constant METH_APR_24H = keccak256("METH_APR_24H");
+    bytes32 public constant AAVE_MANTLE_TVL_24H = keccak256("AAVE_MANTLE_TVL_24H");
+
+    /// Allow deposits when forecast mETH APR exceeds this (bps). 400 bps = 4% APR.
+    uint256 public constant METH_APR_DEPOSIT_THRESHOLD_BPS = 400;
+    /// Throttle risk when forecast Aave-Mantle TVL is below this. USD 8-dec: $500M = 500e6 * 1e8.
+    uint256 public constant AAVE_TVL_THROTTLE_THRESHOLD = 500_000_000 * 1e8;
 
     ICompositeFeed public immutable feed;
 
     constructor(ICompositeFeed _feed) {
         require(address(_feed) != address(0), "feed=0");
         feed = _feed;
+    }
+
+    // ─── Business-logic views (Prompt 12 Part A) ───────────────────────────────
+
+    /// @notice Current ensemble mETH APR forecast.
+    /// @return value APR in bps. @return confidence Aggregated confidence in bps.
+    function getCurrentMethApr() public view returns (uint256 value, uint16 confidence) {
+        return _decode(METH_APR_24H);
+    }
+
+    /// @notice Current ensemble Aave-on-Mantle TVL forecast.
+    /// @return value TVL in USD 8-dec. @return confidence Aggregated confidence in bps.
+    function getCurrentAaveTvl() public view returns (uint256 value, uint16 confidence) {
+        return _decode(AAVE_MANTLE_TVL_24H);
+    }
+
+    /// @notice Example gate: allow deposits when forecast mETH APR clears the floor.
+    function shouldAllowDeposits() external view returns (bool) {
+        (uint256 apr,) = getCurrentMethApr();
+        return apr > METH_APR_DEPOSIT_THRESHOLD_BPS;
+    }
+
+    /// @notice Example gate: throttle risk when forecast TVL is below the floor (an unset feed reads
+    ///         as 0, which throttles — the safe default when there's no data to act on).
+    function shouldThrottleRisk() external view returns (bool) {
+        (uint256 tvl,) = getCurrentAaveTvl();
+        return tvl < AAVE_TVL_THROTTLE_THRESHOLD;
+    }
+
+    function _decode(bytes32 categoryId) internal view returns (uint256 value, uint16 confidence) {
+        ICompositeFeed.CompositeForecast memory f = feed.read(categoryId);
+        value = f.value.length == 0 ? 0 : abi.decode(f.value, (uint256));
+        confidence = f.confidence;
     }
 
     /// @notice Decoded latest composite forecast for `categoryId`.
