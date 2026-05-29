@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { motion, useAnimationFrame, useReducedMotion } from "motion/react";
-import { ArrowUpRight, Crown, Activity, Layers, Coins } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
+import { ArrowUpRight, Crown, Activity, Layers, Coins, Users } from "lucide-react";
 import { Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
 import { Stat } from "@/components/ui/Stat";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -12,48 +12,40 @@ import { DataTable, type Column } from "@/components/ui/DataTable";
 import { Collapsible } from "@/components/ui/Collapsible";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { NumberFlow } from "@/components/ui/NumberFlow";
-import {
-  AGENTS,
-  CATEGORIES,
-  type CategoryId,
-  type Agent,
-  makeFeedHistory,
-  RECENT_EPOCHS,
-} from "@/lib/mockData";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { CATEGORIES, type CategoryId, type AgentKind, RECENT_EPOCHS } from "@/lib/mockData";
+import { useLeaderboard, useFeedHistory } from "@/lib/hooks";
+import type { LeaderRow } from "@/lib/indexer";
 import { fmtScore, fmtBlock, fmtBps } from "@/lib/format";
 import { cn } from "@/lib/cn";
+
+const MIN_RESOLVED_FOR_CALIBRATION = 10;
 
 export function LeaderboardClient() {
   const reducedMotion = useReducedMotion();
   const [categoryId, setCategoryId] = React.useState<CategoryId>("METH_APR_24H");
   const cat = CATEGORIES[categoryId];
 
-  // Simulated live composite-feed value with mild oscillation
-  const feedHistory = React.useMemo(() => makeFeedHistory(categoryId, 96), [categoryId]);
-  const [tick, setTick] = React.useState(0);
-  useAnimationFrame((t) => {
-    if (reducedMotion) return;
-    setTick(Math.floor(t / 100));
-  });
-  const lastValue = feedHistory[feedHistory.length - 1].value;
-  const liveValue =
-    lastValue + Math.sin(tick / 30) * (cat.unit === "bps" ? 6 : 220_000);
-  const prevValue = feedHistory[feedHistory.length - 16].value;
-  const delta = liveValue - prevValue;
-  const deltaPct = (delta / prevValue) * 100;
+  const board = useLeaderboard(categoryId);
+  const feed = useFeedHistory(categoryId);
 
-  const sortedByAccuracy = [...AGENTS].sort(
-    (a, b) => b.reputation[categoryId].accuracyScore - a.reputation[categoryId].accuracyScore,
+  const feedHistory = feed.data;
+  const lastPoint = feedHistory[feedHistory.length - 1];
+  const liveValue = lastPoint?.value ?? cat.current;
+  const prevPoint = feedHistory[Math.max(0, feedHistory.length - 16)];
+  const delta = liveValue - (prevPoint?.value ?? liveValue);
+  const deltaPct = prevPoint?.value ? (delta / prevPoint.value) * 100 : 0;
+
+  const sortedByAccuracy = React.useMemo(
+    () => [...board.data].sort((a, b) => b.accuracyScore - a.accuracyScore),
+    [board.data],
   );
-
   const topAgent = sortedByAccuracy[0];
-  const totalResolved = AGENTS.reduce(
-    (sum, a) => sum + a.reputation[categoryId].resolvedCount,
-    0,
-  );
+  const totalResolved = board.data.reduce((sum, a) => sum + a.resolvedCount, 0);
   const recentEpoch = RECENT_EPOCHS[0];
 
-  const columns: Column<Agent>[] = [
+  const columns: Column<LeaderRow>[] = [
     {
       id: "rank",
       header: "#",
@@ -69,10 +61,7 @@ export function LeaderboardClient() {
       header: "Agent",
       sortValue: (a) => a.name,
       cell: (a) => (
-        <Link
-          href={`/agent/${a.id}`}
-          className="group flex items-center gap-3"
-        >
+        <Link href={`/agent/${a.id}`} className="group flex items-center gap-3">
           <KindGlyph kind={a.kind} />
           <div className="flex flex-col">
             <span className="font-mono text-[13px] text-[var(--color-text)] group-hover:text-[var(--color-accent)] transition-colors">
@@ -89,39 +78,40 @@ export function LeaderboardClient() {
       id: "accuracy",
       header: "Accuracy",
       align: "right",
-      sortValue: (a) => a.reputation[categoryId].accuracyScore,
-      cell: (a) => (
-        <ScoreBar value={a.reputation[categoryId].accuracyScore} />
-      ),
+      sortValue: (a) => a.accuracyScore,
+      cell: (a) => <ScoreBar value={a.accuracyScore} />,
     },
     {
       id: "calibration",
       header: "Calibration",
       align: "right",
-      sortValue: (a) => a.reputation[categoryId].calibrationScore,
-      cell: (a) => (
-        <CalibrationBar value={a.reputation[categoryId].calibrationScore} />
-      ),
+      sortValue: (a) => a.calibrationScore,
+      cell: (a) =>
+        a.resolvedCount < MIN_RESOLVED_FOR_CALIBRATION ? (
+          <span className="inline-flex justify-end">
+            <StatusPill tone="warn">calibrating</StatusPill>
+          </span>
+        ) : (
+          <CalibrationBar value={a.calibrationScore} />
+        ),
     },
     {
       id: "resolved",
       header: "Resolved",
       align: "right",
-      sortValue: (a) => a.reputation[categoryId].resolvedCount,
+      sortValue: (a) => a.resolvedCount,
       cell: (a) => (
-        <span className="font-mono text-sm text-[var(--color-text-dim)] tabular">
-          {a.reputation[categoryId].resolvedCount}
-        </span>
+        <span className="font-mono text-sm text-[var(--color-text-dim)] tabular">{a.resolvedCount}</span>
       ),
     },
     {
       id: "last",
       header: "Last Update",
       align: "right",
-      sortValue: (a) => a.reputation[categoryId].lastUpdatedBlock,
+      sortValue: (a) => a.lastUpdatedBlock,
       cell: (a) => (
         <span className="font-mono text-[11px] text-[var(--color-text-muted)] tabular">
-          #{fmtBlock(a.reputation[categoryId].lastUpdatedBlock)}
+          #{fmtBlock(a.lastUpdatedBlock)}
         </span>
       ),
     },
@@ -164,8 +154,8 @@ export function LeaderboardClient() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <StatusPill tone="up" dot pulse>
-            Live
+          <StatusPill tone={board.source === "live" ? "up" : "muted"} dot pulse={board.source === "live"}>
+            {board.source === "live" ? "Live" : "Demo data"}
           </StatusPill>
           <StatusPill tone="muted">Epoch {recentEpoch.id}</StatusPill>
         </div>
@@ -179,7 +169,9 @@ export function LeaderboardClient() {
             title={cat.label}
             right={
               <div className="flex items-center gap-2">
-                <StatusPill tone="accent">REFRESHED · 12s</StatusPill>
+                <StatusPill tone="accent">
+                  {lastPoint ? `BLOCK #${fmtBlock(lastPoint.block)}` : "NO DATA"}
+                </StatusPill>
                 <Link
                   href={`/feed/${cat.slug}`}
                   className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] transition-colors hover:text-[var(--color-accent)]"
@@ -223,18 +215,18 @@ export function LeaderboardClient() {
             <div className="mt-6 grid grid-cols-2 gap-6 border-t border-[var(--color-border)] pt-5 sm:grid-cols-4">
               <Stat
                 label="contributors"
-                value={feedHistory[feedHistory.length - 1].contributors}
+                value={lastPoint?.contributors ?? 0}
                 sub="top-20 + min 10 resolved"
               />
               <Stat
                 label="confidence"
-                value={fmtBps(feedHistory[feedHistory.length - 1].confidence, 1)}
+                value={fmtBps(lastPoint?.confidence ?? 0, 1)}
                 sub="avg per-agent, clamped"
                 tone="accent"
               />
               <Stat
                 label="block"
-                value={`#${fmtBlock(feedHistory[feedHistory.length - 1].block)}`}
+                value={lastPoint ? `#${fmtBlock(lastPoint.block)}` : "—"}
                 sub="last refresh"
               />
               <Stat
@@ -247,60 +239,65 @@ export function LeaderboardClient() {
         </Panel>
 
         <Panel elevation={1}>
-          <PanelHeader caption="Top agent — this category" title={topAgent.name} />
+          <PanelHeader caption="Top agent — this category" title={topAgent?.name ?? "—"} />
           <PanelBody>
-            <div className="flex items-start gap-4">
-              <KindGlyph kind={topAgent.kind} size={48} />
-              <div className="flex-1">
-                <div className="flex flex-wrap gap-1.5">
-                  {topAgent.badges.slice(0, 3).map((b) => (
-                    <StatusPill key={b} tone="muted">
-                      {b}
+            {topAgent ? (
+              <div className="flex items-start gap-4">
+                <KindGlyph kind={topAgent.kind} size={48} />
+                <div className="flex-1">
+                  <div className="flex flex-wrap gap-1.5">
+                    <StatusPill tone="muted">{topAgent.kind}</StatusPill>
+                    <StatusPill tone={topAgent.resolvedCount >= MIN_RESOLVED_FOR_CALIBRATION ? "accent" : "warn"}>
+                      {topAgent.resolvedCount >= MIN_RESOLVED_FOR_CALIBRATION ? "qualified" : "calibrating"}
                     </StatusPill>
-                  ))}
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                        accuracy
+                      </div>
+                      <div className="mt-1 font-mono text-2xl text-[var(--color-accent)] tabular">
+                        {fmtScore(topAgent.accuracyScore, 3)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                        calibration
+                      </div>
+                      <div className="mt-1 font-mono text-2xl text-[var(--color-text)] tabular">
+                        {topAgent.resolvedCount >= MIN_RESOLVED_FOR_CALIBRATION
+                          ? fmtScore(topAgent.calibrationScore, 3)
+                          : "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                        resolved
+                      </div>
+                      <div className="mt-1 font-mono text-2xl text-[var(--color-text)] tabular">
+                        {topAgent.resolvedCount}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                        last update
+                      </div>
+                      <div className="mt-1 font-mono text-2xl text-[var(--color-up)] tabular">
+                        #{fmtBlock(topAgent.lastUpdatedBlock)}
+                      </div>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/agent/${topAgent.id}`}
+                    className="mt-4 inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-accent)] hover:underline"
+                  >
+                    view profile <ArrowUpRight size={12} />
+                  </Link>
                 </div>
-                <div className="mt-3 grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                      accuracy
-                    </div>
-                    <div className="mt-1 font-mono text-2xl text-[var(--color-accent)] tabular">
-                      {fmtScore(topAgent.reputation[categoryId].accuracyScore, 3)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                      calibration
-                    </div>
-                    <div className="mt-1 font-mono text-2xl text-[var(--color-text)] tabular">
-                      {fmtScore(topAgent.reputation[categoryId].calibrationScore, 3)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                      resolved
-                    </div>
-                    <div className="mt-1 font-mono text-2xl text-[var(--color-text)] tabular">
-                      {topAgent.reputation[categoryId].resolvedCount}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                      equity
-                    </div>
-                    <div className="mt-1 font-mono text-2xl text-[var(--color-up)] tabular">
-                      {topAgent.equityCurve[topAgent.equityCurve.length - 1].value.toFixed(2)}x
-                    </div>
-                  </div>
-                </div>
-                <Link
-                  href={`/agent/${topAgent.id}`}
-                  className="mt-4 inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-accent)] hover:underline"
-                >
-                  view profile <ArrowUpRight size={12} />
-                </Link>
               </div>
-            </div>
+            ) : (
+              <EmptyState title="No ranked agent yet" body="Agents appear here once they have resolved predictions." />
+            )}
           </PanelBody>
         </Panel>
       </div>
@@ -317,39 +314,51 @@ export function LeaderboardClient() {
       {/* KPIs */}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard icon={<Crown size={14} />} label="lead agent">
-          <span className="font-mono text-lg text-[var(--color-accent)]">
-            {topAgent.name}
-          </span>
+          <span className="font-mono text-lg text-[var(--color-accent)]">{topAgent?.name ?? "—"}</span>
         </KpiCard>
         <KpiCard icon={<Activity size={14} />} label="resolutions">
           <span className="font-mono text-lg tabular">{totalResolved}</span>
         </KpiCard>
-        <KpiCard icon={<Layers size={14} />} label="ranked agents">
-          <span className="font-mono text-lg tabular">{AGENTS.length}</span>
+        <KpiCard icon={<Users size={14} />} label="ranked agents">
+          <span className="font-mono text-lg tabular">{board.data.length}</span>
         </KpiCard>
         <KpiCard icon={<Coins size={14} />} label="open bonus pool">
-          <span className="font-mono text-lg tabular">
-            {recentEpoch.totalPool.toFixed(3)} MNT
-          </span>
+          <span className="font-mono text-lg tabular">{recentEpoch.totalPool.toFixed(3)} MNT</span>
         </KpiCard>
       </div>
 
       {/* Leaderboard table */}
-      <motion.div
-        key={categoryId}
-        initial={reducedMotion ? false : { opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="mt-6"
-      >
-        <DataTable
-          columns={columns}
-          rows={sortedByAccuracy}
-          rowKey={(a) => `${categoryId}-${a.id}`}
-          initialSort={{ id: "accuracy", dir: "desc" }}
-          rowClassName={() => "group"}
-        />
-      </motion.div>
+      {board.isLoading ? (
+        <div className="mt-6 space-y-2" aria-busy>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      ) : board.data.length === 0 ? (
+        <div className="mt-6">
+          <EmptyState
+            icon={<Layers size={16} />}
+            title="No agents yet — be the first to register"
+            body="Register an ERC-8004 agent, submit forecasts in this category, and you'll appear here once predictions resolve."
+          />
+        </div>
+      ) : (
+        <motion.div
+          key={categoryId}
+          initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-6"
+        >
+          <DataTable
+            columns={columns}
+            rows={sortedByAccuracy}
+            rowKey={(a) => `${categoryId}-${a.id}`}
+            initialSort={{ id: "accuracy", dir: "desc" }}
+            rowClassName={() => "group"}
+          />
+        </motion.div>
+      )}
 
       {/* How it works */}
       <div className="mt-12">
@@ -451,14 +460,8 @@ function KpiCard({
   );
 }
 
-function KindGlyph({
-  kind,
-  size = 28,
-}: {
-  kind: Agent["kind"];
-  size?: number;
-}) {
-  const map: Record<Agent["kind"], { label: string; color: string }> = {
+function KindGlyph({ kind, size = 28 }: { kind: AgentKind; size?: number }) {
+  const map: Record<AgentKind, { label: string; color: string }> = {
     CLAUDE: { label: "CL", color: "var(--color-accent)" },
     ARIMA: { label: "AR", color: "#9DC8FF" },
     QUANT: { label: "QU", color: "#F8D97A" },

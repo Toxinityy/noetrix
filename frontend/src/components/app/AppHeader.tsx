@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { cn } from "@/lib/cn";
 
@@ -65,16 +66,66 @@ export function AppHeader() {
               Mantle Sepolia
             </StatusPill>
           </div>
-          <button
-            type="button"
-            disabled
-            title="Wallet integration ships with Prompt 11"
-            className="inline-flex cursor-not-allowed items-center gap-2 rounded border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--color-text-muted)] opacity-70"
-          >
-            Connect
-          </button>
+          <ConnectButton />
         </div>
       </div>
     </header>
+  );
+}
+
+function ConnectButton() {
+  const { address, isConnected } = useAccount();
+  const { connect, connectors, isPending } = useConnect();
+  const { disconnect } = useDisconnect();
+  const [mounted, setMounted] = React.useState(false);
+
+  // Wallet state is client-only; render a stable placeholder until mounted to avoid hydration drift.
+  React.useEffect(() => setMounted(true), []);
+
+  const base =
+    "inline-flex items-center gap-2 rounded border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] transition-colors";
+
+  if (!mounted) {
+    return (
+      <span
+        className={cn(base, "border-[var(--color-border)] bg-[var(--color-bg-elev-1)] text-[var(--color-text-muted)]")}
+      >
+        Connect
+      </span>
+    );
+  }
+
+  if (isConnected && address) {
+    return (
+      <button
+        type="button"
+        onClick={() => disconnect()}
+        title="Click to disconnect"
+        className={cn(
+          base,
+          "border-[var(--color-border-strong)] bg-[var(--color-bg)] text-[var(--color-accent)] hover:border-[var(--color-down)] hover:text-[var(--color-down)]",
+        )}
+      >
+        <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--color-up)]" />
+        {address.slice(0, 6)}…{address.slice(-4)}
+      </button>
+    );
+  }
+
+  const connector = connectors[0];
+  return (
+    <button
+      type="button"
+      disabled={!connector || isPending}
+      onClick={() => connector && connect({ connector })}
+      title={connector ? "Connect an injected wallet (e.g. MetaMask)" : "No injected wallet detected"}
+      className={cn(
+        base,
+        "border-[var(--color-border)] bg-[var(--color-bg-elev-1)] text-[var(--color-text)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]",
+        (!connector || isPending) && "opacity-70",
+      )}
+    >
+      {isPending ? "Connecting…" : "Connect"}
+    </button>
   );
 }
