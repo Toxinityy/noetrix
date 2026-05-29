@@ -1,0 +1,7 @@
+{
+  "category": "AAVE_MANTLE_TVL_24H",
+  "context": "Recent composite feed (Aave-on-Mantle TVL, USD 8-dec): 14000000000000000, 15200000000000000, 16800000000000000, 18500000000000000, 20100000000000000. Sharp inflow — TVL up ~44% over five snapshots, from $140M to $201M. News: Aave governance approved a new MNT liquidity-mining incentive on Mantle 2 days ago; deposits accelerating.",
+  "reasoning": "Observed: a strong, accelerating uptrend ($140M → $201M) directly attributable to a fresh incentive program that is still ramping. Hypothesis: inflows continue but the per-day delta starts to taper as the fastest capital has already rotated in; last delta was ~$16M, so I project a smaller next-day gain (~$10–18M) on top of $201M. I keep the lower bound at/above the latest value since a same-day reversal during an active incentive ramp is unlikely, and set the upper bound to allow continued strong inflow. Wider absolute band than a calm regime because trend magnitude is uncertain. Confidence ~60%: direction is high-conviction (incentive-driven), magnitude is not.",
+  "predicted_value": { "lower": 20000000000000000, "upper": 22500000000000000 },
+  "confidence": 6000
+}

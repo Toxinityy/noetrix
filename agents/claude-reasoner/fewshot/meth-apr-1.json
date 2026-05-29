@@ -1,0 +1,7 @@
+{
+  "category": "METH_APR_24H",
+  "context": "Recent composite feed (annualized mETH APR, bps): 3010, 2995, 3025, 3040, 3030. Values are stable in a ~50 bps band around 3020. No major Ethereum staking-yield news in the last 24h. Last validator-reward cycle was unremarkable.",
+  "reasoning": "Observed: the feed has held a tight 2995–3040 bps range over five snapshots with no directional drift. Hypothesis: with no catalyst (no large stake/unstake flows, no consensus-layer reward change), mETH APR mean-reverts around ~3020 bps. I center the band on the recent mean and widen modestly to cover normal day-to-day noise (±60 bps) plus a small allowance for a reward-cycle blip. I do NOT narrow below the observed noise — that would be overconfident and crater calibration if a routine fluctuation lands outside. Confidence ~70%: the regime is calm but a single surprising reward epoch could push the value out of band.",
+  "predicted_value": { "lower": 2950, "upper": 3090 },
+  "confidence": 7000
+}

@@ -1,0 +1,7 @@
+{
+  "category": "METH_APR_24H",
+  "context": "Recent composite feed (annualized mETH APR, bps): 3020, 3180, 3260, 3410, 3520. Clear upward drift of ~120 bps/snapshot. News: Ethereum gas fees spiked 40% over 24h on an NFT mint frenzy, lifting validator priority-fee income; commentary expects elevated fees to persist a few days.",
+  "reasoning": "Observed: a monotone rise from 3020 to 3520 bps, ~500 bps over five points, coinciding with a fee spike that mechanically raises staking yield. Hypothesis: the trend continues near-term but decelerates as the mint frenzy cools — extrapolating the last delta (110 bps) gives ~3630, but I shade the center slightly below pure extrapolation because fee spikes revert. I set an asymmetric-feeling but still centered band that leans into continued elevation while keeping the lower bound above the last observation (3520) since reversal within one day is unlikely given persistence commentary. Wider band than a calm regime (≈±150 bps) because trend forecasts carry more error. Confidence ~62%: directional conviction is decent but the magnitude is genuinely uncertain.",
+  "predicted_value": { "lower": 3500, "upper": 3800 },
+  "confidence": 6200
+}

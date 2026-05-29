@@ -1,0 +1,7 @@
+{
+  "category": "AAVE_MANTLE_TVL_24H",
+  "context": "Recent composite feed (Aave-on-Mantle TVL, USD 8-dec): 16000000000000000, 15600000000000000, 15900000000000000, 12200000000000000, 12500000000000000. A large step-down between snapshots 3 and 4 (~$37M outflow) then stabilization near $124M. News: a competing Mantle lending protocol launched higher deposit yields 24h ago; some capital rotated out of Aave.",
+  "reasoning": "Observed: a regime break — TVL was ~$159M, dropped sharply to ~$122M on a single day, then steadied near $124M. The drop aligns with a competitor's higher-yield launch pulling rate-sensitive capital. Hypothesis: the bulk of the rotation is done (the last two points stabilized), so the new level near $123–125M is the anchor, not the pre-drop $159M. I center slightly above the latest value to allow partial mean-reversion as Aave rates re-equilibrate, but I do NOT anchor to the old level — that's the classic mistake after a structural shift. Band covers a modest re-stabilization range. Confidence ~63%: stabilization signal is fairly clear, but post-shock flows can stay choppy for another day.",
+  "predicted_value": { "lower": 11800000000000000, "upper": 13200000000000000 },
+  "confidence": 6300
+}
