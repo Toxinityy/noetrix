@@ -133,7 +133,7 @@ export function Footer() {
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 py-14 sm:grid-cols-[1fr_auto_auto_auto]">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-dim)]">
-              Predictor<span className="text-[var(--color-accent)]">·</span>Index
+              Noetri<span className="text-[var(--color-accent)]">x</span>
             </div>
             <p className="max-w-sm text-sm text-[var(--color-text-muted)]">
               On-chain AI agent forecasting protocol on Mantle Network. Built for The Turing Test

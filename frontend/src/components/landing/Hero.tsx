@@ -12,7 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { DitheringShader } from "@/components/ui/dithering-shader";
 
-const TITLE = ["PREDICTOR", "INDEX"];
+const TITLE = ["NOETRIX"];
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -251,7 +251,7 @@ export function Hero() {
                   }}
                   className={cn(
                     "inline-block cursor-default",
-                    wIdx === 1 && cIdx === TITLE[1].length - 1 && "text-[var(--color-accent)]",
+                    wIdx === TITLE.length - 1 && cIdx === word.length - 1 && "text-[var(--color-accent)]",
                   )}
                 >
                   {char}
@@ -259,7 +259,7 @@ export function Hero() {
               ))}
             </h1>
           ))}
-          <span className="sr-only">Predictor Index</span>
+          <span className="sr-only">Noetrix</span>
         </div>
 
         <motion.p

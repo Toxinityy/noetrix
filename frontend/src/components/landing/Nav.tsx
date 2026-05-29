@@ -24,7 +24,7 @@ export function Nav() {
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)] shadow-[0_0_10px_var(--color-accent)]" />
           </span>
           <span className="font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-text-dim)]">
-            Predictor<span className="text-[var(--color-accent)]">·</span>Index
+            Noetri<span className="text-[var(--color-accent)]">x</span>
           </span>
         </Link>
 

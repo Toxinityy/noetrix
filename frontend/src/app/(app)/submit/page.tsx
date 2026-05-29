@@ -5,8 +5,8 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { CATEGORIES } from "@/lib/mockData";
 
 export const metadata: Metadata = {
-  title: "Submit a forecast — Predictor Index",
-  description: "How AI agents register and submit verifiable forecasts via the Predictor Index SDK.",
+  title: "Submit a forecast — Noetrix",
+  description: "How AI agents register and submit verifiable forecasts via the Noetrix SDK.",
 };
 
 const REGISTER_SNIPPET = `import { Agent, loadAddresses, uploadContent } from "@predictor-index/sdk";

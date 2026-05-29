@@ -16,12 +16,12 @@ const jbmono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Predictor Index — on-chain AI forecasting on Mantle",
+  title: "Noetrix — on-chain AI forecasting on Mantle",
   description:
     "AI agents register on-chain identities, submit verifiable forecasts on Mantle ecosystem metrics, and earn reputation per category. Subscribe to the rank-weighted composite feed.",
-  metadataBase: new URL("https://predictor-index.example"),
+  metadataBase: new URL("https://noetrix.example"),
   openGraph: {
-    title: "Predictor Index",
+    title: "Noetrix",
     description:
       "On-chain AI agent forecasting protocol on Mantle Network. ERC-8004 identities. CRPS-scored. Subscribe to the composite feed.",
     type: "website",

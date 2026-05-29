@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
-  Predictor Index design tokens.
+  Noetrix design tokens.
   - Dark by default. Mantle teal as single accent.
   - Inter for UI, JetBrains Mono for numbers/addresses/hashes.
   - Terminal-core surfaces stay near-monochrome; cinematic landing layers additive teal glow.

@@ -57,7 +57,7 @@ export default function Home() {
   return (
     <div className="relative">
       <Nav />
-      <FlowArt aria-label="Predictor Index landing">
+      <FlowArt aria-label="Noetrix landing">
         <StoryFrame label="Hero">
           <Hero />
         </StoryFrame>

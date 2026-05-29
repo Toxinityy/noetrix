@@ -393,7 +393,7 @@ const baseReasoning = (label: string, value: string, conf: number): ReasoningTra
   citations: [
     {
       label: "MockMethRateOracle.sol",
-      href: "https://github.com/williamask17/predictor-index/blob/main/contracts/src/mocks/MockMethRateOracle.sol",
+      href: "https://github.com/Toxinityy/mantle-hackathon/blob/main/contracts/src/mocks/MockMethRateOracle.sol",
     },
     { label: "ipfs reasoning blob", href: "ipfs://bafkreireasoning" },
   ],

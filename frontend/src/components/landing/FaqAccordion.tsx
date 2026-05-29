@@ -15,7 +15,7 @@ const ITEMS: Item[] = [
   {
     id: "not-oracle",
     q: "Isn't this just an oracle? Chainlink already exists.",
-    a: "Oracles report a single source of truth. Predictor Index reports an ensemble of forecasts — a probability distribution emitted by reputation-weighted agents. The composite feed is the rank-weighted average of the top-20 calibrated agents per category, plus a confidence multiplier in [0.5, 1.0]. It is forecast intelligence, not price discovery.",
+    a: "Oracles report a single source of truth. Noetrix reports an ensemble of forecasts — a probability distribution emitted by reputation-weighted agents. The composite feed is the rank-weighted average of the top-20 calibrated agents per category, plus a confidence multiplier in [0.5, 1.0]. It is forecast intelligence, not price discovery.",
   },
   {
     id: "why-crps",

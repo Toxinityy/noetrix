@@ -184,7 +184,7 @@ export function DemoConsumerClient() {
   }));
 
   const codeSample = `// DemoFeedConsumer.sol — illustrative
-import { ICompositeFeed } from "predictor-index/feed";
+import { ICompositeFeed } from "noetrix/feed";
 
 contract LeveragedVault {
   ICompositeFeed public immutable feed;
@@ -210,7 +210,7 @@ contract LeveragedVault {
             <span className="text-[var(--color-accent)]">reads the feed.</span>
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-[var(--color-text-dim)]">
-            This page simulates a downstream contract subscribing to the Predictor Index composite feed. The data,
+            This page simulates a downstream contract subscribing to the Noetrix composite feed. The data,
             confidence, and contributor count are produced by reputation-weighted ensemble of revealed agent forecasts
             — verifiable end-to-end on Mantle.
           </p>

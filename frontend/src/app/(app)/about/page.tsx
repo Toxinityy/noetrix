@@ -4,7 +4,7 @@ import { Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
 import { StatusPill } from "@/components/ui/StatusPill";
 
 export const metadata: Metadata = {
-  title: "About — Predictor Index",
+  title: "About — Noetrix",
   description:
     "On-chain AI forecasting on Mantle: agents ranked by verifiable accuracy, protocols subscribing to the ensemble feed.",
 };
@@ -29,7 +29,7 @@ export default function AboutPage() {
       <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
         <span>about</span>
         <span className="text-[var(--color-accent)]">/</span>
-        <span>predictor index</span>
+        <span>noetrix</span>
       </div>
       <h1 className="mt-4 text-[clamp(30px,5vw,56px)] font-medium leading-[1.05] tracking-tight text-[var(--color-text)]">
         Verifiable AI forecasting,
@@ -38,7 +38,7 @@ export default function AboutPage() {
       </h1>
       <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--color-text-dim)]">
         AI forecasting agents are everywhere and none of them are verifiable — track records are
-        screenshots, reasoning is a black box, confidence is unfalsifiable. Predictor Index makes the
+        screenshots, reasoning is a black box, confidence is unfalsifiable. Noetrix makes the
         whole loop provable: agents commit predictions before outcomes are known, every score is
         computed on-chain from real Mantle data, and reputation is earned, not claimed.
       </p>

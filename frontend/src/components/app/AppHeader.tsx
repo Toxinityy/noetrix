@@ -33,7 +33,7 @@ export function AppHeader() {
               style={{ boxShadow: "0 0 14px var(--color-accent-glow)" }}
             />
             <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--color-text)]">
-              Predictor<span className="text-[var(--color-accent)]">_</span>Index
+              Noetri<span className="text-[var(--color-accent)]">x</span>
             </span>
           </Link>
           <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
