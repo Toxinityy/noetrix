@@ -57,13 +57,13 @@ export function Hero() {
   const spotlightMask = useMotionTemplate`radial-gradient(circle 340px at ${maskPosX} ${maskPosY}, #000 0%, rgba(0,0,0,0.4) 35%, transparent 75%)`;
 
   // Title parallax — same spring, normalized about section center.
-  const titleX = useTransform(
-    [sCursorX, widthMV] as const,
-    ([x, w]) => (reduced ? 0 : ((x as number) / Math.max(1, w as number) - 0.5) * -12),
+  // Guard the off-screen sentinel (-9999): real in-section coords are always >= 0, so before the
+  // first pointer event the offset is 0 and the title renders centered (no jump-to-center on hover).
+  const titleX = useTransform([sCursorX, widthMV] as const, ([x, w]) =>
+    reduced || (x as number) < 0 ? 0 : ((x as number) / Math.max(1, w as number) - 0.5) * -12,
   );
-  const titleY = useTransform(
-    [sCursorY, heightMV] as const,
-    ([y, h]) => (reduced ? 0 : ((y as number) / Math.max(1, h as number) - 0.5) * -8),
+  const titleY = useTransform([sCursorY, heightMV] as const, ([y, h]) =>
+    reduced || (y as number) < 0 ? 0 : ((y as number) / Math.max(1, h as number) - 0.5) * -8,
   );
 
   // Keep section dims in sync (handles resize + GSAP pin layout shifts).
@@ -115,7 +115,12 @@ export function Hero() {
 
   const handleMouseLeave = useCallback(() => {
     setHovering(false);
-  }, []);
+    // Reset to the sentinel so the title parallax re-centers (guarded transforms return 0).
+    cursorPxX.set(-9999);
+    cursorPxY.set(-9999);
+    sCursorX.jump(-9999);
+    sCursorY.jump(-9999);
+  }, [cursorPxX, cursorPxY, sCursorX, sCursorY]);
 
   return (
     <section

@@ -32,7 +32,9 @@ export function ReasoningReveal() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
 
   const x = useTransform(scrollYProgress, [0, 1], reduced ? [0, 0] : [-40, 40]);
-  const opacity = useTransform(scrollYProgress, [0, 0.3, 0.85, 1], [0, 1, 1, 0.5]);
+  // Fade in once, then stay at full opacity. (Previously dipped to 0.5 near the end of the scroll
+  // range, which read as the card "going dark" while the GSAP-pinned section was still visible.)
+  const opacity = useTransform(scrollYProgress, [0, 0.3, 1], [0, 1, 1]);
 
   return (
     <section
