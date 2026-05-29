@@ -78,7 +78,7 @@ async function submitForCategory(
   const examples = loadFewShot(cat.label);
   const userPrompt = buildUserPrompt(context, examples);
 
-  const { parsed, rawText } = await getForecast(cfg.anthropicApiKey, cfg.model, userPrompt);
+  const { parsed, rawText } = await getForecast(cfg.llmApiKey, cfg.llmBaseUrl, cfg.model, userPrompt);
   const range = clampRange(parsed.predicted_value.lower, parsed.predicted_value.upper, domainMin, domainMax);
   const confidence = Math.max(0, Math.min(10000, parsed.confidence));
 

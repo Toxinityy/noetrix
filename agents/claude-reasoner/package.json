@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@predictor-index/sdk": "workspace:*",
-    "@anthropic-ai/sdk": "^0.71.0",
     "viem": "^2.51.0",
     "dotenv": "^17.2.4"
   },

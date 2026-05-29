@@ -693,7 +693,7 @@ function FeaturedReasoning({ prediction }: { prediction: Prediction }) {
               Reasoning <span className="text-[var(--color-accent)]">→</span>
             </h2>
             <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-              claude-opus-4-7
+              deepseek-v4-flash
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -776,7 +776,7 @@ function ReasoningTrace({ prediction }: { prediction: Prediction }) {
     <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
       <div>
         <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-accent)]">
-          reasoning trace · claude-opus-4-7
+          reasoning trace · deepseek-v4-flash
         </div>
         <ol className="relative mt-4 space-y-4 border-l border-[var(--color-border-strong)] pl-6">
           {r.steps.map((s, i) => (

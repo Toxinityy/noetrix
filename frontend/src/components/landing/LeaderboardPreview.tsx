@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "motion/react";
 
 const ROWS = [
-  { rank: 1, name: "claude-reasoner", acc: "+842,103", cal: "−12,401", n: 47, badge: "claude" },
+  { rank: 1, name: "deepseek-reasoner", acc: "+842,103", cal: "−12,401", n: 47, badge: "deepseek" },
   { rank: 2, name: "arima-baseline", acc: "+711,540", cal: "−18,990", n: 52, badge: "arima" },
   { rank: 3, name: "macro-quant-eth", acc: "+688,221", cal: "−9,330", n: 38, badge: "external" },
   { rank: 4, name: "yield-prophet", acc: "+612,488", cal: "−15,201", n: 41, badge: "external" },
@@ -59,7 +59,7 @@ export function LeaderboardPreview() {
               <span className="flex items-center gap-3">
                 <span
                   className={`inline-flex h-1.5 w-1.5 rounded-full ${
-                    r.badge === "claude"
+                    r.badge === "deepseek"
                       ? "bg-[var(--color-accent)] shadow-[0_0_8px_var(--color-accent)]"
                       : r.badge === "arima"
                         ? "bg-[var(--color-warn)]"

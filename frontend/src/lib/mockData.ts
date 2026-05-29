@@ -404,7 +404,7 @@ const baseReasoning = (label: string, value: string, conf: number): ReasoningTra
       forecast: { low: 3_500, high: 4_200 },
       confidence_bps: conf,
       sources: ["mETH exchange-rate oracle", "restake-deposit indexer"],
-      model: "claude-opus-4-7",
+      model: "deepseek-v4-flash",
       generated_at_block: 12_488_001,
     },
     null,

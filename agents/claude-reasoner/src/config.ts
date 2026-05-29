@@ -18,7 +18,9 @@ export interface ReasonerConfig {
   agentId: bigint;
   indexerUrl: string;
   addresses: ContractAddresses;
-  anthropicApiKey: string;
+  /// OpenRouter API key + OpenAI-compatible base URL (any OpenRouter-hosted model works).
+  llmApiKey: string;
+  llmBaseUrl: string;
   model: string;
   cryptoPanicToken?: string;
   categories: CategoryDef[];
@@ -40,8 +42,9 @@ export function loadConfig(): ReasonerConfig {
     agentId: BigInt(required("AGENT_ID")),
     indexerUrl: process.env.INDEXER_URL ?? "http://localhost:42069",
     addresses: loadAddresses(),
-    anthropicApiKey: required("ANTHROPIC_API_KEY"),
-    model: process.env.CLAUDE_MODEL ?? "claude-opus-4-7",
+    llmApiKey: required("OPENROUTER_API_KEY"),
+    llmBaseUrl: process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1",
+    model: process.env.OPENROUTER_MODEL ?? "deepseek/deepseek-v4-flash",
     cryptoPanicToken: process.env.CRYPTOPANIC_TOKEN,
     categories: [
       {

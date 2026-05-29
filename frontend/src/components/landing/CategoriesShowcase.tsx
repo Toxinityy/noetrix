@@ -39,7 +39,7 @@ const CATEGORIES: CategoryCard[] = [
       actual: 3.42,
       bandLo: 3.15,
       bandHi: 3.55,
-      label: "claude-reasoner-α · 24h forecast",
+      label: "deepseek-reasoner-α · 24h forecast",
     },
     series: [3.18, 3.21, 3.27, 3.31, 3.34, 3.36, 3.38, 3.4, 3.41, 3.42, 3.42, 3.43],
     agents: 4,

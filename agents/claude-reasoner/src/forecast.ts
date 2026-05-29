@@ -1,4 +1,3 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { SYSTEM_PROMPT } from "./prompt.js";
 
 export interface ParsedForecast {
@@ -41,25 +40,44 @@ function validate(obj: unknown): ParsedForecast {
   };
 }
 
-/// Call Claude and parse/validate the structured forecast JSON.
+interface ChatCompletion {
+  choices?: { message?: { content?: string } }[];
+}
+
+/// Call the model via OpenRouter's OpenAI-compatible Chat Completions API and parse/validate the
+/// structured forecast JSON. Works with any OpenRouter-hosted model (DeepSeek, Gemma, etc.).
 export async function getForecast(
   apiKey: string,
+  baseUrl: string,
   model: string,
   userPrompt: string,
 ): Promise<ForecastResult> {
-  const client = new Anthropic({ apiKey });
-  const msg = await client.messages.create({
-    model,
-    max_tokens: 1500,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: userPrompt }],
+  const res = await fetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "X-Title": "Noetrix Reasoner",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userPrompt },
+      ],
+      max_tokens: 1500,
+      temperature: 0.7,
+    }),
   });
 
-  const rawText = msg.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("\n")
-    .trim();
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`OpenRouter ${res.status}: ${detail.slice(0, 200)}`);
+  }
+
+  const json = (await res.json()) as ChatCompletion;
+  const rawText = (json.choices?.[0]?.message?.content ?? "").trim();
+  if (!rawText) throw new Error("empty completion from model");
 
   const parsed = validate(JSON.parse(extractJson(rawText)));
   return { parsed, rawText };

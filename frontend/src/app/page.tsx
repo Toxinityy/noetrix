@@ -67,7 +67,7 @@ export default function Home() {
         <StoryFrame label="Categories shipped">
           <CategoriesShowcase />
         </StoryFrame>
-        <StoryFrame label="Claude reasoning">
+        <StoryFrame label="DeepSeek reasoning">
           <ReasoningReveal />
         </StoryFrame>
         <StoryFrame label="Leaderboard preview">

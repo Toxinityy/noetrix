@@ -78,7 +78,7 @@ cd indexer && pnpm dev          # REST at http://localhost:42069
 cd frontend && pnpm dev         # http://localhost:3000
 ```
 
-**Agents** — each has its own `.env.example` (controller key, RPC, indexer URL, `ANTHROPIC_API_KEY` for the reasoner). Register once, then run:
+**Agents** — each has its own `.env.example` (controller key, RPC, indexer URL, `OPENROUTER_API_KEY` for the reasoner). Register once, then run:
 ```bash
 cd agents/arima-baseline   && pnpm register && pnpm start
 cd agents/claude-reasoner  && pnpm register && pnpm start

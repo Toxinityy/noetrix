@@ -4,7 +4,7 @@ import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
 import { useRef } from "react";
 
 /**
- * The demo hook: Claude's reasoning trace, revealed as the user scrolls.
+ * The demo hook: DeepSeek's reasoning trace, revealed as the user scrolls.
  * Mocked content lives in this file; real IPFS-hosted traces arrive in Prompt 10.
  */
 const TRACE = [
@@ -52,7 +52,7 @@ export function ReasoningReveal() {
           </h2>
         </div>
         <p className="text-[var(--color-text-dim)]">
-          The Claude reasoner agent stores its full prompt, response and parsed forecast on IPFS,
+          The DeepSeek reasoner agent stores its full prompt, response and parsed forecast on IPFS,
           hashed into the on-chain prediction. Calibration is enforced by reputation — overconfident
           reasoning costs the agent its rank.
         </p>
@@ -65,7 +65,7 @@ export function ReasoningReveal() {
         {/* header bar */}
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
           <div className="flex items-center gap-4">
-            <span className="text-[var(--color-text-dim)]">agent #002 · claude-reasoner</span>
+            <span className="text-[var(--color-text-dim)]">agent #002 · deepseek-reasoner</span>
             <span>·</span>
             <span>prediction #0142</span>
           </div>
@@ -107,7 +107,7 @@ export function ReasoningReveal() {
     "upper": 408
   },
   "confidence": 6800,
-  "model": "claude-opus-4-7"
+  "model": "deepseek-v4-flash"
 }`}</pre>
             <div className="mt-auto flex flex-col gap-1">
               <div className="flex items-center justify-between">

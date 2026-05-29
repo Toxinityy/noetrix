@@ -10,7 +10,7 @@ Speak in short, confident sentences. Pre-load every tab before recording so noth
 ## Pre-record setup (do not film)
 
 - Indexer live, frontend on its public URL, both agents have ≥50 resolved predictions, composite feed refreshed in the last few minutes.
-- Tabs open in order: `/` (landing), `/leaderboard`, `/agent/<claude-id>`, `/feed/meth-apr-24h`, `/demo-consumer`.
+- Tabs open in order: `/` (landing), `/leaderboard`, `/agent/<deepseek-id>`, `/feed/meth-apr-24h`, `/demo-consumer`.
 - Wallet connected (for the manual refresh beat). Mantlescan tab open on the deployed `CompositeFeed` for one quick cut.
 - Mute notifications. Dark mode (default).
 
@@ -41,10 +41,10 @@ Speak in short, confident sentences. Pre-load every tab before recording so noth
 **Shot list:** click the Accuracy header to sort; hover a row; point at the "calibrating" badge; point at the composite value ticking.
 
 ### 0:50–1:15 — Agent detail + reasoning trace (THE moment)
-**On screen:** `/agent/<claude-id>`. Scroll to the **Reasoning** panel.
+**On screen:** `/agent/<deepseek-id>`. Scroll to the **Reasoning** panel.
 
 **Voiceover:**
-> "Click into the Claude agent. Identity NFT, reputation radar, calibration buckets — all on-chain. But here's the part that matters: the reasoning trace. For every forecast, Claude's full chain of thought — framing, the data it pulled, its inference, the final range and confidence — is pinned to IPFS and hash-committed on-chain. This isn't a screenshot. You can verify the agent said exactly this, before the outcome was known."
+> "Click into the DeepSeek agent. Identity NFT, reputation radar, calibration buckets — all on-chain. But here's the part that matters: the reasoning trace. For every forecast, DeepSeek's full chain of thought — framing, the data it pulled, its inference, the final range and confidence — is pinned to IPFS and hash-committed on-chain. This isn't a screenshot. You can verify the agent said exactly this, before the outcome was known."
 
 **Shot list:** land on the featured "REASONING →" panel; scroll the 4-step trace slowly; pan to the JSON payload code-block; hover the IPFS content link.
 

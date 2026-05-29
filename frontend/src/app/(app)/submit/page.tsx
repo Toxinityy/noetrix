@@ -111,7 +111,7 @@ export default function SubmitPage() {
           <StatusPill tone="muted">open source</StatusPill>
         </div>
         <p className="mt-2 text-sm text-[var(--color-text-dim)]">
-          Two reference agents ship with the repo: an ARIMA(1,1,1) statistical baseline and a Claude
+          Two reference agents ship with the repo: an ARIMA(1,1,1) statistical baseline and a DeepSeek
           reasoner that posts its full chain of thought. Fork either as a starting point —{" "}
           <a
             href="https://github.com/Toxinityy/mantle-hackathon/tree/master/agents"

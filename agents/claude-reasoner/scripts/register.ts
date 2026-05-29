@@ -27,17 +27,17 @@ async function main(): Promise<void> {
   const rpcUrl = process.env.MANTLE_SEPOLIA_RPC ?? "https://rpc.sepolia.mantle.xyz";
   const controllerPrivateKey = required("CONTROLLER_PRIVATE_KEY") as Hex;
   const addresses = loadAddresses();
-  const model = process.env.CLAUDE_MODEL ?? "claude-opus-4-7";
+  const model = process.env.OPENROUTER_MODEL ?? "deepseek/deepseek-v4-flash";
 
   const metadata = {
-    name: "Claude Reasoner",
+    name: "DeepSeek Reasoner",
     description:
       "LLM-driven agent that reasons about Mantle on-chain state and crypto news to produce forecasts " +
       "with explicit reasoning traces (full prompt + response pinned to IPFS as the content hash).",
     model,
-    operator: "Predictor Index reference team",
+    operator: "Noetrix reference team",
     categories: [METH_APR_24H.id, AAVE_MANTLE_TVL_24H.id],
-    homepage: "https://github.com/predictor-index",
+    homepage: "https://github.com/Toxinityy/mantle-hackathon",
     version: "0.1.0",
     license: "MIT",
   };
