@@ -122,6 +122,122 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-05-29 — Prompt 12 (DemoFeedConsumer business logic + local full-pipeline E2E + frontend decision panel); live deploy/screenshots pending creds
+**Type:** Build (Prompt 12 — Part A consumer views + deterministic E2E test; live deploy + visual screenshots blocked on creds)
+**Touched files:**
+- `contracts/src/examples/DemoFeedConsumer.sol` (extend) — added Part A business-logic views.
+- `contracts/test/EndToEnd.t.sol` (extend) — added `test_FullPipeline_FeedDrivesConsumerDecisions` + 2-agent multi-cycle helper.
+- `frontend/src/lib/contracts.ts` (extend) — `demoConsumerAbi` + `DEMO_THRESHOLDS`.
+- `frontend/src/app/(app)/demo-consumer/DemoConsumerClient.tsx` (extend) — protocol-decision panel + `DecisionCard`.
+- build-status, CLAUDE.md.
+
+**What happened:**
+- **DemoFeedConsumer (Part A)**: added `getCurrentMethApr()`/`getCurrentAaveTvl()` → (value, confidence); `shouldAllowDeposits()` → mETH APR forecast > 400 bps; `shouldThrottleRisk()` → Aave-Mantle TVL forecast < $500M (500e6·1e8 USD 8-dec). Category ids + thresholds as public constants. Kept the prior `latest`/`valueFresh`. An unset/zero TVL feed reads as 0 → throttle true (documented safe default). `forge build` clean.
+- **End-to-end test (Part B, local substitute)**: `test_FullPipeline_FeedDrivesConsumerDecisions` drives the *whole* chain deterministically — 2 agents register, each runs 10 commit→reveal→resolve cycles (reaching the ≥10 resolved top-agent qualification), then each posts one more forecast left Revealed (active feed contributor), `CompositeFeed.refresh(METH)`, then asserts the consumer reads it: `getCurrentMethApr() ≈ 3650` bps (band [3600,3700] midpoint, 2 contributors, confidence > 0), `shouldAllowDeposits() == true` (3650 > 400), and `shouldThrottleRisk() == true` with the AAVE feed unset (0 < $500M). Proves registry→market→resolution→scoring→reputation→topAgents→CompositeFeed→DemoFeedConsumer. **Full suite 147/147** (was 146; +1).
+- **Frontend (update to read the consumer)**: demo-consumer page now shows a "What this protocol decides" panel with two `DecisionCard`s (shouldAllowDeposits / shouldThrottleRisk) rendering the true/false decision + the rule + good/bad tone. Reads on-chain from `DemoFeedConsumer` (30s refetch) when `NEXT_PUBLIC_ADDR_DEMO_CONSUMER` is set, else derives the same decision client-side from the feed value via `DEMO_THRESHOLDS` (mirrors the contract constants). `next build` clean.
+
+**Decisions:**
+- **Local deterministic E2E instead of the live 1-hour run.** Prompt 12 Part B describes a live pipeline + screenshots — blocked on deploy + funded keys. The forge test is the faithful substitute: it exercises every contract hop including the top-agent gate (≥10 resolved) and the feed→consumer business logic, which the prior Prompt-7 EndToEnd (single agent, single round-trip) did not. Screenshots remain a post-deploy task.
+- **Tested METH pipeline fully + AAVE via the safe-default path**, not a second full resolution pipeline. AAVE's resolver/scorer round-trip is already covered by `AaveMantleTvlResolver.t.sol`; re-running a 10-cycle AAVE qualification here would be redundant gas for no new coverage. `shouldThrottleRisk` is still meaningfully asserted (unset feed → 0 → throttle).
+- **Frontend decision card has a client-side fallback** mirroring the contract thresholds, so the "true/false decision" demo surface renders even before `DemoFeedConsumer` is deployed (shows METH 3812 bps → deposits enabled; AAVE ~$142M → risk throttled). Source label flips to "on-chain" once the address is set.
+- **No Deploy.s.sol change needed** — it already deploys DemoFeedConsumer (Prompt 7); the new views are additive.
+
+**Risks / followups:**
+- **Live deploy + visual screenshots NOT done — needs Prompt 7 Part C creds.** Required screenshots (Prompt 12 verify gate): leaderboard with ≥2 agents + ≥5 resolved; agent-detail with a Claude reasoning trace; demo-consumer showing a true/false decision. The decision panel + leaderboard are wired; the agent-detail reasoning trace is still mock (Part B wiring deferred from Prompt 11).
+- **50+ resolved predictions** for the final verify gate come from running the agents in SEED_MODE ~24h post-deploy (ARIMA + Claude reasoner, Prompts 9/10).
+- DemoFeedConsumer's $500M throttle floor + 400 bps deposit floor are illustrative; if the deployed category domains/scales differ materially from the demo data, revisit the thresholds so the decisions read sensibly on the live feed.
+
+### 2026-05-29 — Prompt 11 (refresher cron + frontend live-wiring layer); live verify pending deploy
+**Type:** Build (Prompt 11 — Part D refresher complete; frontend data/provider/wagmi layer + leaderboard/demo-consumer/Connect wired with mock fallback. `next build` clean; live data path unverified until contracts deploy + indexer runs)
+**Touched files:**
+- `agents/refresher/src/{config,index}.ts` (new), `agents/refresher/.env.example` (new).
+- `frontend/src/lib/{env,contracts,wagmi,indexer,hooks}.ts` (new), `frontend/src/components/providers/Providers.tsx` (new), `frontend/.env.example` (new).
+- `frontend/src/app/layout.tsx` (mount Providers), `frontend/src/components/app/AppHeader.tsx` (real Connect), `frontend/src/app/(app)/leaderboard/LeaderboardClient.tsx` (rewrite to hooks), `frontend/src/app/(app)/demo-consumer/DemoConsumerClient.tsx` (live read + real refresh).
+- build-status, CLAUDE.md.
+
+**What happened:**
+- **Refresher (Part D)**: standalone Node app, viem clients. Loop (default 5 min ≈ 150 blocks) calls `CompositeFeed.refresh(categoryId)` for both categories. `--once` / `REFRESH_ONCE=true` for platform-managed cron (Vercel/GitHub Actions) — one pass then exit. Idempotent: simulates first, catches the expected `RateLimited()` revert (custom errors added to the ABI so viem decodes by name) and logs "skipped". CompositeFeed addr from `ADDR_COMPOSITE_FEED` env → deployments JSON. `tsc` clean, dist emitted.
+- **Frontend data layer**: `env.ts` (NEXT_PUBLIC_* config + `hasIndexer`/`hasFeed` flags + explorer helpers); `contracts.ts` (`categoryHash` = keccak label, CompositeFeed read/refresh ABI + custom errors); `wagmi.ts` (createConfig, Mantle Sepolia chain from env, injected connector, ssr:true); `indexer.ts` (typed REST client → normalized `LeaderRow`/`LivePrediction`/`LiveFeedPoint`, decodes range bytes); `hooks.ts` (`useLeaderboard`/`useFeedHistory` — TanStack Query 30s refetch when `hasIndexer`, else **mock fallback**, also falling back to mock on live error/empty with an `isError` flag). `Providers.tsx` (WagmiProvider + QueryClientProvider) mounted in root layout.
+- **Connect (AppHeader)**: real wagmi `useAccount`/`useConnect`/`useDisconnect`. Mounted-guard placeholder to avoid hydration drift; shows truncated address + disconnect when connected, "Connect" via injected connector otherwise.
+- **Leaderboard (Part A)**: rewritten to consume `useLeaderboard`/`useFeedHistory`. Adds the three Part-A requirements the mock UI lacked: **calibrating badge** for `resolvedCount < 10` (in table + top-agent panel), **skeleton** while loading, **empty state** ("No agents yet — be the first to register"). Source pill shows Live vs Demo data. Top-agent panel + KPIs derive from live rows; composite snapshot card + sparkline from live feed history. Bonus-pool KPI still from mock epoch (not in indexer).
+- **Demo-consumer (Part C)**: live `useReadContract` of `CompositeFeed.read` (30s refetch, decodes the abi.encoded point estimate) overrides the headline value/confidence/contributors/block when `hasFeed`. Manual **refresh button wired to `useWriteContract` → `CompositeFeed.refresh`**, with RateLimited caught and surfaced ("Rate-limited — wait ~100 blocks"). Mock 5s simulation now only runs when NOT live. Chart pulls live feed history when available. Addresses + explorer links from env.
+- **`next build` clean**: 6 routes, TypeScript pass; only the pre-existing benign Recharts SSR width/height warning. With no env set (the build case), everything renders on mock exactly as before.
+
+**Decisions:**
+- **Mock fallback is the default + the build/no-env behavior.** Hooks return mock immediately when `NEXT_PUBLIC_INDEXER_URL` is unset, and fall back to mock (flagging `isError`) on a live fetch error/empty result. This keeps the site fully functional for judges before deploy and means `next build` validates the real code paths without needing infra. Live path activates purely by setting env — no code change.
+- **Normalized `LeaderRow` shape instead of the rich mock `Agent`.** The indexer's reputations table only has accuracy/calibration/resolvedCount/lastUpdatedBlock (no name/kind/badges/equityCurve). Leaderboard now renders against `LeaderRow`; live agent "name" is `agent #<id>` and `kind` is inferred from the name (CLAUDE/ARIMA/ENSEMBLE/QUANT). The top-agent panel dropped the mock "equity ×" stat (replaced with last-update block) since equity isn't on-chain-derivable here. v2: fetch agent metadata (name/model) from IPFS via metadataURI for live display names.
+- **Agent-detail + feed pages left on mock this session.** Part B's expandable reasoning trace is the demo moment but pulls the trace from IPFS (contentHash) — unverifiable without a live pin + deployed data, so wiring it now would be building blind. Hooks + indexer client are in place to wire them in one pass post-deploy.
+- **Connect uses the injected connector only** (MetaMask/Rabbit/etc.). No WalletConnect projectId needed for the hackathon demo. ssr:true on the wagmi config + a mounted-guard on the button avoid Next hydration mismatches.
+- **Refresher is dual-mode** (long-running loop OR `--once` for cron) rather than committing to one host. Decision on Vercel cron vs GitHub Actions vs Railway deferred (CLAUDE.md §3 invariant 8 + the open item from the 2026-05-25 bootstrap).
+
+**Risks / followups:**
+- **Live data path UNVERIFIED.** Only `next build` (mock mode) is confirmed. No running indexer, no deployed CompositeFeed, no browser/runtime/375px check this session. Per Prompt 11's final check, walk through each page on desktop + 375px against the live indexer once deployed; the Recharts SSR warning is cosmetic (client re-sizes on hydration).
+- **Refresher + frontend live use need Prompt 7 Part C addresses.** Refresher: `REFRESHER_PRIVATE_KEY` (separate small hot wallet, NOT an agent key) + `ADDR_COMPOSITE_FEED`. Frontend: set `NEXT_PUBLIC_INDEXER_URL` + `NEXT_PUBLIC_ADDR_COMPOSITE_FEED` (+ others) and redeploy (NEXT_PUBLIC_* inline at build, so a rebuild is required after addresses land).
+- **Vercel deploy not done** (no addresses/indexer yet). When deploying: set the NEXT_PUBLIC_* env, `next build`, report the public URL (Prompt 11 final step).
+- **`indexer.ts` decodes prediction value as `Number(bigint)`** — fine for bps/8-dec-USD magnitudes (< 2^53) but would lose precision for raw 18-dec wei-scale values. Categories here are safe; keep in mind if a future category uses large raw units.
+- **Leaderboard live `name`/`kind` are derived, not authoritative.** Until IPFS metadata is fetched, live agents show as `agent #N` with a guessed glyph. Cosmetic; the numbers (accuracy/calibration/resolved) are authoritative from the indexer.
+
+### 2026-05-29 — Prompt 10 (Claude reasoner — demo highlight); register/live-run pending creds
+**Type:** Build (Prompt 10 — all code + few-shot examples; on-chain register + live loop blocked on deployed addresses + funded controller key + ANTHROPIC_API_KEY)
+**Touched files:**
+- `agents/claude-reasoner/src/{config,state,indexer,news,context,prompt,forecast,index}.ts` (new/rewrite).
+- `agents/claude-reasoner/scripts/register.ts` (new), `agents/claude-reasoner/.env.example` (new).
+- `agents/claude-reasoner/fewshot/{meth-apr-1,2,3,aave-tvl-1,2,3}.json` (new — 3 per category).
+- `agents/claude-reasoner/package.json` (start path fix), build-status, CLAUDE.md.
+
+**What happened:**
+- **Reasoner pipeline (§8.3 / Prompt 10 Part A)**: per category per tick → `getCategoryConfig` (domain) → parallel fetch [feed history, agent's own resolved history+scores, CryptoPanic 24h news] → `buildContext` (Markdown block) → `loadFewShot` + `buildUserPrompt` → `getForecast` (Anthropic `messages.create`) → parse/validate JSON → clamp band to domain + clamp confidence → `uploadContent({systemPromptIncluded, userPrompt, rawResponse, parsedForecast, ...})` → `submitFullCycle` via SDK. Full prompt+response+parsed forecast is the on-chain `contentHash` payload (keccak; pinned to IPFS if PINATA_JWT). Structured JSONL debug log to `reasoner.log.jsonl`.
+- **System prompt** verbatim per spec ("...reputation depends on calibrated forecasts. Overconfidence will harm your calibration score; underconfidence will harm your accuracy ranking...") + explicit "accuracy and calibration are PUBLIC on-chain" to incentivize honest confidence. Strict JSON output contract (predicted_value{lower,upper}, confidence 0-10000 bps, reasoning).
+- **Few-shot (Part B — Day-9 deliverable)**: hand-wrote 3 examples per category in `fewshot/*.json`, each shaped `{category, context, reasoning, predicted_value, confidence}`. Each shows observed data → hypothesis → forecast range → confidence justification across 3 regimes (calm/mean-revert, trend w/ catalyst, high-variance or regime-break). Reasoning explicitly teaches the calibration lesson (don't narrow below observed noise; widen on trends; don't anchor to pre-shock level). `loadFewShot` filters by `category` field and concatenates into the user prompt.
+- **SEED_MODE (Part C)**: identical to ARIMA — `agent.state.json` `{mode, seedStartTimestamp}`, auto-flip on resolved-count ≥50 OR 48h elapsed; seed 350-block/30-min, normal 43200/6h. Indexer-unreachable count = 0 (never falsely flips).
+- **register.ts (Part D)**: §8.1.1 metadata (name "Claude Reasoner", model from CLAUDE_MODEL) → IPFS/data-URI → `register()` w/ 0.1 MNT → writes AGENT_ID to .env.
+- **`tsc` clean, dist emitted.** Verified: fewshot loader returns 3+3, `buildUserPrompt` includes examples + output contract.
+
+**Decisions:**
+- **Context "category data" = composite-feed snapshots (real on-chain ensemble values) + the agent's own resolved predictions w/ CRPS scores**, NOT realized truth outcomes — the indexer doesn't store category outcomes (same limit as ARIMA). The feed history is a genuine on-chain signal; the agent's own scored history enables in-prompt self-reflection (the few-shot examples model this). v2: index resolver outcomes for true-series context.
+- **News optional via CryptoPanic v1 API + token.** No token (or error) → empty news, prompt says "reason from on-chain data alone." Avoided an RSS-XML parser dep; kept dependency-free (global fetch).
+- **Default model `claude-opus-4-7`** (env `CLAUDE_MODEL` overrides; spec allowed opus-4-7 or sonnet). Opus for demo-highlight reasoning quality.
+- **Few-shot values anchored to the demo's early observed scale** (METH ~3000 bps, AAVE ~1.4e16 = ~$140M) so examples are consistent with the synthetic-seed/early-feed values Claude will actually see in-context. Note: METH domain (max 100000 bps, bucket 1000) is wide vs. realistic ~3% APR — a deploy-config coarseness already flagged; examples use the as-deployed domain.
+- **`start` script fixed to `dist/src/index.js`** (tsconfig rootDir "." → output mirrors `dist/src/` + `dist/scripts/`). Same one-line fix applied to arima-baseline in the prior session is now applied here.
+
+**Risks / followups:**
+- **NOT run live** — needs deployed addresses (Prompt 7 Part C), funded controller key, `ANTHROPIC_API_KEY`, ideally live indexer + `PINATA_JWT` + `CRYPTOPANIC_TOKEN`. Run: `pnpm --filter @predictor-index/claude-reasoner register` once, then `... start`.
+- **No Anthropic call was exercised** (no API key in this session). The `getForecast` parse path (fence-strip + outer-brace slice + shape validation) is reviewed but unverified against a real model response. First live run should confirm the model honors the JSON-only contract; the extractor tolerates ```json fences as a safety net.
+- **Hosting deferred** (GH Actions cron / Railway) — same as ARIMA + indexer.
+- Few-shot copy references numbers (3000 bps regime, $140M TVL, ±noise) — if the deployed domain/category math or seed centers change materially, refresh the examples so in-context observed values and example values stay on the same scale.
+- CryptoPanic v1 API may require a paid plan for some token tiers; if it 4xx's the agent degrades gracefully to no-news. Confirm the free tier works with the chosen token before relying on news in the demo.
+
+### 2026-05-29 — Prompt 9 (Agent SDK + ARIMA baseline); register/live-run pending creds
+**Type:** Build (Prompt 9 — all code; on-chain register + live submission loop blocked on deployed addresses + funded controller key)
+**Touched files:**
+- `agents/sdk/src/{abis,types,categories,addresses,ipfs,agent,index}.ts` (new/rewrite) — full SDK.
+- `agents/arima-baseline/src/{arima,config,state,indexer,index}.ts` (new/rewrite) — ARIMA agent.
+- `agents/arima-baseline/scripts/register.ts` (new), `agents/arima-baseline/.env.example` (new).
+
+**What happened:**
+- **SDK (`@predictor-index/sdk`)**: `Agent` class with `commit / reveal / submitFullCycle / register / getCategoryConfig`. viem clients (custom-defined Mantle Sepolia chain from rpcUrl), `nonceManager` from `viem/accounts` for batch nonce caching, bounded retry (3 attempts, linear backoff) on all writes, viem default gas estimation. Commit builds `value = abi.encode(uint256 low, uint256 high)`, random 32-byte nonce, `commitHash = keccak256(abi.encode(uint256 agentId, bytes32 categoryId, bytes value, uint16 confidence, bytes32 nonce))` — matches PredictionMarket.reveal's recomputation exactly. predictionId + commitBlock parsed from the `PredictionCommitted` receipt log (not the simulate result, which can drift). Reveal polls block number until `[commitBlock+REVEAL_DELAY, commitBlock+REVEAL_WINDOW]`, reads the constants on-chain, throws if window missed. RevealMaterial held in an in-memory Map keyed by predictionId (submitFullCycle is same-process; cross-process reveal accepts explicit material).
+- **Categories**: `categoryId(label)=keccak256(label)`; domains mirror Deploy.s.sol (METH `[0,100000]` bps, AAVE `[0,1e17]` USD-8dec, 100 buckets). `getCategoryConfig` reads PredictionMarket.getCategory + decodes configBytes → domain.
+- **addresses.ts**: same 3-tier loader as the indexer (ADDR_* env → `contracts/deployments/<DEPLOY_NETWORK>.json` → throw). `DEPLOYMENTS_FILE` overrides path; default resolves `../../contracts/deployments` from cwd.
+- **ipfs.ts**: `uploadContent` computes `contentHash = keccak256(content)` (verifiable on-chain regardless of IPFS), and pins to IPFS via Pinata REST if `PINATA_JWT` set (returns cid/uri), else hash-only with a warn. No heavy w3up dep.
+- **ARIMA agent**: self-contained ARIMA(1,1,1) in pure TS (no native/WASM dep) — d=1 differencing, conditional-SSE estimation of (phi, theta) via coarse grid + local refine (c pinned to mean(w)(1-phi)), forecast integrated back to levels, 95% interval from integrated MA(∞) psi-weights (cumulative ARMA(1,1) weights). Main loop: load state → poll indexer resolved-count → SEED auto-flip check → per category fetch history (range midpoints of resolved revealed predictions; synthetic 15-pt seed if <10) → fit → clamp 95% band to domain → upload provenance JSON → `submitFullCycle` with fixed 5000 bps confidence. SEED mode: offset 350 blocks (~12 min), cadence 30 min. Normal: offset 43200 (~24h), cadence 6h.
+- **SEED_MODE (Part C)**: `agent.state.json` `{ mode, seedStartTimestamp }`; auto-flip when resolved-count ≥ 50 OR elapsed > 48h, persisted on flip. Indexer-unreachable count treated as 0 so a transient outage never falsely flips.
+- **register.ts (Part D)**: builds §8.1.1 metadata, pins to IPFS (or base64 data: URI fallback), `Agent.register(uri)` with the on-chain `REGISTRATION_FEE` (0.1 MNT), writes `AGENT_ID` back to `.env`.
+- **Both packages typecheck + emit clean** (`tsc` EXIT 0; dist js for all SDK + arima modules + register.js).
+
+**Decisions:**
+- **SDK public API accepts a structured `RangeValue {low,high}` OR pre-encoded `Hex` for `value`** — encodes internally via `encodeRangeValue`. Cleaner/type-safe than forcing callers to abi-encode (Prompt B sketched the agent encoding; SDK owning it is better and the agent just passes the range object).
+- **Pure-TS ARIMA over the `arima` npm pkg / Python sidecar** (Prompt offered "or"). Avoids native/WASM install + child_process fragility on Windows/CI; the CSS estimator + integrated psi-weight intervals are a legitimate ARIMA(1,1,1). Documented in `arima.ts`.
+- **`contentHash` = keccak256(content), not an IPFS CID.** The field is bytes32; a CIDv0 multihash digest is 32 bytes but coupling the on-chain value to IPFS availability is fragile. keccak is self-verifying; the CID (when pinned) lives in the provenance JSON + logs.
+- **predictionId from the receipt event, not simulate.** Concurrent commits could change `nextPredictionId` between simulate and mine; the `PredictionCommitted` log (matched on our commitHash) is authoritative.
+- **register() lives on the Agent class** (constructed with agentId=0n; register ignores it). One fewer export; the constructor key is the controller that gets bound.
+
+**Risks / followups:**
+- **NOT run live — needs deployed addresses (Prompt 7 Part C) + a funded controller key.** To run: deploy contracts (writes deployments JSON), `pnpm --filter @predictor-index/arima-baseline register` once, then `pnpm --filter @predictor-index/arima-baseline start`. Indexer should be live too (history + flip count); without it the agent uses synthetic seeds and treats count as 0 (stays in seed mode until 48h).
+- **Hosting (GitHub Actions cron OR Railway) not set up** — same deferral as the indexer. The loop is a long-running `while(true)`; on Actions it'd be a scheduled single-tick variant instead. Decide before demo.
+- **Series = range midpoints of the agent's *own* resolved predictions**, not the realized on-chain truth (the indexer doesn't store category outcomes). Fine as an autoregressive seed for a baseline; if v2 wants true-outcome ARIMA, index the resolver outcome or read it on-chain.
+- **ARIMA horizon = 1 step** (next observation), not literally 43200 blocks ahead. The interval still widens by the integrated psi-weights; acceptable for a baseline. The forecast targets "the next resolution" which is what gets scored.
+- **Synthetic seed centers are guesses** (METH 3000 bps, AAVE 1.4e16 ≈ $140M). Once real resolved history ≥10 points exists, synthetic is never used. Tune centers if the first-run bands look off vs. the live metric.
+
 ### 2026-05-28 — Prompt 8 code (Ponder indexer); live run/Railway deploy pending creds
 **Type:** Build (Prompt 8 — indexer code; live sync + hosting blocked on deployed addresses + creds)
 **Touched files:**
