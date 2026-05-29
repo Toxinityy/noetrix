@@ -17,11 +17,12 @@
 ### Files in this directory
 | File | Purpose | Owner |
 |------|---------|-------|
-| `README.md` | The full PRD (currently v2.1). Source of truth for product spec. | Hand-authored, patched by review sessions. |
-| `Prompt.md` | Sequenced Claude Code prompt series (v2.1). Drives the build prompt-by-prompt. Must stay in sync with README.md. | Same as README. |
+| `docs/PRD.md` | The full PRD (v2.2). Source of truth for product spec. (Was root `README.md` until 2026-05-29 — moved per Prompt 13 Part D.) | Hand-authored, patched by review sessions. |
+| `README.md` | GitHub-facing README (overview, architecture, quick-start, links). NOT the PRD. | Written Prompt 13 Part D. |
+| `Prompt.md` | Sequenced Claude Code prompt series (v2.2). Drives the build prompt-by-prompt. Must stay in sync with docs/PRD.md. | Same as PRD. |
 | `CLAUDE.md` | This file. Project context + history for new sessions. | Every session appends. |
 
-When `README.md` and `Prompt.md` disagree, **README.md wins** and `Prompt.md` is the bug.
+When `docs/PRD.md` and `Prompt.md` disagree, **docs/PRD.md wins** and `Prompt.md` is the bug.
 
 ---
 
@@ -57,7 +58,7 @@ AGENTS (off-chain Node)──┘
   refresher (cron: calls CompositeFeed.refresh)
 ```
 
-Contract count: 9 production + 2 mocks. See README.md §16 for repo layout.
+Contract count: 9 production + 2 mocks. See docs/PRD.md §16 for repo layout.
 
 ---
 
@@ -121,6 +122,50 @@ If a future session is tempted to add any of these, push back to the user first.
 ---
 
 ## 6. Session history
+
+### 2026-05-29 — Prompt 13 Parts G, E, F, D (docs) + PRD relocation
+**Type:** Docs (no code). Order done per user: G → E → F → D.
+**Touched files:**
+- `docs/PREFLIGHT.md` (new, Part G), `docs/DEMO_SCRIPT.md` (new, Part E), `docs/SUBMISSION.md` (new, Part F).
+- `README.md` → `docs/PRD.md` (git mv); new `README.md` (GitHub-facing, Part D).
+- `CLAUDE.md` (§0 file table + boot/spec refs repointed to docs/PRD.md; this entry).
+
+**What happened:**
+- **Part G — pre-flight checklist** (`docs/PREFLIGHT.md`): audited PRD §2 + §17. Verdict: **no code blockers** — everything buildable without a chain is built + verified (147 forge tests, all TS typechecks, `next build` clean). All gaps are operational (deploy creds → contracts/indexer/agents/Vercel/video) or input (team info). Ordered action list included.
+- **Part E — demo script** (`docs/DEMO_SCRIPT.md`): 2-min (cap 2:30) shot-by-shot — problem (0:00–0:30) → walkthrough leaderboard/agent-reasoning/feed/consumer (0:30–1:30) → pitch (1:30–2:00), with voiceover, key phrases, pre-record setup, end card, editing notes. Reasoning-trace beat protected as the demo peak.
+- **Part F — submission** (`docs/SUBMISSION.md`): one-liner, 5-paragraph description (problem/solution/ERC-8004/Mantle composition/revenue), AI-Alpha-&-Data track justification, concrete built-list, roadmap (PRD §15), links table (URLs/addresses/video = TBD), team placeholder.
+- **Part D — README relocation + GitHub README**: `git mv README.md docs/PRD.md`; wrote a new root `README.md` (overview, **mermaid** architecture diagram from PRD §6, quick-start for contracts/indexer/frontend/agents, addresses table + live-links + team = TBD placeholders, track rationale, repo layout). Repointed CLAUDE.md §0/§7 + the "source of truth" invariant from `README.md` to `docs/PRD.md`.
+
+**Decisions:**
+- **PRD moved to `docs/PRD.md`; root `README.md` is now the GitHub README** (was the open question from the 2026-05-26 bootstrap). The "PRD wins over Prompt.md" invariant now references `docs/PRD.md`. Prompt.md itself still says "README.md" internally in spots — not repointed this pass (low priority; Prompt.md is the build-sequence bug-bearer, not source of truth).
+- **Placeholders, not guesses**, for deploy-dependent fields (addresses, live URLs, video) and team info. Marked `_TBD_` + an HTML `<!-- TEAM -->` comment so they're greppable.
+- **Skipped Part C** (optional `/category` `/submit` `/about` pages) per spec — ship only if polish time remains; not needed for submission.
+
+**Risks / followups:**
+- **Team info still ❓** — README + SUBMISSION both have TBD team placeholders; fill before submitting.
+- Deploy-dependent TBDs in README/SUBMISSION/PREFLIGHT must be filled post-deploy (addresses, Vercel URL, indexer URL, video link).
+- `Prompt.md` still references `README.md` as the PRD in its text; if a future session relies on that, note the PRD is now `docs/PRD.md`.
+- `README.workspace.md` (old workspace stub) is now redundant with the new README — consider removing in a cleanup pass.
+
+### 2026-05-29 — Prompt 13 Part B + A error states (static fallback + cached-data banner)
+**Type:** Build (frontend demo-safety). `next build` clean.
+**Touched files:**
+- `frontend/scripts/gen-fallback.ts` (new), `frontend/public/fallback-leaderboard.json` (generated), `frontend/package.json` (gen:fallback script + tsx devDep).
+- `frontend/src/lib/hooks.ts` (cached tier), `frontend/src/app/(app)/leaderboard/LeaderboardClient.tsx` (banner).
+
+**What happened:**
+- **Static fallback (Part B)**: `gen-fallback.ts` writes `public/fallback-leaderboard.json` — from the live indexer when `INDEXER_URL` is set, else from curated mock. Ran it now (source=mock). Re-runnable via `pnpm --filter frontend gen:fallback` (or `INDEXER_URL=… tsx scripts/gen-fallback.ts`) post-deploy to snapshot real data.
+- **Cached tier in hooks**: `useLeaderboard` now has a three-tier source — `live` (indexer) → `cached` (static JSON, fetched when live errors/empties) → `mock` (no indexer configured). Added `DataSource = "live" | "cached" | "mock"`; the fallback file is fetched once (staleTime Infinity, only when `hasIndexer`).
+- **"Showing cached data" banner (Part A error state)**: warn-tone `role="status"` banner on the leaderboard when `source === "cached"` (indexer expected but down). Cached ≠ error, so it's warn-tone, not the red `ErrorState`.
+
+**Decisions:**
+- **Fallback generated, not hand-written** — a script keeps it in sync; post-deploy it snapshots the real indexer with one command. Committed JSON is mock-derived for now (functionally identical shape).
+- **Banner only on the `cached` state**, not `mock`. With no indexer configured (the current default), `source` is `mock` and no banner shows — that's the intended demo data, not a degraded state. The banner only signals a real live→cached fallback.
+- **Feed history kept on mock fallback** (no cached tier) — Part B scope is the leaderboard JSON; the banner is leaderboard-driven.
+
+**Risks / followups:**
+- Cached/banner path is **build-verified only** — exercising the live→cached transition needs a deployed indexer that then goes down. Logic is straightforward (live query error → fallback query data).
+- `public/fallback-leaderboard.json` is mock-derived; regenerate against the live indexer before the demo so the cached snapshot reflects real agents.
 
 ### 2026-05-29 — UI/UX polish pass (Prompt 13 Part A subset): reasoning peak + mobile overflow + dead links
 **Type:** Build (frontend polish; guided by the ui-ux-pro-max skill). `next build` clean. Visual/375px verification still needs a browser run.
@@ -736,12 +781,12 @@ If a future session is tempted to add any of these, push back to the user first.
 
 Concrete checklist for any new Claude session in this dir:
 
-1. **Read in order:** `CLAUDE.md` (this file) → `README.md` → `Prompt.md`.
+1. **Read in order:** `CLAUDE.md` (this file) → `docs/PRD.md` → `Prompt.md`.
 2. **Confirm understanding** by checking the invariants in §3 of this file are reflected in current PRD.
 3. **Check session history (§6)** for what was last touched and what's open.
 4. **If user asks "where are we":** answer using §5 (current build state) + §6 (last session).
 5. **If user is starting build:** they paste Prompt 0 from `Prompt.md` to begin.
-6. **If user wants to change spec:** make patches to `README.md`, then propagate to `Prompt.md`, then append a session entry to §6 of this file.
+6. **If user wants to change spec:** make patches to `docs/PRD.md`, then propagate to `Prompt.md`, then append a session entry to §6 of this file.
 7. **If you delete or skip a scope item:** make sure it's listed in §4. If not, ask the user.
 8. **Always end the session by appending to §6** with what changed.
 
