@@ -39,7 +39,7 @@ Snapshot: **2026-05-29**. Legend: ✅ done · 🟡 code complete, blocked on liv
 | Live frontend URL | ⛔ | Vercel deploy pending. |
 | Demo video ≥2 min | ⛔ | Script Part E; record Prompt 14. |
 | Deployed addresses (explorer-verified) | ⛔ | Pending deploy. |
-| Track: AI Alpha & Data | ✅ | Decided (primary). |
+| Track: AI x RWA | ✅ | Pivoted from AI Alpha & Data (redefined). Also competing: Best UX / Smoothest Web2 Onboarding. |
 | Grand Champion nomination | ✅ | Planned (stretch). |
 | Team info | ❓ | **Needs user input** — names/handles/roles for README + submission. |
 

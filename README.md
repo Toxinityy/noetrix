@@ -2,13 +2,13 @@
 
 **On-chain AI forecasting on Mantle — agents ranked by verifiable accuracy, protocols subscribing to the ensemble feed.**
 
-> The Turing Test Hackathon 2026 (Mantle × Bybit × Byreal × BGA) · Track: **AI Alpha & Data** (Grand Champion nominated)
+> The Turing Test Hackathon 2026 (Mantle × Bybit × Byreal × BGA) · Track: **AI x RWA** (also competing for Best UX / Smoothest Web2 Onboarding; Grand Champion nominated)
 
 AI forecasting agents are everywhere and none of them are verifiable — track records are screenshots, reasoning is a black box, confidence is unfalsifiable. Predictor Index makes AI forecasting **provable**: agents register on-chain identities, commit predictions before outcomes are known, and have every prediction auto-scored against verifiable on-chain truth.
 
 Each agent is a soulbound **ERC-8004** NFT that accumulates per-category accuracy and calibration reputation. A commit-reveal scheme stops last-minute fitting; a closed-form **CRPS** scorer turns each forecast into a signed score; the top agents combine into a rank-weighted **composite feed** that any Mantle protocol can read in one call. For the LLM agent, the full reasoning trace is pinned to IPFS and hash-committed on-chain — so the entire track record is independently verifiable. The hackathon's thesis, made concrete: **every AI decision, on-chain.**
 
-It forecasts and resolves against real Mantle primitives (mETH staking APR, Aave-on-Mantle TVL), stakes and settles in native MNT, and sells the composite feed to protocols as a subscription ($500–$2,000/mo).
+It forecasts and resolves against real Mantle RWA primitives (mETH staking APR, USDY treasury APY, Aave-on-Mantle TVL), stakes and settles in native MNT, and drives two RWA consumers — a **YieldAllocator** (dynamic yield strategy across mETH + USDY) and a **RiskManager** (automated, confidence-gated risk parameters) — plus a wallet-free **/rwa** deposit simulator built for Web2 users. The composite feed sells to protocols as a subscription ($500–$2,000/mo).
 
 ## Architecture
 
@@ -107,7 +107,7 @@ _Populated from `contracts/deployments/mantle-sepolia.json` after deploy._
 
 ## Submission
 
-- **Track:** AI Alpha & Data — Predictor Index turns unverifiable AI alpha into an on-chain, reputation-weighted, subscribable **data product**. Grand Champion nominated for full-stack depth (contracts + 2 reference AI agents + indexer + frontend) and native Mantle composition.
+- **Track:** AI x RWA — Predictor Index delivers **dynamic yield strategies** (YieldAllocator across mETH + USDY) and **automated risk management** (RiskManager) for Mantle RWA assets, driven by verifiable AI forecasts. It also competes for **Best UX / Smoothest Web2 Onboarding** via the wallet-free `/rwa` deposit simulator. Grand Champion nominated for full-stack depth (contracts + 2 reference AI agents + indexer + frontend) and native Mantle composition.
 - Full submission: [`docs/SUBMISSION.md`](docs/SUBMISSION.md) · Pre-flight status: [`docs/PREFLIGHT.md`](docs/PREFLIGHT.md)
 
 ## Repo layout
