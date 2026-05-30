@@ -11,6 +11,7 @@ import {RangeCrpsScorer} from "../src/scorers/RangeCrpsScorer.sol";
 import {ResolutionEngine} from "../src/ResolutionEngine.sol";
 import {MockMethRateOracle} from "../src/mocks/MockMethRateOracle.sol";
 import {MockAavePool} from "../src/mocks/MockAavePool.sol";
+import {MockAToken} from "../src/mocks/MockAToken.sol";
 import {MethAprResolver} from "../src/resolvers/MethAprResolver.sol";
 import {AaveMantleTvlResolver} from "../src/resolvers/AaveMantleTvlResolver.sol";
 import {CompositeFeed} from "../src/CompositeFeed.sol";
@@ -47,6 +48,16 @@ contract Deploy is Script {
     uint256 internal constant MIN_STAKE = 0.1 ether;
     uint256 internal constant WINDOW_START = 300; // == PredictionMarket.MIN_RESOLUTION_OFFSET
     uint256 internal constant WINDOW_END = 500_000;
+
+    // mETH synthetic curve: ~822 ppm/day → resolved APR ≈ 822 × 3.65 ≈ 3000 bps (matches agent seed center).
+    uint256 internal constant METH_DAILY_GROWTH_PPM = 822;
+    // anchor = deployBlock − this; must sit below the earliest queried block (first resolutionBlock − 43200).
+    uint256 internal constant METH_ANCHOR_LOOKBACK = 50_000;
+
+    // Aave reserve seeds → total TVL ≈ $142M (matches the frontend narrative). Prices are 8-dec USD.
+    // Asset addresses are arbitrary unique keys (only used to index the reserve in the mock pool).
+    address internal constant AAVE_USDC = 0x0000000000000000000000000000000000000a01;
+    address internal constant AAVE_WETH = 0x0000000000000000000000000000000000000a02;
 
     // Deployed addresses (state vars to dodge stack-too-deep in run()).
     AgentRegistry agentRegistry;
@@ -93,6 +104,11 @@ contract Deploy is Script {
         // 7. Mock oracles (v1 archive-RPC substitutes)
         methOracle = new MockMethRateOracle(deployer);
         aavePool = new MockAavePool(deployer);
+        // 7a. Seed the mock Aave pool with two reserves so TVL resolves to ≈ $142M (not $0).
+        MockAToken aUsdc = new MockAToken(88_000_000 * 1e6, 6); // 88M USDC (6 dec)
+        MockAToken aWeth = new MockAToken(18_000 * 1e18, 18); // 18k WETH (18 dec)
+        aavePool.addReserve(AAVE_USDC, address(aUsdc), 1e8); // $1.00  → $88M
+        aavePool.addReserve(AAVE_WETH, address(aWeth), 3000 * 1e8); // $3,000 → $54M
         // 8. MethAprResolver
         methAprResolver = new MethAprResolver(IMethRateOracle(address(methOracle)));
         // 9. AaveMantleTvlResolver (pool doubles as oracle in the mock)
@@ -150,6 +166,9 @@ contract Deploy is Script {
             WINDOW_END,
             abi.encode(TVL_DOMAIN_MIN, TVL_DOMAIN_MAX)
         );
+
+        // mETH oracle synthetic curve so any agent-chosen resolutionBlock resolves to ~3000 bps APR.
+        methOracle.setSynthetic(block.number - METH_ANCHOR_LOOKBACK, 1e18, METH_DAILY_GROWTH_PPM);
 
         // CompositeFeed dependencies.
         compositeFeed.setAgentRegistry(IAgentRegistry(address(agentRegistry)));

@@ -44,7 +44,7 @@ export function loadConfig(): ReasonerConfig {
     addresses: loadAddresses(),
     llmApiKey: required("OPENROUTER_API_KEY"),
     llmBaseUrl: process.env.OPENROUTER_BASE_URL ?? "https://openrouter.ai/api/v1",
-    model: process.env.OPENROUTER_MODEL ?? "deepseek/deepseek-v4-flash",
+    model: process.env.OPENROUTER_MODEL ?? "deepseek/deepseek-chat-v3.1",
     cryptoPanicToken: process.env.CRYPTOPANIC_TOKEN,
     categories: [
       {

@@ -5,6 +5,7 @@ packages:
   - "agents/arima-baseline"
   - "agents/claude-reasoner"
   - "agents/refresher"
+  - "agents/resolver"
 
 ignoredBuiltDependencies:
   - sharp

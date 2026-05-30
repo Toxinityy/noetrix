@@ -15,6 +15,10 @@
     "dev:agents": "pnpm --parallel --filter \"@predictor-index/*\" dev",
     "dev:all": "pnpm -r --parallel dev",
     "test": "pnpm -r test",
-    "clean": "pnpm -r clean"
+    "clean": "pnpm -r clean",
+    "balances": "node scripts/check-balances.mjs"
+  },
+  "devDependencies": {
+    "viem": "^2.51.0"
   }
 }

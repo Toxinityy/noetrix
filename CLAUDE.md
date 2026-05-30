@@ -123,6 +123,52 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-05-30 — FIRST LIVE DEPLOY to Mantle Sepolia + fixed 3 live-pipeline gaps
+**Type:** Build + deploy (the operational unblock). All 13 contracts live on Mantle Sepolia (chainId 5003). 147/147 forge tests still green.
+**Deployer:** `0x23015eEb4CDDBF71be80ea4259B5a32Cf1b60e60` (~497 MNT left after 2 deploys).
+
+**Deployed addresses (authoritative — `contracts/deployments/mantle-sepolia.json`):**
+| Contract | Address |
+|----------|---------|
+| AgentRegistry | `0x7557D821788677dac39d737cD75580D3cC495643` |
+| PredictionMarket | `0x7C73819dEA3C060A5609DD669D899aFeB7bB7046` |
+| BonusDistributor | `0x7CBCa4966dC9F37f0AAB184f04a373b8215DA107` |
+| ScoringEngine | `0xE5650634D9fC8904c1d188C0f9a0CD836C9De8d3` |
+| RangeCrpsScorer | `0x5FF0A9E1aFC110F968bDd27f55A1e653889a11d8` |
+| ResolutionEngine | `0x7d7E9dd38317A63b5D2b2E4831ab8f305df4458B` |
+| MockMethRateOracle | `0x9066B8BA1b4c11d5D71A8e493555fc79D45ba028` |
+| MockAavePool | `0xbCD003b3C01baf18a216E720f9a7e3D2a8882767` |
+| MethAprResolver | `0xBAad9e6C2fCB8F0FeE27D7b8b87DEEB28abAF277` |
+| AaveMantleTvlResolver | `0x68f1a0459c4BBe82e9E5e74f35Fbf5f146618207` |
+| CompositeFeed | `0x798f1C7a6bb6f507A71D6304aC0561D92c395748` |
+| SubscriptionGate | `0xEd7Eda46b3c0Dd101088F8094AA908C12c2cD148` |
+| DemoFeedConsumer | `0x0dce172DCe35284D043E4F8Cf8A719d7eFe04E19` |
+
+(NOTE: an earlier deploy this session produced a now-ABANDONED address set — the redeploy below replaced it. Use ONLY the table above.)
+
+**What happened:**
+- First broadcast deployed all 13 contracts. **Then three integration gaps were found that block a genuinely on-chain *resolved* leaderboard** (criteria §2.4 + §2.7) — none caught earlier because nothing had run live (consistent with every prior "NOT run live" caveat):
+  1. **No resolver bot existed.** Only `SmokeTest.s.sol` ever called `ResolutionEngine.resolve()`. Without a caller, predictions commit+reveal but never score → leaderboard empty.
+  2. **MockMethRateOracle was exact-block-match** (`getRateAt` reverts unless the exact block was seeded). Agents pick `resolutionBlock = currentBlock + offset` (arbitrary), so every mETH resolution would revert.
+  3. **MockAavePool shipped with zero reserves** (Deploy never called `addReserve`, no seed script) → AAVE TVL resolved to $0 vs agents forecasting ~$140M.
+- **Fixes (then redeployed fresh — old addresses abandoned since nothing consumed them yet):**
+  1. **Built `agents/resolver/`** (new workspace pkg, mirrors `refresher/`). Scans `PredictionMarket.nextPredictionId` → `getPrediction(id)` on-chain (NO indexer dependency), resolves every `Revealed` prediction past its `resolutionBlock` via `ResolutionEngine.resolve()`. Persisted `cursor` in `resolver.state.json` advances past contiguous terminal predictions. Simulate-first (skips gas on `ResolutionBlockNotReached`). Dual-mode loop / `--once`. Earns the 2% resolver reward. Typechecks clean.
+  2. **Rewrote `MockMethRateOracle`**: kept the override table + `RateNotSet` revert, ADDED a synthetic linear-growth curve (`setSynthetic(anchorBlock, baseRate, dailyGrowthPpm)`) answered for ANY block ≥ anchor. Lookup order: explicit override → synthetic → revert. Resolved APR ≈ `dailyGrowthPpm × 3.65` bps.
+  3. **`Deploy.s.sol`**: now (a) deploys 2 `MockAToken`s + `addReserve` (88M USDC @ $1 + 18k WETH @ $3000 = **$142M TVL**, matches the frontend narrative); (b) calls `methOracle.setSynthetic(block.number − 50000, 1e18, 822)` → resolves to **~3000 bps** (matches agent seed center; anchor sits safely below the earliest queried `resolutionBlock − 43200`).
+- **Verified live via `cast call` on the (view) resolvers:** `MethAprResolver.resolve(0x, block+350)` → **2999 bps**; `AaveMantleTvlResolver.resolve(0x, 0)` → **14200000000000000 = $142.0M**. Both at arbitrary blocks (the exact thing that was broken).
+
+**Decisions:**
+- **Synthetic curve over per-prediction seeding.** Option B (resolver bot seeds the oracle at exact blocks before resolving) was rejected — the synthetic curve makes the contract correct for any block with zero operational coupling, and keeps the override table for tests/SeedRates. `SeedRates.s.sol` is now optional (synthetic handles everything).
+- **Resolver reads on-chain, not via the indexer.** `nextPredictionId` is public + sequential from 1, so a bare RPC scan is enough — one fewer live dependency during the 24h run.
+- **Redeploy fresh rather than surgical patch.** The oracle bytecode changed → new address → `MethAprResolver` (immutable oracle) needed redeploy → category re-registration. Since the indexer/agents/frontend hadn't started against the first deploy, a clean re-run of `Deploy.s.sol` was simpler than partial rewiring. First address set is dead.
+- **822 ppm/day** chosen so resolved APR ≈ 3000 bps == ARIMA/reasoner synthetic center, so first-run scores are sensible (not all terrible from a center mismatch). The PRD's "≈2.92% APR" comment on 8 ppm was ~10× off; bps domain is coarse (already flagged) — 3000 bps reads as "30%" but keeps forecasts + outcomes co-located.
+
+**Risks / followups:**
+- **Verification still pending.** Mantlescan killed its V1 API (`--verify` failed: "deprecated V1 endpoint, switch to Etherscan API V2"). Contracts deployed fine; verify needs an Etherscan **V2** key + `--verifier-url https://api.etherscan.io/v2/api` (or sourcify). Retry post-deploy.
+- **`PRIVATE_KEY` in `contracts/.env` was missing the `0x` prefix** — `cast` tolerated it but `vm.envUint` reverted. Prefix added in-place. Other envs (agents/refresher/resolver) may have the same issue — check before running.
+- **The live 24h run is the remaining operational work** (not yet done): start indexer (with new addresses + `PONDER_START_BLOCK` = AgentRegistry deploy block ≈ 39286945) → register + run both agents in SEED_MODE → run `resolver` + `refresher` bots → ≥50 resolved predictions accrue → set frontend `NEXT_PUBLIC_*` + Vercel deploy → regenerate `fallback-leaderboard.json` from the live indexer.
+- Resolver/refresher need their own small-balance hot wallets (`RESOLVER_PRIVATE_KEY`, `REFRESHER_PRIVATE_KEY`) — NOT agent keys. Fund with gas.
+
 ### 2026-05-29 — Prompt 13 Part C (optional pages: /category, /submit, /about)
 **Type:** Build (frontend, additive). `next build` clean — 9 routes. User opted in (spec marks these optional).
 **Touched files:**
