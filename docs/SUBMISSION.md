@@ -1,7 +1,7 @@
 # Predictor Index — DoraHacks submission
 
 **Hackathon:** The Turing Test Hackathon 2026 (Mantle × Bybit × Byreal × BGA)
-**Track:** AI Alpha & Data (primary) · Grand Champion (nominated)
+**Track:** AI x RWA (primary) · Best UX / Smoothest Web2 Onboarding · Grand Champion (nominated)
 
 ## One-liner
 
@@ -15,13 +15,19 @@ On-chain AI forecasting benchmark for Mantle — agents ranked by verifiable acc
 
 **ERC-8004 integration.** Every agent's identity is a soulbound ERC-8004 NFT. Reputation accrues to the token, not the controller wallet, so a controller key can be rotated (behind a 24h timelock) without losing history, and an agent identity can't be sold, transferred, or laundered through a fresh address. A 0.1 MNT registration fee deters Sybil farming and seeds the bonus pool.
 
-**Mantle ecosystem composition.** The protocol forecasts and resolves against real Mantle primitives — mETH staking APR and Aave-on-Mantle TVL — using on-chain resolvers, and stakes/settles in native MNT with a per-epoch bonus pool. It composes *with* Mantle rather than sitting beside it: the composite feed is designed for Mantle lending markets, vaults, and treasuries to consume for parameter, risk, and treasury decisions (see the `DemoFeedConsumer` example: allow deposits when forecast mETH APR clears a floor, throttle risk when forecast TVL drops).
+**RWA composition (mETH + USDY).** The protocol forecasts and resolves against real Mantle RWA yield primitives — **mETH** staking APR and **USDY** (Ondo's tokenized US-Treasury stablecoin) APY — plus Aave-on-Mantle TVL, using on-chain resolvers, staking/settling in native MNT. Two reference consumers turn those forecasts into RWA infrastructure: a **YieldAllocator** computes a confidence-weighted dynamic allocation across mETH and USDY (the "dynamic yield strategy"), and a **RiskManager** derives per-asset collateral factors, deposit caps, and a Normal/Caution/Frozen risk state from forecast confidence + freshness (the "automated risk management"). Both are advisory/read-only — a real vault or lending market embeds them — a deliberate scope choice (no custody) for the hackathon.
 
 **Revenue model.** Protocols subscribe to the gated composite feed at $500–$2,000/mo per protocol (tiered). The subscription gate is built and architecturally proven; it's left open in v1 so hackathon judges can read freely. Secondary value: data licensing and premium analytics tiers post-hackathon.
 
-## Track justification — AI Alpha & Data
+## Track justification — AI x RWA
 
-Predictor Index is squarely "AI + Data": it is an AI-agent benchmark that produces a *data product* (the composite forecast feed) consumable by other protocols. It turns unverifiable AI alpha into an on-chain, reputation-weighted, subscribable data stream — directly the category's intent. The Grand Champion nomination is justified by full-stack depth (9 production contracts + 2 reference AI agents + indexer + frontend) and genuine Mantle composition.
+The track asks for *"dynamic yield strategies and automated risk management for assets including USDY and mETH, built on Mantle's RWA infrastructure."* Predictor Index hits every clause: it forecasts **mETH** and **USDY** yield (both named in the track), the **YieldAllocator** is the dynamic yield strategy, and the **RiskManager** is the automated risk management — all driven by AI forecasts that are verifiable on-chain rather than a black box. The novel angle: the yield/risk logic is powered by a *competitive, reputation-weighted AI forecast feed*, not a single oracle.
+
+## Second award — Best UX / Smoothest Web2 Onboarding
+
+The `/rwa` page is a deliberately Web2-friendly surface: **no wallet, no login, no MetaMask** — ever. A traditional user types a deposit amount and instantly sees projected annual yield, the AI's auto-balanced allocation, and a plain-language safety check, computed client-side from the live feed. Crypto jargon is translated throughout (bps → %, "composite feed" → "AI consensus forecast", risk enum → "Looking healthy / Cautious / Paused"). It's grounded in an accessible-by-design system (WCAG contrast, SVG-not-emoji icons, reduced-motion, keyboard, 375px) and is the conversion bridge from curious Web2 users to the on-chain product.
+
+The Grand Champion nomination is justified by full-stack depth (11 production contracts + 2 reference AI agents + indexer + frontend) and genuine Mantle composition.
 
 ## What was built (concrete)
 

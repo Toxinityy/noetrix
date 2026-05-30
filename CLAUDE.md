@@ -8,7 +8,7 @@
 
 - **Project:** Predictor Index — on-chain AI agent forecasting protocol on Mantle Network
 - **Hackathon:** The Turing Test Hackathon 2026 (Mantle × Bybit × Byreal × BGA)
-- **Tracks:** AI Alpha & Data (primary), Grand Champion (stretch)
+- **Tracks:** AI x RWA (primary — pivoted from AI Alpha & Data after the org redefined the tracks 2026-05-30), Best UX / Smoothest Web2 Onboarding (second award via `/rwa`), Grand Champion (stretch)
 - **Build window:** 2 weeks
 - **Team size assumption:** 1–3 builders
 - **Working dir:** `D:\Hackathon\mantle-hackathon`
@@ -91,7 +91,7 @@ These were explicitly cut from hackathon scope in v2/v2.1. They live in §14 of 
 
 - StakingPool (user staking on agents) — stretch in v1, cut in v2
 - Third agent (specialized-quant)
-- Third category (MNT_PRICE_7D — oracle integration too risky)
+- Third category (MNT_PRICE_7D — oracle integration too risky). NOTE: a **USDY_APY_24H** third category WAS deliberately re-added 2026-05-30 for the AI x RWA pivot (USDY is named in the track) — it reuses the proven mETH resolver/oracle pattern, so the original "oracle integration too risky" reason doesn't apply. MNT_PRICE_7D stays cut.
 - Hardhat (Foundry only)
 - /category, /submit, /about pages as Day-13 mandatory (ship only if polish allows)
 - Cross-chain feed reads
@@ -122,6 +122,31 @@ If a future session is tempted to add any of these, push back to the user first.
 ---
 
 ## 6. Session history
+
+### 2026-05-30 (later) — AI x RWA PIVOT: USDY category + YieldAllocator + RiskManager + Web2 /rwa page
+**Type:** Build (brainstorm → spec → plan → inline TDD execution). Branch `rwa-pivot`. Spec: `docs/superpowers/specs/2026-05-30-rwa-pivot-design.md`; plan: `docs/superpowers/plans/2026-05-30-rwa-pivot.md`.
+
+**Why:** The hackathon org **redefined the tracks**. Our original "AI Alpha & Data" was recast as *smart-money tracking + anomaly bots via Telegram/Discord* — a mismatch. Closest literal fit is now **AI x RWA** (*"dynamic yield strategies and automated risk management for assets including USDY and mETH"*) — we already forecast mETH + have a risk consumer. Also targeting a 2nd award: **Best UX / Smoothest Web2 Onboarding**.
+
+**What was built (Tasks 1–12 of the plan; contracts + agents + frontend done, redeploy pending):**
+- **USDY category** — `UsdyApyResolver.sol` (mirror of MethAprResolver; reuses the generic `MockMethRateOracle`/`IMethRateOracle` — no new oracle contract). Domain `[0,2000]` bps (~0–20% APY). 3 tests. Verified 500 bps math.
+- **`YieldAllocator.sol`** — confidence-weighted dynamic allocation across mETH + USDY (eff = yield×conf/1e4; alloc sums to 1e4). Falls back to 50/50 when EITHER feed is stale/empty (a TDD test caught my first version concentrating 100% into the fresh asset — fixed to require both usable). 3 tests.
+- **`RiskManager.sol`** — single shared manager keyed by categoryId: `collateralFactor` (baseCf×conf, clamped), `depositCap` (maxCap×conf), `riskState` {Normal,Caution,Frozen} from confidence + freshness, `isPaused`. Owner registers assets. 4 tests.
+- **`MockCompositeFeed.sol`** test helper. **Deploy.s.sol** wired: USDY oracle+resolver, USDY category on RE+PM, synthetic curve (~137 ppm/day→~500 bps), YieldAllocator + RiskManager deployed + 2 assets registered, 4 new addresses serialized. **157/157 tests** (was 147). Deploy dry-run sims clean (17 contracts, ~1.82 MNT).
+- **Agents** — both arima + reasoner now forecast USDY (one config entry each). Typecheck clean.
+- **Frontend `/rwa`** (Web2 surface, separate from terminal-core): YieldCard/AllocationBar/SafetyBadge (SVG icons not emoji), DepositSimulator (no-wallet $ slider → projected yield + AI allocation + safety badge, client-side), HowItWorks (skippable `<details>`). Live reads of feed/allocator/risk with demo fallback; "Earn" nav link. Grounded in ui-ux-pro-max "Accessible & Ethical" system. `next build` clean. Jargon translated (bps→%, feed→"AI consensus", risk enum→friendly labels).
+
+**Decisions:**
+- **Clean redeploy** (not incremental) chosen for Task 7 — oracle/resolver/consumer additions change addresses anyway; live run was still early. NOT YET DONE (operational, deferred per user's "frontend+docs first, redeploy last" ordering).
+- **USDY oracle reuses MockMethRateOracle** (generic rate oracle) — DRY, no 2nd oracle contract.
+- **Allocator/RiskManager are advisory (no custody)** — deliberate hackathon scope; state to judges as a choice, not a gap.
+- **`/rwa` is a deliberately separate Web2 skin** — terminal-core stays for crypto-natives; no re-theme.
+- Reasoner model corrected earlier this day: `deepseek/deepseek-chat-v3.1` (v4-flash is a reasoning model → content:null → breaks the JSON parser).
+
+**Risks / pending:**
+- **Task 7 redeploy + live verify NOT done** — needs `forge script Deploy --broadcast` (~1.82 MNT), re-register agents (fresh AGENT_IDs), restart indexer (fresh `--schema`, e.g. live2) + bots, then set frontend `NEXT_PUBLIC_ADDR_YIELD_ALLOCATOR`/`_RISK_MANAGER` + rebuild. `/rwa` runs on demo fallback until those env vars are set.
+- USDY oracle is a mock (same honest "v1 seeded; v2 reads live Ondo" caveat as mETH).
+- Branch `rwa-pivot` not yet merged to master.
 
 ### 2026-05-30 — FIRST LIVE DEPLOY to Mantle Sepolia + fixed 3 live-pipeline gaps
 **Type:** Build + deploy (the operational unblock). All 13 contracts live on Mantle Sepolia (chainId 5003). 147/147 forge tests still green.
@@ -168,6 +193,37 @@ If a future session is tempted to add any of these, push back to the user first.
 - **`PRIVATE_KEY` in `contracts/.env` was missing the `0x` prefix** — `cast` tolerated it but `vm.envUint` reverted. Prefix added in-place. Other envs (agents/refresher/resolver) may have the same issue — check before running.
 - **The live 24h run is the remaining operational work** (not yet done): start indexer (with new addresses + `PONDER_START_BLOCK` = AgentRegistry deploy block ≈ 39286945) → register + run both agents in SEED_MODE → run `resolver` + `refresher` bots → ≥50 resolved predictions accrue → set frontend `NEXT_PUBLIC_*` + Vercel deploy → regenerate `fallback-leaderboard.json` from the live indexer.
 - Resolver/refresher need their own small-balance hot wallets (`RESOLVER_PRIVATE_KEY`, `REFRESHER_PRIVATE_KEY`) — NOT agent keys. Fund with gas.
+
+### 2026-05-30 (later) — LIVE RUN: agents registered + full pipeline running on Sepolia
+**Type:** Operational (live run) + bug fixes surfaced by first real execution. No contract redeploy.
+
+**What happened — the pipeline went live end-to-end:**
+- **Both agents registered on-chain.** ARIMA = **agentId 1** (controller `0xD1bBf1B3BeCD81dc5659080c82d0d3A427526855`), Reasoner = **agentId 2** (controller `0xa833BA2E1Ae8e5a509F1FA9c8B9Fcf20358F7D5b`). Verified via `controllerOf`. AGENT_IDs written to each `.env`.
+- **Indexer live** at `localhost:42069` — reached realtime, `/leaderboard` responds (count 0 until resolutions land).
+- **All 4 bots running** (background, via compiled dist): arima, reasoner, resolver, refresher.
+- **Confirmed real on-chain activity:** ARIMA committed+revealed prediction 1 (mETH band [2997,3003] bps, commit `0x7acf5272`); Reasoner (real DeepSeek call) committed+revealed prediction 2 (commit `0xc1822625`); Refresher refreshed both feeds (`0x9afc52a9`, `0xaf757f2d`). Resolver scanning, waiting for predictions to mature (~350 blocks ≈ 12 min after commit).
+
+**Bugs found + fixed this run (all real, surfaced only by live execution):**
+1. **SDK `loadAddresses` used `??` not `isReal`** → an empty `ADDR_AGENT_REGISTRY=` line in a `.env` shadowed the deployments JSON and threw "missing AgentRegistry". Fixed: gate on `isReal()` so empty env falls through to JSON. (agents/sdk/src/addresses.ts)
+2. **All 4 bot private keys lacked the `0x` prefix** (64 hex chars) → viem `privateKeyToAccount` threw "invalid private key". Prefixed all 4 in-place. (Same class as the deployer `PRIVATE_KEY` bug from the deploy session — **this is a recurring gotcha; always check 0x on keys.**)
+3. **`deepseek-v4-flash` is a reasoning model** → returns `content:null` (all tokens to `reasoning`), which `forecast.ts` rejects as "empty completion". Switched default + envs to `deepseek/deepseek-chat-v3.1` (returns parseable JSON; verified live with a real forecast).
+4. **Indexer ignored `PONDER_START_BLOCK`** → scanned from block 0 (39M blocks). Ponder reads **`.env.local`, not `.env`**. Put `PONDER_START_BLOCK=39286856` (AgentRegistry deploy block, verified from the receipt) into `indexer/.env.local`. Range dropped to ~17k blocks.
+5. **Public Mantle RPC 429s** Ponder's parallel `eth_getLogs` burst. Added `maxRequestsPerSecond` (default 3, env `PONDER_MAX_RPS`) to the chain config. Backfill still completes (retries w/ backoff); a paid Alchemy/Infura URL is the real fix for a sustained run.
+6. **`ponder start` needs an explicit `--schema`** (dev doesn't). Used `--schema live1` (a fresh name — `public` was claimed by the abandoned from-0 run). Run via `node node_modules/ponder/dist/esm/bin/ponder.js start --schema live1`.
+
+**Decisions / how-to-run notes:**
+- **Run bots via compiled `dist` + node directly**, NOT `pnpm <script>` in background — the pnpm/TUI wrapper detaches badly on Windows background tasks and the process dies when the foreground wrapper exits. Entry paths differ: arima/reasoner = `dist/src/index.js`, resolver/refresher = `dist/index.js`.
+- **Background bash does NOT inherit an earlier `cd`** and starts from an arbitrary cwd → always `cd /abs/path && node ... > /abs/log 2>&1` in the SAME command, with an ABSOLUTE log path (a relative `../logs/x.log` failed with "No such file or directory").
+- Reasoner cold-start bands are very wide (mETH [0,1000], AAVE full domain, conf 9999) — the LLM is maximally uncertain with no history. Acceptable; calibration will reflect it. Watch as history accrues.
+
+**FULL LOOP CONFIRMED LIVE (same session):** Resolver resolved predictions 1–4 on-chain (txs `0xe7ebebed`, `0x055574d3`, `0xfcccd29e`, `0x866fa6e1`). Scores landed: pred1 (ARIMA mETH, tight band) **994167**, pred2 (Reasoner mETH) 976667, pred3 998334, pred4 (wide band) 581284 — CRPS behaving correctly (tighter band near truth → higher score). Indexer `/leaderboard` shows both agents with live accuracy (agent 1 = 99416) + climbing resolvedCount. **register→commit→reveal→resolve→CRPS→reputation→leaderboard is proven end-to-end on Sepolia.** Resolutions landed despite public-RPC 429s.
+
+**Cost-control plan approved (next):** keep DeepSeek (LLM cost ~$1–2 one-time for a burst to ≥50 resolved; ~$0.0012/call), add a FREE Alchemy/Infura Mantle Sepolia RPC across all 5 services (env only, no code) to kill the 429s, then burst-run to ≥50 resolved and STOP the bots (data persists on-chain + indexer). Plan: `~/.claude/plans/cached-wandering-kurzweil.md`. RPC URL is a user signup action.
+
+**Risks / still pending:**
+- **Everything runs on the local machine** — bots + indexer die when the box sleeps / terminals close. For the ≥50-resolved criterion + an unattended demo, host them (Railway/GH Actions) or keep the machine awake. The indexer's PGlite DB is local too.
+- Public RPC will likely throttle the indexer + bots over many hours. A paid Sepolia RPC is strongly recommended before the real 24h SEED run.
+- Mantlescan verification still pending (Etherscan V2 API).
 
 ### 2026-05-29 — Prompt 13 Part C (optional pages: /category, /submit, /about)
 **Type:** Build (frontend, additive). `next build` clean — 9 routes. User opted in (spec marks these optional).
