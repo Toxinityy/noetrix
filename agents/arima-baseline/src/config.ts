@@ -48,6 +48,7 @@ export function loadConfig(): ArimaConfig {
     categories: [
       { label: "METH_APR_24H", syntheticCenter: 3000, syntheticDriftPpm: 800 }, // ~30% APR-bps band seed
       { label: "AAVE_MANTLE_TVL_24H", syntheticCenter: 1.4e16, syntheticDriftPpm: 500 }, // ~$140M, 8-dec
+      { label: "USDY_APY_24H", syntheticCenter: 500, syntheticDriftPpm: 300 }, // ~5% APY bps
     ],
     normalOffsetBlocks: 43_200n, // ~24h
     seedOffsetBlocks: 350n, // ~12 min, > 200 cutoff + 100 reveal window

@@ -61,6 +61,14 @@ export function loadConfig(): ReasonerConfig {
           "(up to ~$1B); resolved by summing reserve aToken supply × oracle price across the pool.",
         newsCurrencies: ["AAVE", "MNT", "ETH"],
       },
+      {
+        label: "USDY_APY_24H",
+        description:
+          "24h annualized APY of Ondo USDY (a yield-bearing RWA stablecoin) on Mantle, in basis points " +
+          "(bps). Domain [0, 2000] bps (0%–20%); resolved by annualizing the USDY price-per-share change " +
+          "over the prior day. USDY tracks short-term US Treasury yields, so expect ~400–550 bps.",
+        newsCurrencies: ["USDY", "ONDO", "MNT"],
+      },
     ],
     normalOffsetBlocks: 43_200n, // ~24h
     seedOffsetBlocks: 350n, // ~12 min
