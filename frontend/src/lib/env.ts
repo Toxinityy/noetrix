@@ -15,6 +15,8 @@ export const env = {
     demoConsumer: addr(process.env.NEXT_PUBLIC_ADDR_DEMO_CONSUMER),
     agentRegistry: addr(process.env.NEXT_PUBLIC_ADDR_AGENT_REGISTRY),
     predictionMarket: addr(process.env.NEXT_PUBLIC_ADDR_PREDICTION_MARKET),
+    yieldAllocator: addr(process.env.NEXT_PUBLIC_ADDR_YIELD_ALLOCATOR),
+    riskManager: addr(process.env.NEXT_PUBLIC_ADDR_RISK_MANAGER),
   },
 } as const;
 
@@ -22,6 +24,9 @@ export const env = {
 export const hasIndexer = env.indexerUrl.length > 0;
 /// CompositeFeed deployed — enables live on-chain reads + the manual refresh button.
 export const hasFeed = env.addresses.compositeFeed !== "";
+/// RWA consumers deployed — enables live allocation + risk reads on /rwa.
+export const hasYieldAllocator = env.addresses.yieldAllocator !== "";
+export const hasRiskManager = env.addresses.riskManager !== "";
 
 export function explorerAddress(address: string): string {
   return `${env.explorerUrl}/address/${address}`;

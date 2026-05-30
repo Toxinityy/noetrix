@@ -1,8 +1,8 @@
 import { keccak256, toBytes, type Hex } from "viem";
-import type { CategoryId } from "@/lib/mockData";
 
 /// keccak256 of the category label — matches the contract's `keccak256("LABEL")` id derivation.
-export function categoryHash(label: CategoryId): Hex {
+/// Accepts any label string (METH_APR_24H, AAVE_MANTLE_TVL_24H, USDY_APY_24H, …).
+export function categoryHash(label: string): Hex {
   return keccak256(toBytes(label));
 }
 
@@ -82,3 +82,61 @@ export const DEMO_THRESHOLDS = {
   methAprDepositBps: 400,
   aaveTvlThrottle: 500_000_000 * 1e8, // $500M in USD 8-dec
 } as const;
+
+/// YieldAllocator — confidence-weighted dynamic allocation across mETH + USDY.
+export const yieldAllocatorAbi = [
+  {
+    type: "function",
+    name: "getAllocation",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [
+      { name: "allocMethBps", type: "uint256" },
+      { name: "allocUsdyBps", type: "uint256" },
+      { name: "methYield", type: "uint256" },
+      { name: "usdyYield", type: "uint256" },
+    ],
+  },
+  { type: "function", name: "rebalanceSignal", stateMutability: "view", inputs: [], outputs: [{ type: "bool" }] },
+] as const;
+
+/// RiskManager — per-asset risk params derived from forecast confidence + freshness.
+export const riskManagerAbi = [
+  {
+    type: "function",
+    name: "riskState",
+    stateMutability: "view",
+    inputs: [{ name: "categoryId", type: "bytes32" }],
+    outputs: [{ type: "uint8" }],
+  },
+  {
+    type: "function",
+    name: "collateralFactor",
+    stateMutability: "view",
+    inputs: [{ name: "categoryId", type: "bytes32" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "depositCap",
+    stateMutability: "view",
+    inputs: [{ name: "categoryId", type: "bytes32" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "isPaused",
+    stateMutability: "view",
+    inputs: [{ name: "categoryId", type: "bytes32" }],
+    outputs: [{ type: "bool" }],
+  },
+] as const;
+
+/// Web2 jargon translation used across the /rwa surface.
+export const RWA_LABELS = {
+  meth: { name: "mETH staking yield", short: "mETH", blurb: "Liquid-staked ETH on Mantle" },
+  usdy: { name: "USDY treasury yield", short: "USDY", blurb: "Tokenized US Treasuries (Ondo)" },
+} as const;
+
+/// Friendly risk-state labels — index matches the RiskManager.State enum (0 Normal, 1 Caution, 2 Frozen).
+export const RISK_STATE_UI = ["Looking healthy", "Cautious", "Paused"] as const;
