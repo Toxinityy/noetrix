@@ -38,8 +38,11 @@ export function loadAddresses(opts?: {
     );
   }
 
-  const agentRegistry = envRegistry ?? json.AgentRegistry;
-  const predictionMarket = envMarket ?? json.PredictionMarket;
+  // Use the env value only if it's a real address; otherwise fall back to the JSON. A bare
+  // `??` would keep an empty-string env var (e.g. `ADDR_AGENT_REGISTRY=` in a .env), shadowing
+  // the deployments file, so we gate on isReal rather than null-coalescing.
+  const agentRegistry = isReal(envRegistry) ? envRegistry : json.AgentRegistry;
+  const predictionMarket = isReal(envMarket) ? envMarket : json.PredictionMarket;
   if (!isReal(agentRegistry) || !isReal(predictionMarket)) {
     throw new Error(`deployments file ${file} missing AgentRegistry/PredictionMarket addresses`);
   }

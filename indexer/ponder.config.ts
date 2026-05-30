@@ -41,6 +41,10 @@ export default createConfig({
     mantleSepolia: {
       id: 5003,
       rpc: process.env.PONDER_RPC_URL_MANTLE_SEPOLIA ?? "https://rpc.sepolia.mantle.xyz",
+      // The public Mantle Sepolia RPC 429s under Ponder's default parallel eth_getLogs burst.
+      // Throttle to stay under its limit. Raise this (or drop a paid Alchemy/Infura URL into
+      // PONDER_RPC_URL_MANTLE_SEPOLIA) for a faster sustained sync.
+      maxRequestsPerSecond: Number(process.env.PONDER_MAX_RPS ?? 3),
     },
   },
   contracts: {
