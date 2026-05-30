@@ -14,9 +14,12 @@ import {MockAavePool} from "../src/mocks/MockAavePool.sol";
 import {MockAToken} from "../src/mocks/MockAToken.sol";
 import {MethAprResolver} from "../src/resolvers/MethAprResolver.sol";
 import {AaveMantleTvlResolver} from "../src/resolvers/AaveMantleTvlResolver.sol";
+import {UsdyApyResolver} from "../src/resolvers/UsdyApyResolver.sol";
 import {CompositeFeed} from "../src/CompositeFeed.sol";
 import {SubscriptionGate} from "../src/SubscriptionGate.sol";
 import {DemoFeedConsumer} from "../src/examples/DemoFeedConsumer.sol";
+import {YieldAllocator} from "../src/examples/YieldAllocator.sol";
+import {RiskManager} from "../src/examples/RiskManager.sol";
 
 import {IAgentRegistry} from "../src/interfaces/IAgentRegistry.sol";
 import {IPredictionMarket} from "../src/interfaces/IPredictionMarket.sol";
@@ -38,12 +41,15 @@ contract Deploy is Script {
     // Category ids.
     bytes32 internal constant METH_APR_24H = keccak256("METH_APR_24H");
     bytes32 internal constant AAVE_MANTLE_TVL_24H = keccak256("AAVE_MANTLE_TVL_24H");
+    bytes32 internal constant USDY_APY_24H = keccak256("USDY_APY_24H");
 
     // Category config (RangeCrpsScorer domain = abi.encode(domainMin, domainMax), split into 100 buckets).
     uint256 internal constant METH_DOMAIN_MIN = 0;
     uint256 internal constant METH_DOMAIN_MAX = 100_000; // APR bps space, bucket width 1000
     uint256 internal constant TVL_DOMAIN_MIN = 0;
     uint256 internal constant TVL_DOMAIN_MAX = 1e17; // USD 8-dec up to ~$1B, bucket width $10M
+    uint256 internal constant USDY_DOMAIN_MIN = 0;
+    uint256 internal constant USDY_DOMAIN_MAX = 2_000; // APY bps, ~0–20%, bucket width 20
 
     uint256 internal constant MIN_STAKE = 0.1 ether;
     uint256 internal constant WINDOW_START = 300; // == PredictionMarket.MIN_RESOLUTION_OFFSET
@@ -51,6 +57,8 @@ contract Deploy is Script {
 
     // mETH synthetic curve: ~822 ppm/day → resolved APR ≈ 822 × 3.65 ≈ 3000 bps (matches agent seed center).
     uint256 internal constant METH_DAILY_GROWTH_PPM = 822;
+    // USDY synthetic curve: ~137 ppm/day → resolved APY ≈ 137 × 3.65 ≈ 500 bps (≈5%, matches agent seed).
+    uint256 internal constant USDY_DAILY_GROWTH_PPM = 137;
     // anchor = deployBlock − this; must sit below the earliest queried block (first resolutionBlock − 43200).
     uint256 internal constant METH_ANCHOR_LOOKBACK = 50_000;
 
@@ -73,6 +81,10 @@ contract Deploy is Script {
     CompositeFeed compositeFeed;
     SubscriptionGate subscriptionGate;
     DemoFeedConsumer demoConsumer;
+    MockMethRateOracle usdyOracle;
+    UsdyApyResolver usdyApyResolver;
+    YieldAllocator yieldAllocator;
+    RiskManager riskManager;
 
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
@@ -109,6 +121,9 @@ contract Deploy is Script {
         MockAToken aWeth = new MockAToken(18_000 * 1e18, 18); // 18k WETH (18 dec)
         aavePool.addReserve(AAVE_USDC, address(aUsdc), 1e8); // $1.00  → $88M
         aavePool.addReserve(AAVE_WETH, address(aWeth), 3000 * 1e8); // $3,000 → $54M
+        // 7b. USDY oracle (reuses the generic rate-oracle mock) + resolver.
+        usdyOracle = new MockMethRateOracle(deployer);
+        usdyApyResolver = new UsdyApyResolver(IMethRateOracle(address(usdyOracle)));
         // 8. MethAprResolver
         methAprResolver = new MethAprResolver(IMethRateOracle(address(methOracle)));
         // 9. AaveMantleTvlResolver (pool doubles as oracle in the mock)
@@ -120,6 +135,9 @@ contract Deploy is Script {
         subscriptionGate = new SubscriptionGate(deployer);
         // 12. DemoFeedConsumer
         demoConsumer = new DemoFeedConsumer(ICompositeFeed(address(compositeFeed)));
+        // 13. RWA consumers — dynamic yield strategy + automated risk management.
+        yieldAllocator = new YieldAllocator(ICompositeFeed(address(compositeFeed)), METH_APR_24H, USDY_APY_24H);
+        riskManager = new RiskManager(ICompositeFeed(address(compositeFeed)), deployer);
     }
 
     function _wire() internal {
@@ -146,6 +164,9 @@ contract Deploy is Script {
         resolutionEngine.registerCategory(
             AAVE_MANTLE_TVL_24H, address(aaveTvlResolver), address(rangeCrpsScorer), abi.encode(TVL_DOMAIN_MIN, TVL_DOMAIN_MAX)
         );
+        resolutionEngine.registerCategory(
+            USDY_APY_24H, address(usdyApyResolver), address(rangeCrpsScorer), abi.encode(USDY_DOMAIN_MIN, USDY_DOMAIN_MAX)
+        );
 
         // PredictionMarket category config (stake + reveal window).
         predictionMarket.registerCategory(
@@ -166,14 +187,29 @@ contract Deploy is Script {
             WINDOW_END,
             abi.encode(TVL_DOMAIN_MIN, TVL_DOMAIN_MAX)
         );
+        predictionMarket.registerCategory(
+            USDY_APY_24H,
+            address(usdyApyResolver),
+            address(rangeCrpsScorer),
+            MIN_STAKE,
+            WINDOW_START,
+            WINDOW_END,
+            abi.encode(USDY_DOMAIN_MIN, USDY_DOMAIN_MAX)
+        );
 
         // mETH oracle synthetic curve so any agent-chosen resolutionBlock resolves to ~3000 bps APR.
         methOracle.setSynthetic(block.number - METH_ANCHOR_LOOKBACK, 1e18, METH_DAILY_GROWTH_PPM);
+        // USDY oracle synthetic curve so any agent-chosen resolutionBlock resolves to ~500 bps APY.
+        usdyOracle.setSynthetic(block.number - METH_ANCHOR_LOOKBACK, 1e18, USDY_DAILY_GROWTH_PPM);
 
         // CompositeFeed dependencies.
         compositeFeed.setAgentRegistry(IAgentRegistry(address(agentRegistry)));
         compositeFeed.setPredictionMarket(IPredictionMarket(address(predictionMarket)));
         compositeFeed.setSubscriptionGate(ISubscriptionGate(address(subscriptionGate)));
+
+        // RiskManager asset registry (categoryId → base collateral factor + max deposit cap).
+        riskManager.registerAsset(METH_APR_24H, 8_000, 1_000_000_000 * 1e8); // 80% baseCf, $1B cap
+        riskManager.registerAsset(USDY_APY_24H, 9_000, 1_000_000_000 * 1e8); // 90% baseCf (stablecoin), $1B cap
     }
 
     function _writeJson() internal {
@@ -192,7 +228,11 @@ contract Deploy is Script {
         vm.serializeAddress(key, "AaveMantleTvlResolver", address(aaveTvlResolver));
         vm.serializeAddress(key, "CompositeFeed", address(compositeFeed));
         vm.serializeAddress(key, "SubscriptionGate", address(subscriptionGate));
-        string memory json = vm.serializeAddress(key, "DemoFeedConsumer", address(demoConsumer));
+        vm.serializeAddress(key, "DemoFeedConsumer", address(demoConsumer));
+        vm.serializeAddress(key, "UsdyOracle", address(usdyOracle));
+        vm.serializeAddress(key, "UsdyApyResolver", address(usdyApyResolver));
+        vm.serializeAddress(key, "YieldAllocator", address(yieldAllocator));
+        string memory json = vm.serializeAddress(key, "RiskManager", address(riskManager));
 
         string memory path = string.concat("deployments/", net, ".json");
         vm.writeJson(json, path);
@@ -214,5 +254,9 @@ contract Deploy is Script {
         console2.log("CompositeFeed        ", address(compositeFeed));
         console2.log("SubscriptionGate     ", address(subscriptionGate));
         console2.log("DemoFeedConsumer     ", address(demoConsumer));
+        console2.log("UsdyOracle           ", address(usdyOracle));
+        console2.log("UsdyApyResolver      ", address(usdyApyResolver));
+        console2.log("YieldAllocator       ", address(yieldAllocator));
+        console2.log("RiskManager          ", address(riskManager));
     }
 }
