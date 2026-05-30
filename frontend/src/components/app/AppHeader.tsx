@@ -8,6 +8,7 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { cn } from "@/lib/cn";
 
 const navItems = [
+  { href: "/rwa", label: "Earn" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/feed/meth-apr-24h", label: "Feed" },
   { href: "/demo-consumer", label: "Consumer" },
