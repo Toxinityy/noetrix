@@ -25,9 +25,18 @@ export const AAVE_MANTLE_TVL_24H: CategoryConfig = {
   bucketCount: 100,
 };
 
+export const USDY_APY_24H: CategoryConfig = {
+  id: categoryId("USDY_APY_24H"),
+  label: "USDY_APY_24H",
+  domainMin: 0n,
+  domainMax: 2_000n, // USDY APY in bps (~0–20%), bucket width 20
+  bucketCount: 100,
+};
+
 export const CATEGORIES: Record<string, CategoryConfig> = {
   METH_APR_24H,
   AAVE_MANTLE_TVL_24H,
+  USDY_APY_24H,
 };
 
 /// Resolve a CategoryConfig from a label, a known constant, or a raw bytes32 id.
