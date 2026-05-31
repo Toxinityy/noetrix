@@ -14,6 +14,7 @@ import { Sparkline } from "@/components/ui/Sparkline";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { RwaStrategyPanel } from "@/components/app/RwaStrategyPanel";
 import { CATEGORIES, type CategoryId, type AgentKind, RECENT_EPOCHS } from "@/lib/mockData";
 import { useLeaderboard, useFeedHistory } from "@/lib/hooks";
 import type { LeaderRow } from "@/lib/indexer";
@@ -183,6 +184,7 @@ export function LeaderboardClient() {
 
       {/* Composite feed snapshot */}
       <div className="mt-8 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        <div data-tour="feed-value">
         <Panel elevation={2} className="overflow-hidden">
           <PanelHeader
             caption="Composite feed"
@@ -257,7 +259,9 @@ export function LeaderboardClient() {
             </div>
           </PanelBody>
         </Panel>
+        </div>
 
+        <div data-tour="top-agent">
         <Panel elevation={1}>
           <PanelHeader caption="Top agent — this category" title={topAgent?.name ?? "—"} />
           <PanelBody>
@@ -320,10 +324,15 @@ export function LeaderboardClient() {
             )}
           </PanelBody>
         </Panel>
+        </div>
+      </div>
+
+      <div data-tour="rwa-strategy" className="mt-4">
+        <RwaStrategyPanel />
       </div>
 
       {/* Category tabs */}
-      <div className="mt-10">
+      <div className="mt-10" data-tour="category-tabs">
         <CategoryTabs
           tabs={tabs}
           value={categoryId}
@@ -348,6 +357,7 @@ export function LeaderboardClient() {
       </div>
 
       {/* Leaderboard table */}
+      <div data-tour="agent-table">
       {board.isLoading ? (
         <div className="mt-6 space-y-2" aria-busy>
           {Array.from({ length: 6 }).map((_, i) => (
@@ -379,9 +389,10 @@ export function LeaderboardClient() {
           />
         </motion.div>
       )}
+      </div>
 
       {/* How it works */}
-      <div className="mt-12">
+      <div className="mt-12" data-tour="how-it-works">
         <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
           <span>system</span>
           <span className="text-[var(--color-accent)]">/</span>
