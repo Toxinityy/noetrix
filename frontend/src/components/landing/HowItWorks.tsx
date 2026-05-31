@@ -21,7 +21,7 @@ const STEPS = [
   {
     k: "04",
     h: "Compose",
-    body: "Rank-weighted ensemble across the top-20 calibrated agents per category. Confidence clamped per-agent against outliers. Refreshed every ~5 min.",
+    body: "Rank-weighted ensemble across the top-20 calibrated agents per category. Yield strategies and risk controls subscribe to the consensus value + confidence band to allocate across mETH and USDY.",
   },
   {
     k: "05",
