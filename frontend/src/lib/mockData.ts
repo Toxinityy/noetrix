@@ -1,6 +1,6 @@
 // Hand-curated mock data. Replaced with indexer-driven hooks in Prompt 11.
 
-export type CategoryId = "METH_APR_24H" | "AAVE_MANTLE_TVL_24H";
+export type CategoryId = "METH_APR_24H" | "USDY_APY_24H" | "AAVE_MANTLE_TVL_24H";
 
 export type Category = {
   id: CategoryId;
@@ -25,6 +25,18 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     description:
       "24-hour trailing mETH exchange-rate APR, expressed in basis points. Resolves via the MethAprResolver against the mETH staking-contract historical exchange rate (43,200-block lookback ≈ 1 day on Mantle).",
     current: 3_812,
+    unitFormatter: (n) => `${(n / 100).toFixed(2)}%`,
+  },
+  USDY_APY_24H: {
+    id: "USDY_APY_24H",
+    slug: "usdy-apy-24h",
+    label: "USDY 24h APY",
+    unit: "bps",
+    minStake: 0.05,
+    windowBlocks: { start: 300, end: 50_000 },
+    description:
+      "24-hour trailing USDY (Ondo tokenized US Treasuries) price-per-share APY, in basis points. Resolves via the UsdyApyResolver against the USDY rate oracle (43,200-block lookback ≈ 1 day on Mantle). v1 uses a seeded oracle; v2 reads the live Ondo USDY contract.",
+    current: 500,
     unitFormatter: (n) => `${(n / 100).toFixed(2)}%`,
   },
   AAVE_MANTLE_TVL_24H: {
@@ -101,6 +113,11 @@ export const AGENTS: Agent[] = [
         ]),
         bucketCount: E([3, 4, 5, 6, 6, 5, 4, 3, 3, 3]),
       },
+      USDY_APY_24H: {
+        accuracyScore: 540_000, calibrationScore: -78_000, resolvedCount: 61, lastUpdatedBlock: 12_488_050,
+        bucketAccuracy: E([0.50, 0.56, 0.60, 0.64, 0.68, 0.72, 0.77, 0.82, 0.87, 0.92]),
+        bucketCount: E([2, 3, 4, 6, 8, 9, 9, 8, 7, 5]),
+      },
     },
     equityCurve: makeCurve(0, 1.0, 0.012, 0.004, 72),
   },
@@ -134,6 +151,11 @@ export const AGENTS: Agent[] = [
           0.44, 0.46, 0.51, 0.54, 0.57, 0.59, 0.62, 0.65, 0.66, 0.68,
         ]),
         bucketCount: E([3, 4, 6, 7, 8, 8, 8, 8, 6, 6]),
+      },
+      USDY_APY_24H: {
+        accuracyScore: 402_000, calibrationScore: -120_000, resolvedCount: 58, lastUpdatedBlock: 12_487_900,
+        bucketAccuracy: E([0.49, 0.52, 0.55, 0.58, 0.61, 0.64, 0.66, 0.69, 0.71, 0.73]),
+        bucketCount: E([3, 4, 5, 7, 8, 8, 8, 6, 5, 4]),
       },
     },
     equityCurve: makeCurve(1, 1.0, 0.005, 0.008, 72),
@@ -169,6 +191,11 @@ export const AGENTS: Agent[] = [
         ]),
         bucketCount: E([4, 5, 6, 7, 8, 7, 7, 6, 4, 3]),
       },
+      USDY_APY_24H: {
+        accuracyScore: 351_000, calibrationScore: -210_000, resolvedCount: 44, lastUpdatedBlock: 12_487_300,
+        bucketAccuracy: E([0.43, 0.47, 0.51, 0.55, 0.60, 0.65, 0.69, 0.73, 0.77, 0.80]),
+        bucketCount: E([4, 5, 5, 5, 5, 5, 4, 4, 3, 4]),
+      },
     },
     equityCurve: makeCurve(2, 1.0, 0.018, 0.005, 72),
   },
@@ -202,6 +229,11 @@ export const AGENTS: Agent[] = [
           0.46, 0.49, 0.53, 0.55, 0.59, 0.61, 0.63, 0.64, 0.67, 0.7,
         ]),
         bucketCount: E([4, 5, 5, 5, 4, 4, 4, 3, 2, 2]),
+      },
+      USDY_APY_24H: {
+        accuracyScore: 388_000, calibrationScore: -38_000, resolvedCount: 63, lastUpdatedBlock: 12_488_020,
+        bucketAccuracy: E([0.50, 0.54, 0.57, 0.60, 0.63, 0.66, 0.69, 0.71, 0.74, 0.76]),
+        bucketCount: E([7, 9, 9, 8, 8, 7, 6, 5, 3, 2]),
       },
     },
     equityCurve: makeCurve(3, 1.0, 0.007, 0.003, 72),
@@ -237,6 +269,11 @@ export const AGENTS: Agent[] = [
         ]),
         bucketCount: E([3, 4, 6, 7, 7, 7, 6, 4, 3, 2]),
       },
+      USDY_APY_24H: {
+        accuracyScore: 471_000, calibrationScore: -102_000, resolvedCount: 52, lastUpdatedBlock: 12_487_850,
+        bucketAccuracy: E([0.50, 0.54, 0.58, 0.62, 0.65, 0.69, 0.71, 0.73, 0.75, 0.77]),
+        bucketCount: E([4, 5, 6, 7, 7, 7, 6, 5, 3, 2]),
+      },
     },
     equityCurve: makeCurve(4, 1.0, 0.009, 0.0035, 72),
   },
@@ -270,6 +307,11 @@ export const AGENTS: Agent[] = [
           0.25, 0.3, 0.35, 0.41, 0.48, 0.54, 0.62, 0.7, 0.77, 0.84,
         ]),
         bucketCount: E([2, 2, 3, 3, 3, 3, 4, 3, 2, 2]),
+      },
+      USDY_APY_24H: {
+        accuracyScore: 176_000, calibrationScore: -360_000, resolvedCount: 33, lastUpdatedBlock: 12_487_100,
+        bucketAccuracy: E([0.30, 0.34, 0.39, 0.44, 0.50, 0.56, 0.63, 0.71, 0.80, 0.87]),
+        bucketCount: E([2, 2, 3, 3, 4, 4, 5, 4, 3, 3]),
       },
     },
     equityCurve: makeCurve(5, 1.0, 0.024, 0.002, 72),
@@ -305,6 +347,11 @@ export const AGENTS: Agent[] = [
         ]),
         bucketCount: E([5, 6, 7, 7, 7, 6, 6, 6, 2, 2]),
       },
+      USDY_APY_24H: {
+        accuracyScore: 158_000, calibrationScore: -176_000, resolvedCount: 60, lastUpdatedBlock: 12_487_950,
+        bucketAccuracy: E([0.44, 0.47, 0.50, 0.52, 0.55, 0.57, 0.59, 0.60, 0.61, 0.62]),
+        bucketCount: E([5, 6, 7, 8, 8, 7, 6, 5, 3, 2]),
+      },
     },
     equityCurve: makeCurve(6, 1.0, 0.003, 0.005, 72),
   },
@@ -338,6 +385,11 @@ export const AGENTS: Agent[] = [
           0.45, 0.48, 0.51, 0.54, 0.57, 0.6, 0.62, 0.64, 0.66, 0.67,
         ]),
         bucketCount: E([8, 11, 12, 12, 12, 11, 10, 9, 7, 6]),
+      },
+      USDY_APY_24H: {
+        accuracyScore: 243_000, calibrationScore: -142_000, resolvedCount: 110, lastUpdatedBlock: 12_488_090,
+        bucketAccuracy: E([0.47, 0.50, 0.53, 0.56, 0.59, 0.62, 0.64, 0.66, 0.68, 0.70]),
+        bucketCount: E([9, 12, 14, 15, 14, 13, 11, 9, 7, 5]),
       },
     },
     equityCurve: makeCurve(7, 1.0, 0.006, 0.004, 72),
@@ -423,8 +475,18 @@ export const PREDICTIONS: Prediction[] = (() => {
         const cb = now - (i + 1) * 1820 - a.id * 110;
         const rb = cb + 600;
         const seed = (a.id * 7919 + i * 31 + (cat.id === "METH_APR_24H" ? 0 : 11)) % 100;
-        const pointBase = cat.id === "METH_APR_24H" ? 3800 + (seed - 50) * 4 : 142_000_000 + (seed - 50) * 250_000;
-        const halfWidth = cat.id === "METH_APR_24H" ? 90 + (seed % 30) : 1_400_000 + (seed % 31) * 50_000;
+        const pointBase =
+          cat.id === "METH_APR_24H"
+            ? 3800 + (seed - 50) * 4
+            : cat.id === "USDY_APY_24H"
+              ? 500 + (seed - 50)
+              : 142_000_000 + (seed - 50) * 250_000;
+        const halfWidth =
+          cat.id === "METH_APR_24H"
+            ? 90 + (seed % 30)
+            : cat.id === "USDY_APY_24H"
+              ? 20 + (seed % 15)
+              : 1_400_000 + (seed % 31) * 50_000;
         const outcome = pointBase + ((seed * 13) % 60) - 30;
         const conf = 5000 + ((a.id * 311 + seed) % 4500);
         const score =
@@ -457,8 +519,10 @@ export const PREDICTIONS: Prediction[] = (() => {
     for (const cat of Object.values(CATEGORIES)) {
       const cb = now - 30;
       const rb = cb + 480;
-      const pointBase = cat.id === "METH_APR_24H" ? 3800 : 142_500_000;
-      const halfWidth = cat.id === "METH_APR_24H" ? 110 : 1_700_000;
+      const pointBase =
+        cat.id === "METH_APR_24H" ? 3800 : cat.id === "USDY_APY_24H" ? 500 : 142_500_000;
+      const halfWidth =
+        cat.id === "METH_APR_24H" ? 110 : cat.id === "USDY_APY_24H" ? 25 : 1_700_000;
       rows.push({
         id: id++,
         agentId: a.id,
@@ -490,8 +554,8 @@ export type FeedPoint = {
 export function makeFeedHistory(catId: CategoryId, points = 96): FeedPoint[] {
   const cat = CATEGORIES[catId];
   const base = cat.current;
-  const drift = cat.id === "METH_APR_24H" ? 8 : 280_000;
-  const noise = cat.id === "METH_APR_24H" ? 24 : 480_000;
+  const drift = cat.unit === "usd" ? 280_000 : cat.id === "USDY_APY_24H" ? 6 : 8;
+  const noise = cat.unit === "usd" ? 480_000 : cat.id === "USDY_APY_24H" ? 18 : 24;
   const start = 12_488_300 - points * 75;
   return Array.from({ length: points }, (_, i) => {
     const t = i / (points - 1);
