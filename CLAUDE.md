@@ -123,6 +123,26 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-06-01 — Finished RWA web pivot on the site + spotlight onboarding tour (plan resumed, merged to master)
+**Type:** Build (frontend). Resumed the in-flight plan `docs/superpowers/plans/2026-05-31-rwa-web-finish-and-tour.md` (spec `…/specs/2026-05-31-rwa-web-finish-and-tour-design.md`) after a usage-limit cutoff. Branch `rwa-web-tour` → **fast-forward merged to `master`, branch deleted**. Prior session had landed Tasks 1,2,6,7 (USDY mock data, leaderboard tab, RwaStrategyPanel, mount + tour anchors); this session did the rest.
+
+**What was built (Tasks 3,4,5,8–12):**
+- **Landing reframed to AI x RWA** — Hero subtitle now leads "AI agents forecast and risk-manage yield across Mantle's real-world assets — mETH and USDY"; corner-meta → `track · ai x rwa` / `assets · meth + usdy` / `scorer · range-crps`. CategoriesShowcase gained a **third (USDY) card**, 3-col `lg` grid, "AI x RWA · three markets shipped" header. HowItWorks "Compose" step + FAQ "not-oracle" answer RWA-framed (yield allocation + risk state).
+- **Spotlight onboarding tour** (dependency-free) — `components/tour/steps.ts` (6-step `LEADERBOARD_STEPS` registry), `TourProvider.tsx` (state machine + first-run via `localStorage noetrix.tour.v1` + cross-page replay via `sessionStorage`), `Spotlight.tsx` (box-shadow `0 0 0 9999px` cutout scrim + flip-aware callout + focus trap + `Esc`/`←`/`→`/`Enter` keys + reduced-motion). Mounted `TourProvider` in `(app)/layout.tsx`; added a header **Guide** replay button (`AppHeader.tsx`).
+- **Blocker fix (not in plan):** `category/[category]/CategoryClient.tsx` `DOMAIN` was a `Record<CategoryId,…>` missing `USDY_APY_24H` → build broke the moment Task 1 added USDY to the `CategoryId` union. Added the USDY domain entry (range 0–2000 bps, 20 bps × 100 buckets, `UsdyApyResolver`). Despite earlier git commits claiming this was fixed, HEAD == master for that file, so it was broken at HEAD — fixed now.
+- **Lint:** fixed a self-introduced `no-unused-expressions` warning in `Spotlight.tsx` (ternary statement → if/else).
+
+**Verification:** `pnpm --filter frontend build` **green on merged master** (TS passes, 9 routes, static gen OK; only the long-standing benign Recharts SSR width/height warning). My touched files are lint-clean.
+
+**Decisions:**
+- **Local merge to master** (user-chosen via finishing-a-development-branch), not a PR. Not pushed — `master` is ahead of `origin/master` by 36 commits (local-only, as before).
+- Kept the tour **dependency-free** (no react-joyride etc.) — CSS box-shadow cutout + a `data-tour` selector registry, per the plan. Six anchors on the leaderboard: `category-tabs`, `feed-value`, `agent-table`, `top-agent`, `rwa-strategy`, `how-it-works`.
+
+**Risks / pending:**
+- **Tour runtime is NOT browser-verified.** Build/compile + lint only. Task 12 Step 2 (auto-start on first `/leaderboard` visit, spotlight cutout tracking, keyboard nav, Guide replay across pages, reduced-motion jump) needs a manual `pnpm --filter frontend dev` walkthrough — not possible in this headless session. Logic is straightforward but unproven at runtime.
+- **Pre-existing lint debt remains (out of scope):** ~10 lint **errors** in files this work never touched — `about/page.tsx` (unescaped `'`), `agent/[id]/AgentDetailClient.tsx` (React-Compiler "memoization could not be preserved"), `ui/dithering-shader.tsx` (`Date.now()` purity), plus `AppHeader` ConnectButton `setState-in-effect` + `AllocationBar` unused var. Lint has been red since before this branch (prior sessions only ever gated on `next build`). Left untouched deliberately; flag for a future lint-cleanup pass.
+- `/leaderboard` still reads mock data unless the indexer is up + `NEXT_PUBLIC_*` env set (unchanged from prior sessions). The RwaStrategyPanel shows "Demo data" until `YieldAllocator`/`RiskManager` addresses are wired into env.
+
 ### 2026-05-30 (later) — AI x RWA PIVOT: USDY category + YieldAllocator + RiskManager + Web2 /rwa page
 **Type:** Build (brainstorm → spec → plan → inline TDD execution). Branch `rwa-pivot`. Spec: `docs/superpowers/specs/2026-05-30-rwa-pivot-design.md`; plan: `docs/superpowers/plans/2026-05-30-rwa-pivot.md`.
 
