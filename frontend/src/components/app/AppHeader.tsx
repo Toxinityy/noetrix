@@ -4,7 +4,9 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { HelpCircle } from "lucide-react";
 import { StatusPill } from "@/components/ui/StatusPill";
+import { useTour } from "@/components/tour/TourProvider";
 import { cn } from "@/lib/cn";
 
 const navItems = [
@@ -69,10 +71,26 @@ export function AppHeader() {
               Mantle Sepolia
             </StatusPill>
           </div>
+          <GuideButton />
           <ConnectButton />
         </div>
       </div>
     </header>
+  );
+}
+
+function GuideButton() {
+  const { requestStart } = useTour();
+  return (
+    <button
+      type="button"
+      onClick={requestStart}
+      title="Replay the guided tour"
+      className="hidden items-center gap-1.5 rounded border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] sm:inline-flex"
+    >
+      <HelpCircle size={13} aria-hidden />
+      Guide
+    </button>
   );
 }
 
