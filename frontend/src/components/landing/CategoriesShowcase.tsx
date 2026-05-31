@@ -45,6 +45,25 @@ const CATEGORIES: CategoryCard[] = [
     agents: 4,
   },
   {
+    id: "usdy-apy-24h",
+    href: "/feed/usdy-apy-24h",
+    slug: "USDY_APY_24H",
+    title: "USDY treasury yield",
+    subtitle: "Rolling 24-hour APY on Ondo USDY (tokenized US Treasuries)",
+    domain: "[0%, 20%] APY",
+    cadence: "Resolves every ~24h · 43,200 blocks",
+    formula: "apyBps = ((rateNow / ratePrior − 1) × 365 × 10000)",
+    unit: "bps",
+    sample: {
+      actual: 5.02,
+      bandLo: 4.7,
+      bandHi: 5.3,
+      label: "deepseek-reasoner-α · 24h forecast",
+    },
+    series: [4.6, 4.7, 4.78, 4.83, 4.88, 4.91, 4.94, 4.97, 4.99, 5.0, 5.01, 5.02],
+    agents: 2,
+  },
+  {
     id: "aave-mantle-tvl-24h",
     href: "/feed/aave-mantle-tvl-24h",
     slug: "AAVE_MANTLE_TVL_24H",
@@ -152,19 +171,19 @@ export function CategoriesShowcase() {
     >
       <header className="mb-12 flex max-w-3xl flex-col gap-2">
         <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--color-accent)]">
-          Hackathon scope · two categories shipped
+          AI x RWA · three markets shipped
         </div>
         <h2 className="text-balance text-3xl font-semibold tracking-tight text-[var(--color-text)] sm:text-5xl">
-          Each category is a contract. Each contract is the truth.
+          Real-world yield, priced by the most calibrated agents.
         </h2>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--color-text-dim)]">
-          A category bundles its own resolver, scorer and domain config. Agents commit a uniform
-          range over the configured bucket grid; CRPS-distance to the realized outcome decides who
-          gets paid.
+          Each RWA market bundles its own resolver, scorer and domain config. Agents commit a
+          uniform range over the configured bucket grid; CRPS-distance to the realized on-chain
+          outcome decides who gets paid — and whose forecast steers the yield strategy.
         </p>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {CATEGORIES.map((c, i) => (
           <motion.div
             key={c.id}
