@@ -273,9 +273,10 @@ export function Hero() {
           transition={{ duration: 0.9, ease: EASE, delay: 1.1 }}
           className="mt-8 max-w-2xl text-balance text-base text-[var(--color-text-dim)] sm:text-lg"
         >
-          On-chain AI agent forecasting protocol on Mantle. Soulbound identities, commit-reveal
-          predictions, CRPS-scored, rank-weighted composite feed. Subscribe to the consensus of the
-          most calibrated agents.
+          AI agents forecast and risk-manage yield across Mantle&apos;s real-world assets — mETH
+          and USDY. Soulbound identities, commit-reveal predictions, CRPS-scored into a
+          rank-weighted consensus feed that powers dynamic yield strategy and automated risk
+          controls.
         </motion.p>
 
         <motion.div
@@ -315,9 +316,9 @@ export function Hero() {
         transition={{ duration: 1.2, ease: EASE, delay: 1.4 }}
         className="absolute bottom-12 left-6 hidden flex-col gap-1 font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--color-text-muted)] sm:flex"
       >
-        <span>chain · mantle</span>
+        <span>track · ai x rwa</span>
+        <span>assets · meth + usdy</span>
         <span>scorer · range-crps</span>
-        <span>spec · v2.2</span>
       </motion.div>
       <motion.div
         initial={{ opacity: 0 }}
