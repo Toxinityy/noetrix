@@ -22,6 +22,12 @@ const DOMAIN: Record<CategoryId, { range: string; bucket: string; resolver: stri
     resolver: "MethAprResolver",
     cadence: "~24h · 43,200 blocks",
   },
+  USDY_APY_24H: {
+    range: "0 – 2,000 bps (0–20% APY)",
+    bucket: "20 bps × 100 buckets",
+    resolver: "UsdyApyResolver",
+    cadence: "~24h · 43,200 blocks",
+  },
   AAVE_MANTLE_TVL_24H: {
     range: "$0 – ~$1B (1e17, USD 8-dec)",
     bucket: "$10M × 100 buckets",
