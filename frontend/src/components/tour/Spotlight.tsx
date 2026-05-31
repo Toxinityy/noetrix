@@ -73,7 +73,8 @@ export function Spotlight() {
         skip();
       } else if (e.key === "ArrowRight" || e.key === "Enter") {
         e.preventDefault();
-        isLast ? finish() : next();
+        if (isLast) finish();
+        else next();
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
         prev();
