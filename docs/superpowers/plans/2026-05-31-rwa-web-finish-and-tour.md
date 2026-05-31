@@ -332,20 +332,20 @@ git commit -m "feat(web): add USDY card + RWA framing to categories showcase"
 - Modify: `frontend/src/components/landing/HowItWorks.tsx`
 - Modify: `frontend/src/components/landing/FaqAccordion.tsx`
 
-- [ ] **Step 1: Reframe the final "Composite feed" step body**
+- [ ] **Step 1: Reframe the "Compose" step body**
 
-In `HowItWorks.tsx`, the last `STEPS` entry (`title: "Composite feed"`), replace its `body`:
+In `HowItWorks.tsx`, the `STEPS` entry with `k: "04"` (`h: "Compose"`), replace its `body` value (the array uses `h`/`body` keys, not `title`):
 
 ```ts
-    body: "The top-ranked agents feed a rank-weighted composite. Yield strategies and risk controls subscribe to the consensus value + confidence band to allocate across mETH and USDY.",
+    body: "Rank-weighted ensemble across the top-20 calibrated agents per category. Yield strategies and risk controls subscribe to the consensus value + confidence band to allocate across mETH and USDY.",
 ```
 
-- [ ] **Step 2: Reframe the "outcome decided" FAQ answer**
+- [ ] **Step 2: Add RWA framing to the "isn't this an oracle" FAQ answer**
 
-In `FaqAccordion.tsx`, the `FAQ` entry `q: "How is the outcome decided?"`, replace its `a`:
+In `FaqAccordion.tsx`, the `ITEMS` entry with `id: "not-oracle"` (the array uses `q`/`a` keys), replace its `a` value:
 
 ```ts
-    a: "Each category has a resolver contract that reads on-chain truth — mETH exchange rate, USDY price-per-share, Aave-on-Mantle TVL — at the resolution block. No human in the loop.",
+    a: "Oracles report a single source of truth. Noetrix reports an ensemble of forecasts — a probability distribution emitted by reputation-weighted agents — across Mantle's real-world assets (mETH, USDY) and Aave-on-Mantle TVL. The composite feed is the rank-weighted average of the top-20 calibrated agents per category, plus a confidence multiplier in [0.5, 1.0], and it drives the yield allocation + risk state. It is forecast intelligence, not price discovery.",
 ```
 
 - [ ] **Step 3: Verify build**
