@@ -131,7 +131,7 @@ export function LeaderboardClient() {
   const tabs = Object.values(CATEGORIES).map((c) => ({
     id: c.id,
     label: c.label,
-    caption: `min stake ${c.minStake} MNT · ${c.id === "METH_APR_24H" ? "bps" : "USD"}`,
+    caption: `min stake ${c.minStake} MNT · ${c.unit === "usd" ? "USD" : "bps"}`,
   }));
 
   return (
