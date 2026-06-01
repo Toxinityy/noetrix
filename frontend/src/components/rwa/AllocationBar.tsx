@@ -1,8 +1,8 @@
 /// Friendly two-segment allocation bar. Labels carry the meaning (not color alone);
 /// 300ms width transition honors prefers-reduced-motion via the global motion rule.
-export function AllocationBar({ methBps }: { methBps: number; usdyBps: number }) {
+export function AllocationBar({ methBps, usdyBps }: { methBps: number; usdyBps: number }) {
   const mPct = Math.round(methBps / 100);
-  const uPct = 100 - mPct;
+  const uPct = Math.round(usdyBps / 100);
   return (
     <div className="space-y-2">
       <div

@@ -99,6 +99,7 @@ function ConnectButton() {
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   // Wallet state is client-only; render a stable placeholder until mounted to avoid hydration drift.
+  // Hydration-safe "client mounted" flag — store never changes, so subscribe is intentionally a no-op.
   const mounted = React.useSyncExternalStore(
     () => () => {},
     () => true,
