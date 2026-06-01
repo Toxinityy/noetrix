@@ -98,10 +98,12 @@ function ConnectButton() {
   const { address, isConnected } = useAccount();
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
-  const [mounted, setMounted] = React.useState(false);
-
   // Wallet state is client-only; render a stable placeholder until mounted to avoid hydration drift.
-  React.useEffect(() => setMounted(true), []);
+  const mounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
   const base =
     "inline-flex items-center gap-2 rounded border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] transition-colors";

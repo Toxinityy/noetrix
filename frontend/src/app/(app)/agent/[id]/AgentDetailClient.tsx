@@ -32,10 +32,8 @@ import { Stat } from "@/components/ui/Stat";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { AddressChip } from "@/components/ui/AddressChip";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
-import { DataTable, type Column } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
-  AGENTS,
   CATEGORIES,
   PREDICTIONS,
   type CategoryId,
@@ -61,37 +59,26 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
   const cat = CATEGORIES[categoryId];
   const rep = agent.reputation[categoryId];
 
-  const predictions = React.useMemo(
-    () =>
-      PREDICTIONS.filter(
-        (p) => p.agentId === agent.id && p.categoryId === categoryId,
-      ).sort((a, b) => b.commitBlock - a.commitBlock),
-    [agent.id, categoryId],
-  );
+  const predictions = PREDICTIONS.filter(
+    (p) => p.agentId === agent.id && p.categoryId === categoryId,
+  ).sort((a, b) => b.commitBlock - a.commitBlock);
 
   // Most recent prediction that carries a reasoning trace — surfaced as the page's visual peak.
-  const featuredReasoning = React.useMemo(
-    () =>
-      predictions.find((p) => p.reasoning) ??
-      PREDICTIONS.filter((p) => p.agentId === agent.id && p.reasoning).sort(
-        (a, b) => b.commitBlock - a.commitBlock,
-      )[0],
-    [predictions, agent.id],
-  );
+  const featuredReasoning =
+    predictions.find((p) => p.reasoning) ??
+    PREDICTIONS.filter((p) => p.agentId === agent.id && p.reasoning).sort(
+      (a, b) => b.commitBlock - a.commitBlock,
+    )[0];
 
   const equity = agent.equityCurve;
   const equityCurrent = equity[equity.length - 1].value;
   const equityStart = equity[0].value;
   const equityDelta = ((equityCurrent - equityStart) / equityStart) * 100;
 
-  const radarData = React.useMemo(
-    () =>
-      RADAR_AXES.map((axis) => ({
-        axis: axis.label,
-        value: radarValue(agent, categoryId, axis.id),
-      })),
-    [agent, categoryId],
-  );
+  const radarData = RADAR_AXES.map((axis) => ({
+    axis: axis.label,
+    value: radarValue(agent, categoryId, axis.id),
+  }));
 
   const calibrationData = rep.bucketAccuracy.map((acc, i) => ({
     bucket: `${i * 10}-${i * 10 + 10}%`,
