@@ -226,14 +226,14 @@ async function main() {
         address: deployments.CompositeFeed as Hex,
         event: compositeFeedRefreshedEvent,
         args: { categoryId: catHash(cat) },
-        fromBlock: process.env.SNAPSHOT_FROM_BLOCK ? BigInt(process.env.SNAPSHOT_FROM_BLOCK) : 0n,
+        fromBlock: process.env.SNAPSHOT_FROM_BLOCK ? BigInt(process.env.SNAPSHOT_FROM_BLOCK) : BigInt(0),
         toBlock: "latest",
       });
       feedHistory = logs.map((l) => ({
         block: Number(l.args.blockNumber ?? l.blockNumber ?? 0),
-        value: Number(l.args.value ?? 0n) / scale,
+        value: Number(l.args.value ?? BigInt(0)) / scale,
         confidence: Number(l.args.confidence ?? 0),
-        contributors: Number(l.args.contributorCount ?? 0n),
+        contributors: Number(l.args.contributorCount ?? BigInt(0)),
       })).sort((a, b) => a.block - b.block);
     } catch (e) {
       console.warn(`[snapshot] feed logs failed ${cat}:`, (e as Error).message);

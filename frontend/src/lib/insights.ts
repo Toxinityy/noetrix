@@ -1,7 +1,19 @@
 import type { LeaderRow, LiveFeedPoint } from "@/lib/indexer";
 
-export const MIN_RESOLVED_QUALIFIED = 10;
+// Demo threshold: agents have only a few graded forecasts on-chain so far. Production target is 10
+// (mirrors the contract's top-agent gate). All aggregates use *N-growing* framing in the UI.
+export const MIN_RESOLVED_QUALIFIED = 3;
 export const SMART_MONEY_TOP_N = 8;
+
+// A band only counts as a real forecast if its width is under 100% of its midpoint. This excludes
+// degenerate full-domain "hedge" forecasts (e.g. [0, 100000]) whose midpoint is meaningless and would
+// both pollute the crowd/smart-money value and fake the track record.
+export const MAX_REL_BAND_WIDTH = 1.0;
+export function isUsableBand(low: number, high: number): boolean {
+  if (high < low) return false;
+  const mid = (low + high) / 2;
+  return (high - low) / Math.max(Math.abs(mid), 1) <= MAX_REL_BAND_WIDTH;
+}
 
 export type Direction = "higher" | "lower" | "in line";
 export type UncertaintyLevel = "Low" | "Medium" | "High";
@@ -36,7 +48,7 @@ export function smartMoneyDivergence(
   crowdValue: number | null,
 ): SmartMoneyDivergence {
   const qualified = bands.filter(
-    (b) => b.resolvedCount >= MIN_RESOLVED_QUALIFIED && b.high >= b.low,
+    (b) => b.resolvedCount >= MIN_RESOLVED_QUALIFIED && isUsableBand(b.low, b.high),
   );
   const ranked = [...qualified]
     .sort((a, b) => b.accuracyScore - a.accuracyScore)
@@ -87,7 +99,7 @@ export function uncertaintyLevel(
   crowdValue: number | null,
 ): UncertaintySignal {
   const q = bands.filter(
-    (b) => b.resolvedCount >= MIN_RESOLVED_QUALIFIED && b.high >= b.low,
+    (b) => b.resolvedCount >= MIN_RESOLVED_QUALIFIED && isUsableBand(b.low, b.high),
   );
   if (q.length === 0 || !crowdValue) {
     return { level: "Medium", spreadPct: 0, enoughData: false };
@@ -192,7 +204,9 @@ export interface TrackRecord {
 
 /** Of resolved forecasts by qualified agents, how many had the real outcome land inside the band. */
 export function signalTrackRecord(preds: TrackRecordInput[]): TrackRecord {
-  const r = preds.filter((p) => p.status === "Resolved" && p.qualified && p.outcome != null);
+  const r = preds.filter(
+    (p) => p.status === "Resolved" && p.qualified && p.outcome != null && isUsableBand(p.low, p.high),
+  );
   const hits = r.filter((p) => (p.outcome as number) >= p.low && (p.outcome as number) <= p.high).length;
   return { hits, total: r.length, ratePct: r.length ? (hits / r.length) * 100 : 0, enoughData: r.length > 0 };
 }
@@ -229,7 +243,7 @@ export interface Disagreement {
 
 /** The qualified agents whose band midpoints sit farthest apart, as a % of the crowd value. */
 export function biggestDisagreement(bands: AgentBand[], crowdValue: number | null): Disagreement {
-  const q = bands.filter((b) => b.resolvedCount >= MIN_RESOLVED_QUALIFIED && b.high >= b.low);
+  const q = bands.filter((b) => b.resolvedCount >= MIN_RESOLVED_QUALIFIED && isUsableBand(b.low, b.high));
   if (q.length < 2 || !crowdValue) {
     return { spreadPct: 0, highAgent: null, lowAgent: null, enoughData: false };
   }
@@ -238,4 +252,12 @@ export function biggestDisagreement(bands: AgentBand[], crowdValue: number | nul
   const lo = withMid.reduce((m, x) => (x.mid < m.mid ? x : m));
   const spreadPct = (Math.abs(hi.mid - lo.mid) / crowdValue) * 100;
   return { spreadPct, highAgent: hi.b, lowAgent: lo.b, enoughData: true };
+}
+
+/** Unweighted mean midpoint of qualified, usable bands = the crowd of forecasters. Null if none.
+ *  Used as the crowd reference when the on-chain composite feed has no history yet. */
+export function crowdConsensus(bands: AgentBand[]): number | null {
+  const q = bands.filter((b) => b.resolvedCount >= MIN_RESOLVED_QUALIFIED && isUsableBand(b.low, b.high));
+  if (q.length === 0) return null;
+  return q.reduce((s, b) => s + (b.low + b.high) / 2, 0) / q.length;
 }

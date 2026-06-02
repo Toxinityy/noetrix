@@ -9,6 +9,8 @@ import {
   signalTrackRecord,
   anomalyTimeline,
   biggestDisagreement,
+  isUsableBand,
+  crowdConsensus,
   type AgentBand,
 } from "@/lib/insights";
 import type { LeaderRow, LiveFeedPoint } from "@/lib/indexer";
@@ -26,7 +28,7 @@ describe("smartMoneyDivergence", () => {
     expect(d.smartMoneyValue).toBeGreaterThan(3800);
   });
   it("ignores agents below the qualified threshold", () => {
-    const d = smartMoneyDivergence([band({ resolvedCount: 5 })], 3800);
+    const d = smartMoneyDivergence([band({ resolvedCount: 2 })], 3800);
     expect(d.enoughData).toBe(false);
     expect(d.smartMoneyValue).toBeNull();
   });
@@ -65,7 +67,7 @@ describe("topPerformers", () => {
     id, name: `agent #${id}`, kind: "CLAUDE", accuracyScore: acc, calibrationScore: -1, resolvedCount: resolved, lastUpdatedBlock: 1,
   });
   it("filters below-threshold and sorts by accuracy desc", () => {
-    const rows = [row(1, 100, 5), row(2, 800, 20), row(3, 500, 15)];
+    const rows = [row(1, 100, 2), row(2, 800, 20), row(3, 500, 15)];
     const top = topPerformers(rows, 2);
     expect(top.map((r) => r.id)).toEqual([2, 3]);
   });
@@ -90,7 +92,7 @@ describe("topVsCrowdAccuracy", () => {
     expect(t.pctMoreAccurate).toBeGreaterThan(0);
   });
   it("needs qualified agents", () => {
-    expect(topVsCrowdAccuracy([r(1, 900_000, 5)], 1).enoughData).toBe(false);
+    expect(topVsCrowdAccuracy([r(1, 900_000, 2)], 1).enoughData).toBe(false);
   });
 });
 
@@ -137,5 +139,42 @@ describe("biggestDisagreement", () => {
   });
   it("needs at least two qualified bands", () => {
     expect(biggestDisagreement([b(1, 3000, 3100)], 3800).enoughData).toBe(false);
+  });
+});
+
+describe("isUsableBand", () => {
+  it("accepts a tight real forecast", () => {
+    expect(isUsableBand(2994, 2999)).toBe(true);
+  });
+  it("rejects a full-domain hedge (width ≥ 100% of midpoint)", () => {
+    expect(isUsableBand(0, 100000)).toBe(false);
+  });
+  it("rejects inverted bands", () => {
+    expect(isUsableBand(3900, 3700)).toBe(false);
+  });
+});
+
+describe("crowdConsensus", () => {
+  it("averages qualified, usable band midpoints", () => {
+    expect(crowdConsensus([band({ low: 3700, high: 3900, resolvedCount: 5 })])).toBe(3800);
+  });
+  it("excludes degenerate hedge bands from the crowd", () => {
+    const c = crowdConsensus([
+      band({ agentId: 1, low: 3700, high: 3900, resolvedCount: 5 }),
+      band({ agentId: 2, low: 0, high: 100000, resolvedCount: 5 }),
+    ]);
+    expect(c).toBe(3800); // only the usable band counts
+  });
+  it("is null when no band qualifies", () => {
+    expect(crowdConsensus([band({ resolvedCount: 2 })])).toBeNull();
+  });
+});
+
+describe("signalTrackRecord excludes degenerate hedges", () => {
+  const p = (low: number, high: number, outcome: number | null) => ({ low, high, outcome, status: "Resolved", qualified: true });
+  it("does not count a full-domain band as a hit", () => {
+    const t = signalTrackRecord([p(0, 100000, 2999)]);
+    expect(t.total).toBe(0);
+    expect(t.enoughData).toBe(false);
   });
 });
