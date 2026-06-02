@@ -6,7 +6,9 @@ import { getLeaderboard, getFeedHistory, getAgentPredictions, type LeaderRow, ty
 import { AGENTS, CATEGORIES, PREDICTIONS, makeFeedHistory, type CategoryId } from "@/lib/mockData";
 import { categoryHash } from "@/lib/contracts";
 import type { AgentBand } from "@/lib/insights";
-import { MIN_RESOLVED_QUALIFIED, SMART_MONEY_TOP_N } from "@/lib/insights";
+import { MIN_RESOLVED_QUALIFIED, SMART_MONEY_TOP_N, crowdConsensus } from "@/lib/insights";
+import type { InsightsSnapshot, SnapCategory } from "@/lib/snapshot";
+import { leaderRowsFromSnapshot, bandsFromSnapshot, feedFromSnapshot } from "@/lib/snapshot";
 
 export type DataSource = "live" | "cached" | "mock";
 
@@ -182,6 +184,76 @@ export function useSmartMoneyBands(category: CategoryId): QueryView<AgentBand[]>
   }
   // Live empty/failed → mock so the centerpiece still renders (demo-shaped).
   return { data: mockBands(category), source: "mock", isLoading: false, isError: q.isError };
+}
+
+export interface InsightsData {
+  source: DataSource;
+  board: LeaderRow[];
+  feed: LiveFeedPoint[];
+  bands: AgentBand[];
+  crowdValue: number | null; // feed last value, else mean of usable band midpoints (crowdConsensus)
+  category: SnapCategory | null;
+  allocation: { methBps: number; usdyBps: number } | null;
+  generatedAt: string | null;
+  block: number | null;
+  isLoading: boolean;
+}
+
+/// Loads the committed build-time chain snapshot (public/insights-snapshot.json) once.
+function useSnapshotFile() {
+  return useQuery({
+    queryKey: ["insights-snapshot"],
+    queryFn: async (): Promise<InsightsSnapshot | null> => {
+      const res = await fetch("/insights-snapshot.json");
+      if (!res.ok) return null;
+      return (await res.json()) as InsightsSnapshot;
+    },
+    staleTime: Infinity,
+    retry: false,
+  });
+}
+
+/// Single source for the /insights page. Prefers the real chain snapshot; falls back to curated
+/// mock so the page always renders. (The REST indexer does not serve replay/outcome/risk data,
+/// so the snapshot — not the indexer — is the live tier here.)
+export function useInsightsData(category: CategoryId): InsightsData {
+  const snap = useSnapshotFile();
+  const cat = snap.data?.categories?.[category] ?? null;
+  const hasSnap = !!cat && cat.predictions.length > 0;
+
+  if (snap.isLoading) {
+    return { source: "live", board: [], feed: [], bands: [], crowdValue: null, category: null, allocation: null, generatedAt: null, block: null, isLoading: true };
+  }
+  if (hasSnap && cat) {
+    const feed = feedFromSnapshot(cat);
+    const bands = bandsFromSnapshot(cat);
+    return {
+      source: "live",
+      board: leaderRowsFromSnapshot(cat),
+      feed,
+      bands,
+      crowdValue: feed[feed.length - 1]?.value ?? crowdConsensus(bands),
+      category: cat,
+      allocation: snap.data?.allocation ?? null,
+      generatedAt: snap.data?.generatedAt ?? null,
+      block: snap.data?.block ?? null,
+      isLoading: false,
+    };
+  }
+  // No snapshot → curated mock (demo-shaped).
+  const feed = mockFeedPoints(category);
+  return {
+    source: "mock",
+    board: mockLeaderRows(category),
+    feed,
+    bands: mockBands(category),
+    crowdValue: feed[feed.length - 1]?.value ?? null,
+    category: null,
+    allocation: { methBps: 6000, usdyBps: 4000 },
+    generatedAt: null,
+    block: null,
+    isLoading: false,
+  };
 }
 
 export { CATEGORIES };
