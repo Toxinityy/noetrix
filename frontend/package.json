@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "gen:fallback": "tsx scripts/gen-fallback.ts",
+    "gen:insights": "tsx scripts/gen-insights-snapshot.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test"
