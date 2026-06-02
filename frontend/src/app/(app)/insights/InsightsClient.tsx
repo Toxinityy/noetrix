@@ -7,6 +7,8 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { CATEGORIES, type CategoryId } from "@/lib/mockData";
 import { useLeaderboard, useFeedHistory, useSmartMoneyBands } from "@/lib/hooks";
 import { FRIENDLY_CATEGORY } from "@/lib/labels";
+import { SmartMoneyCard } from "./SmartMoneyCard";
+import { ConsensusBandCard } from "./ConsensusBandCard";
 
 export function InsightsClient() {
   const [categoryId, setCategoryId] = React.useState<CategoryId>("METH_APR_24H");
@@ -82,10 +84,15 @@ export function InsightsClient() {
         <CategoryTabs tabs={tabs} value={categoryId} onValueChange={(v) => setCategoryId(v as CategoryId)} />
       </div>
 
-      {/* Findings grid — cards added in Tasks 7–8 */}
+      {/* Findings grid */}
       <div id="insights-findings" className="mt-6 grid gap-4 lg:grid-cols-2">
-        {/* placeholder filled by next tasks */}
-        <FindingsContext board={board} feed={feed} bands={bands} categoryId={categoryId} />
+        <SmartMoneyCard
+          categoryId={categoryId}
+          bands={bands.data}
+          crowdValue={feed.data[feed.data.length - 1]?.value ?? null}
+        />
+        <ConsensusBandCard categoryId={categoryId} history={feed.data} bands={bands.data} />
+        {/* NotableMoveCard + TopPerformersCard added in Task 8 */}
       </div>
 
       {/* "Tell us in your submission" — judge + Web2 facing */}
@@ -102,29 +109,5 @@ export function InsightsClient() {
         </p>
       </div>
     </div>
-  );
-}
-
-// Temporary holder so the data hooks are wired before Tasks 7–8 add real cards.
-// Renders nothing visible; replaced by the findings cards in Task 7.
-function FindingsContext({
-  board,
-  feed,
-  bands,
-  categoryId,
-}: {
-  board: ReturnType<typeof useLeaderboard>;
-  feed: ReturnType<typeof useFeedHistory>;
-  bands: ReturnType<typeof useSmartMoneyBands>;
-  categoryId: CategoryId;
-}) {
-  return (
-    <span
-      hidden
-      data-source={board.source}
-      data-feed={feed.data.length}
-      data-bands={bands.data.length}
-      data-category={categoryId}
-    />
   );
 }
