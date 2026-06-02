@@ -8,7 +8,7 @@
 
 - **Project:** Predictor Index — on-chain AI agent forecasting protocol on Mantle Network
 - **Hackathon:** The Turing Test Hackathon 2026 (Mantle × Bybit × Byreal × BGA)
-- **Tracks:** AI x RWA (primary — pivoted from AI Alpha & Data after the org redefined the tracks 2026-05-30), Best UX / Smoothest Web2 Onboarding (second award via `/rwa`), Grand Champion (stretch)
+- **Tracks:** AI Alpha & Data (primary — pivoted from AI Alpha & Data after the org redefined the tracks 2026-05-30), Best UX / Smoothest Web2 Onboarding (second award via `/rwa`), Grand Champion (stretch)
 - **Build window:** 2 weeks
 - **Team size assumption:** 1–3 builders
 - **Working dir:** `D:\Hackathon\mantle-hackathon`
@@ -122,6 +122,32 @@ If a future session is tempted to add any of these, push back to the user first.
 ---
 
 ## 6. Session history
+
+### 2026-06-03 — Proof-first `/insights`: investor/judge surface on a build-time chain snapshot (plan resumed Tasks 5–11)
+**Type:** Build (frontend). Resumed the in-flight plan `docs/superpowers/plans/2026-06-02-proof-first-insights.md` (spec `…/specs/2026-06-02-proof-first-insights-design.md`) via **executing-plans (inline, no subagents** — not requested this session, and last session already pivoted to inline after the spawn outage). Branch `insights-pixel-gradient` (off `master`, local-only, NOT pushed). Tasks 1–4 were already committed (`c5b6928`→`af4ee51`, plus thin-data fit-fix `1b7b93c`); this session landed **Tasks 5–11**.
+
+**Goal:** Extend the shipped `/insights` findings page into a proof surface (why-trust strip → forecast-vs-reality replay → disagreement → anomaly feed → your-move) backed by **real on-chain numbers** captured in a committed build-time chain snapshot (`public/insights-snapshot.json`), with mock fallback so the page always renders.
+
+**What was built (Tasks 5–11):**
+- **§1 `ProofStrip`** (`elevation=2`, top-of-page): three tiles — *top-AIs-vs-crowd* (`topVsCrowdAccuracy`), *forecasts-graded-on-chain* count, *landed-in-range* (`signalTrackRecord`), + explorer link with the snapshot block. (Plan passed an unused `categoryId` prop → removed it + its import + the call-site arg to keep lint 0/0.)
+- **§2 `ReplayCard`**: per-resolved-forecast rail — accent predicted band + white actual-outcome marker, plain-English "AI predicted X–Y; real value landed at Z", `inRange`/`near miss` pill. Sorts by `resolutionBlock` desc, top 4, `isUsableBand` filtered, EmptyState when none resolved.
+- **§3 `DisagreementCallout`** (in findings grid): `biggestDisagreement` — most-bullish vs most-bearish qualified AIs, spread% tone (down>6 / warn>2 / up).
+- **§4 `AnomalyFeed`** (`lg:col-span-2`): `anomalyTimeline(16,2)` list + an inline **Telegram/Discord `AlertPreview`** mock (concretizes the productized anomaly bot for the Alpha & Data track).
+- **§5 `YourMoveStrip`** (`elevation=2`, below grid): AI briefing (`topFinding`), on-chain **risk monitor** (Normal/Caution/Frozen → friendly labels), and **AI yield allocation** bar (mETH vs USDY from snapshot `allocation`).
+- **`InsightsClient` rewire (Task 5):** swapped the three separate hooks (`useLeaderboard`/`useFeedHistory`/`useSmartMoneyBands`) for the single **`useInsightsData(categoryId)`** snapshot-first hook; added §0 caption ("Live on-chain data · snapshot @ block #…"), mounted §1/§2 above the grid + §5 below it, added §3/§4 into the grid, expanded the §6 footer with an **honesty note** (seeded outcome oracle; N-small-and-growing; figures from Mantle Sepolia @ block).
+
+**Verification (Task 11 gate, all green):** `tsc --noEmit` exit 0 · `pnpm lint` 0/0 · `pnpm test` 34 passed (snapshot 3 + insights 24 + labels 4 + narrate 3) · `pnpm build` green, 12 routes incl. `/insights` (static) + `/api/narrate` (ƒ) · Playwright `pnpm test:e2e` **5 passed** incl `/insights` 375px no-horizontal-overflow. Re-ran `pnpm gen:insights` against the Alchemy RPC — identical real data (27 preds / 21 resolved across 3 cats, 2 reps each, risk Frozen, alloc 50/50); only block# + timestamp changed (no regression).
+
+**Decisions:**
+- **Inline executing-plans, not subagent-driven** — per the no-spawn-unless-asked guidance + last session's pivot. Each task gated on green build/lint/test before its per-task commit (`ac08346` T6 … `1532568` T5).
+- **Snapshot is the live tier for `/insights`** (the REST indexer doesn't serve replay/outcome/risk). `useInsightsData` prefers the committed chain snapshot, falls back to curated mock.
+- **Feed history degrades to a single composite-read point** — Alchemy free tier caps `eth_getLogs` at a 10-block range, so `CompositeFeedRefreshed` log scans fail; the script's fallback reads the current composite value as one point. `feedHistory` is therefore length 0–1 in the snapshot (anomaly/consensus-over-time cards show their EmptyState until a wider-range RPC or hosted indexer backfills logs). Snapshot write is atomic-at-end, so a throttle/failure never corrupts the committed JSON.
+
+**Risks / pending (honest caveats):**
+- **Numbers are real-but-thin and demo-seeded.** Outcomes are graded against a deterministic seeded oracle (footer states this); track-record N is small and growing; the snapshot is **static until re-run** (`pnpm gen:insights`). Bots are stopped, so chain state is ~frozen.
+- **`feedHistory` is sparse** (RPC log-range cap) → the time-series cards lean on EmptyStates; a hosted indexer or PAYG RPC is the fix.
+- **Branch `insights-pixel-gradient` is local-only**, ahead of master, NOT pushed. Deployment (Vercel/Railway/Etherscan-verify/demo video) still deferred to a separate conversation. `masterdoc/requirements.md` shows large pre-existing churn unrelated to this work — left untouched/uncommitted.
+- **finishing-a-development-branch** offered at session end (local FF-merge to master vs PR — user decides).
 
 ### 2026-06-02 — Alpha & Data repositioning: `/insights` findings page + Web2 narration (plan resumed Tasks 6–14)
 **Type:** Build (frontend + reasoner agent). Resumed the in-flight plan `docs/superpowers/plans/2026-06-01-alpha-data-insights-and-narration.md` (spec `…/specs/2026-06-01-alpha-data-insights-and-narration-design.md`) after a usage-limit cutoff at Task 6 (RESUME doc `docs/superpowers/RESUME-2026-06-02.md`). Branch `alpha-data-insights-narration` (off `master`, local-only, NOT pushed). Tasks 1–5 were already done (HEAD `d25c52c`); this session landed **Tasks 6–14**.
