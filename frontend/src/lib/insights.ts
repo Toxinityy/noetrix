@@ -146,3 +146,96 @@ export function topFinding(
   }
   return `AI consensus for ${categoryFriendly} is holding steady.`;
 }
+
+// ─── Proof pure functions ──────────────────────────────────────────────────
+
+/** Signed accuracy score (-1e6..1e6) → [0,1]. */
+function accNorm(score: number): number {
+  return Math.min(1, Math.max(0, (score + 1_000_000) / 2_000_000));
+}
+
+export interface TopVsCrowd {
+  topMean: number;
+  crowdMean: number;
+  pctMoreAccurate: number;
+  topN: number;
+  enoughData: boolean;
+}
+
+/** Mean normalized accuracy of the top-N qualified agents vs the whole qualified crowd. */
+export function topVsCrowdAccuracy(rows: LeaderRow[], topN = 3): TopVsCrowd {
+  const q = rows.filter((r) => r.resolvedCount >= MIN_RESOLVED_QUALIFIED);
+  if (q.length === 0) {
+    return { topMean: 0, crowdMean: 0, pctMoreAccurate: 0, topN, enoughData: false };
+  }
+  const sorted = [...q].sort((a, b) => b.accuracyScore - a.accuracyScore);
+  const top = sorted.slice(0, topN);
+  const topMean = top.reduce((s, r) => s + accNorm(r.accuracyScore), 0) / top.length;
+  const crowdMean = q.reduce((s, r) => s + accNorm(r.accuracyScore), 0) / q.length;
+  const pctMoreAccurate = crowdMean > 0 ? ((topMean - crowdMean) / crowdMean) * 100 : 0;
+  return { topMean, crowdMean, pctMoreAccurate, topN, enoughData: true };
+}
+
+export interface TrackRecordInput {
+  low: number;
+  high: number;
+  outcome: number | null;
+  status: string;
+  qualified: boolean;
+}
+export interface TrackRecord {
+  hits: number;
+  total: number;
+  ratePct: number;
+  enoughData: boolean;
+}
+
+/** Of resolved forecasts by qualified agents, how many had the real outcome land inside the band. */
+export function signalTrackRecord(preds: TrackRecordInput[]): TrackRecord {
+  const r = preds.filter((p) => p.status === "Resolved" && p.qualified && p.outcome != null);
+  const hits = r.filter((p) => (p.outcome as number) >= p.low && (p.outcome as number) <= p.high).length;
+  return { hits, total: r.length, ratePct: r.length ? (hits / r.length) * 100 : 0, enoughData: r.length > 0 };
+}
+
+export interface Anomaly {
+  block: number;
+  direction: "up" | "down";
+  deltaPct: number;
+  from: number;
+  to: number;
+}
+
+/** Scan the feed series for moves ≥ thresholdPct across a `lookback` window. Newest last. */
+export function anomalyTimeline(history: LiveFeedPoint[], lookback = 16, thresholdPct = 2): Anomaly[] {
+  const out: Anomaly[] = [];
+  for (let i = lookback; i < history.length; i++) {
+    const to = history[i].value;
+    const from = history[i - lookback].value;
+    if (from === 0) continue;
+    const deltaPct = ((to - from) / from) * 100;
+    if (Math.abs(deltaPct) >= thresholdPct) {
+      out.push({ block: history[i].block, direction: deltaPct > 0 ? "up" : "down", deltaPct, from, to });
+    }
+  }
+  return out;
+}
+
+export interface Disagreement {
+  spreadPct: number;
+  highAgent: AgentBand | null;
+  lowAgent: AgentBand | null;
+  enoughData: boolean;
+}
+
+/** The qualified agents whose band midpoints sit farthest apart, as a % of the crowd value. */
+export function biggestDisagreement(bands: AgentBand[], crowdValue: number | null): Disagreement {
+  const q = bands.filter((b) => b.resolvedCount >= MIN_RESOLVED_QUALIFIED && b.high >= b.low);
+  if (q.length < 2 || !crowdValue) {
+    return { spreadPct: 0, highAgent: null, lowAgent: null, enoughData: false };
+  }
+  const withMid = q.map((b) => ({ b, mid: (b.low + b.high) / 2 }));
+  const hi = withMid.reduce((m, x) => (x.mid > m.mid ? x : m));
+  const lo = withMid.reduce((m, x) => (x.mid < m.mid ? x : m));
+  const spreadPct = (Math.abs(hi.mid - lo.mid) / crowdValue) * 100;
+  return { spreadPct, highAgent: hi.b, lowAgent: lo.b, enoughData: true };
+}
