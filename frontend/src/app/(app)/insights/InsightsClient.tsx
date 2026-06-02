@@ -7,8 +7,11 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { CATEGORIES, type CategoryId } from "@/lib/mockData";
 import { useLeaderboard, useFeedHistory, useSmartMoneyBands } from "@/lib/hooks";
 import { FRIENDLY_CATEGORY } from "@/lib/labels";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { SmartMoneyCard } from "./SmartMoneyCard";
 import { ConsensusBandCard } from "./ConsensusBandCard";
+import { NotableMoveCard } from "./NotableMoveCard";
+import { TopPerformersCard } from "./TopPerformersCard";
 
 export function InsightsClient() {
   const [categoryId, setCategoryId] = React.useState<CategoryId>("METH_APR_24H");
@@ -86,13 +89,26 @@ export function InsightsClient() {
 
       {/* Findings grid */}
       <div id="insights-findings" className="mt-6 grid gap-4 lg:grid-cols-2">
-        <SmartMoneyCard
-          categoryId={categoryId}
-          bands={bands.data}
-          crowdValue={feed.data[feed.data.length - 1]?.value ?? null}
-        />
-        <ConsensusBandCard categoryId={categoryId} history={feed.data} bands={bands.data} />
-        {/* NotableMoveCard + TopPerformersCard added in Task 8 */}
+        {board.isLoading || feed.isLoading ? (
+          <div className="lg:col-span-2 space-y-3" aria-busy>
+            <Skeleton className="h-40 w-full" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Skeleton className="h-40 w-full" />
+              <Skeleton className="h-40 w-full" />
+            </div>
+          </div>
+        ) : (
+          <>
+            <SmartMoneyCard
+              categoryId={categoryId}
+              bands={bands.data}
+              crowdValue={feed.data[feed.data.length - 1]?.value ?? null}
+            />
+            <ConsensusBandCard categoryId={categoryId} history={feed.data} bands={bands.data} />
+            <NotableMoveCard categoryId={categoryId} history={feed.data} />
+            <TopPerformersCard rows={board.data} />
+          </>
+        )}
       </div>
 
       {/* "Tell us in your submission" — judge + Web2 facing */}

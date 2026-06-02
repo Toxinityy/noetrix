@@ -101,6 +101,29 @@ export function ConsensusBandCard({
           The line is the combined AI view; the shaded band shows how much the AIs currently disagree.
           Wider band = less certainty.
         </p>
+        <details className="mt-3">
+          <summary className="cursor-pointer text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-muted)] hover:text-[var(--color-accent)]">
+            View as data table
+          </summary>
+          <div className="mt-2 max-h-48 overflow-auto rounded border border-[var(--color-border)]">
+            <table className="w-full text-left font-mono text-[11px] tabular">
+              <thead className="text-[var(--color-text-muted)]">
+                <tr>
+                  <th scope="col" className="px-3 py-1.5">block</th>
+                  <th scope="col" className="px-3 py-1.5">AI consensus</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.slice(-12).map((d) => (
+                  <tr key={d.block} className="border-t border-[var(--color-border)] text-[var(--color-text-dim)]">
+                    <td className="px-3 py-1">#{d.block.toLocaleString("en-US")}</td>
+                    <td className="px-3 py-1">{friendlyValue(categoryId, d.value)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
       </PanelBody>
     </Panel>
   );
