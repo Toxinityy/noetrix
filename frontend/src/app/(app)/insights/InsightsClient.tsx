@@ -5,21 +5,23 @@ import { Info } from "lucide-react";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { CATEGORIES, type CategoryId } from "@/lib/mockData";
-import { useLeaderboard, useFeedHistory, useSmartMoneyBands } from "@/lib/hooks";
+import { useInsightsData } from "@/lib/hooks";
 import { FRIENDLY_CATEGORY } from "@/lib/labels";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { SmartMoneyCard } from "./SmartMoneyCard";
 import { ConsensusBandCard } from "./ConsensusBandCard";
 import { NotableMoveCard } from "./NotableMoveCard";
 import { TopPerformersCard } from "./TopPerformersCard";
+import { ProofStrip } from "./ProofStrip";
+import { ReplayCard } from "./ReplayCard";
+import { DisagreementCallout } from "./DisagreementCallout";
+import { AnomalyFeed } from "./AnomalyFeed";
+import { YourMoveStrip } from "./YourMoveStrip";
 
 export function InsightsClient() {
   const [categoryId, setCategoryId] = React.useState<CategoryId>("METH_APR_24H");
-  const board = useLeaderboard(categoryId);
-  const feed = useFeedHistory(categoryId);
-  const bands = useSmartMoneyBands(categoryId);
-
-  const source = board.source; // representative tier for the page
+  const data = useInsightsData(categoryId);
+  const source = data.source;
   const tabs = Object.values(CATEGORIES).map((c) => ({
     id: c.id,
     label: FRIENDLY_CATEGORY[c.id],
@@ -44,9 +46,17 @@ export function InsightsClient() {
             Findings pulled from on-chain AI forecasters on Mantle — no crypto jargon required.
           </p>
         </div>
-        <StatusPill tone={source === "live" ? "up" : "muted"} dot pulse={source === "live"}>
-          {source === "live" ? "Live data" : "Demo data"}
-        </StatusPill>
+        <div className="flex flex-col items-end gap-1">
+          <StatusPill tone={source === "live" ? "up" : "muted"} dot pulse={source === "live"}>
+            {source === "live" ? "Live on-chain data" : "Demo data"}
+          </StatusPill>
+          {source === "live" && data.block ? (
+            <span className="font-mono text-[10px] text-[var(--color-text-muted)]">
+              snapshot @ block #{data.block.toLocaleString("en-US")}
+              {data.generatedAt ? ` · ${new Date(data.generatedAt).toLocaleDateString("en-US")}` : ""}
+            </span>
+          ) : null}
+        </div>
       </div>
 
       {/* What is this — skippable Web2 intro */}
@@ -87,9 +97,13 @@ export function InsightsClient() {
         <CategoryTabs tabs={tabs} value={categoryId} onValueChange={(v) => setCategoryId(v as CategoryId)} />
       </div>
 
+      {/* §1 proof + §2 replay — the top-of-page peak */}
+      <ProofStrip data={data} />
+      <ReplayCard categoryId={categoryId} predictions={data.category?.predictions ?? []} />
+
       {/* Findings grid */}
       <div id="insights-findings" className="mt-6 grid gap-4 lg:grid-cols-2">
-        {board.isLoading || feed.isLoading ? (
+        {data.isLoading ? (
           <div className="lg:col-span-2 space-y-3" aria-busy>
             <Skeleton className="h-40 w-full" />
             <div className="grid gap-3 sm:grid-cols-2">
@@ -101,15 +115,24 @@ export function InsightsClient() {
           <>
             <SmartMoneyCard
               categoryId={categoryId}
-              bands={bands.data}
-              crowdValue={feed.data[feed.data.length - 1]?.value ?? null}
+              bands={data.bands}
+              crowdValue={data.crowdValue}
             />
-            <ConsensusBandCard categoryId={categoryId} history={feed.data} bands={bands.data} />
-            <NotableMoveCard categoryId={categoryId} history={feed.data} />
-            <TopPerformersCard rows={board.data} />
+            <DisagreementCallout
+              categoryId={categoryId}
+              bands={data.bands}
+              crowdValue={data.crowdValue}
+            />
+            <ConsensusBandCard categoryId={categoryId} history={data.feed} bands={data.bands} />
+            <NotableMoveCard categoryId={categoryId} history={data.feed} />
+            <AnomalyFeed categoryId={categoryId} history={data.feed} />
+            <TopPerformersCard rows={data.board} />
           </>
         )}
       </div>
+
+      {/* §5 your move */}
+      <YourMoveStrip categoryId={categoryId} data={data} />
 
       {/* "Tell us in your submission" — judge + Web2 facing */}
       <div className="mt-12 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6 text-sm leading-relaxed text-[var(--color-text-dim)]">
@@ -122,6 +145,14 @@ export function InsightsClient() {
           reasoner and an ARIMA baseline) forecast each metric; their accuracy is scored on-chain via CRPS.{" "}
           <span className="text-[var(--color-text)]">Verifiable value:</span> every forecast, grade, and the
           resulting &quot;smart-money&quot; view is recorded on Mantle and independently checkable.
+        </p>
+        <p className="mt-3 border-t border-[var(--color-border)] pt-3 text-[var(--color-text-muted)]">
+          <span className="text-[var(--color-text-dim)]">Honesty note:</span> for this demo the outcome
+          oracles (mETH / USDY rates) are seeded with a deterministic curve — the AI forecasts and the
+          on-chain grading are fully real, but the &quot;reality&quot; they are graded against is
+          demo-seeded until v2 reads the live Ondo / mETH contracts. Track-record sample sizes are small
+          and growing. All figures are computed from Mantle Sepolia
+          {source === "live" && data.block ? ` at block #${data.block.toLocaleString("en-US")}` : ""}.
         </p>
       </div>
     </div>
