@@ -123,6 +123,41 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-06-02 — Alpha & Data repositioning: `/insights` findings page + Web2 narration (plan resumed Tasks 6–14)
+**Type:** Build (frontend + reasoner agent). Resumed the in-flight plan `docs/superpowers/plans/2026-06-01-alpha-data-insights-and-narration.md` (spec `…/specs/2026-06-01-alpha-data-insights-and-narration-design.md`) after a usage-limit cutoff at Task 6 (RESUME doc `docs/superpowers/RESUME-2026-06-02.md`). Branch `alpha-data-insights-narration` (off `master`, local-only, NOT pushed). Tasks 1–5 were already done (HEAD `d25c52c`); this session landed **Tasks 6–14**.
+
+**Strategy:** Primary track repositioned to **Alpha & Data** (Mirana); AI x RWA secondary. Awards chased: Alpha&Data + Best UI/UX + 20-Project-Deployment. Web2-legibility is a hard requirement on every new surface (no bps/CRPS/feed jargon shown to end users).
+
+**What was built (Tasks 6–14):**
+- **`/insights` page** (new route, terminal-core aesthetic): `page.tsx` + `InsightsClient.tsx` (category tabs reusing `FRIENDLY_CATEGORY`, skippable Web2 "what is this" intro, source pill, cached banner, "how this works" judge/Web2 footer) + `AppHeader` nav link (after Leaderboard). Findings grid renders four cards built on the already-shipped pure fns (`lib/insights.ts`) + hooks (`useLeaderboard`/`useFeedHistory`/`useSmartMoneyBands`):
+  - **`SmartMoneyCard`** (centerpiece, `lg:col-span-2`): accuracy-weighted smart-money-vs-crowd divergence, bullet-style marker viz + sr-only text, EmptyState when <enough qualified AIs.
+  - **`ConsensusBandCard`**: Recharts Area+Line consensus over time with a dispersion band + uncertainty badge (Low/Med/High) + a **"View as data table"** `<details>` a11y fallback.
+  - **`NotableMoveCard`**: 24h move (notableMove) with direction icon + plain-English sentence.
+  - **`TopPerformersCard`**: accuracy leaders (reframed from "rising agents" — momentum needs history we lack; documented), links to `/agent/[id]`.
+  - Loading skeleton + empty states wired in the grid.
+- **Landing teaser** (`components/landing/InsightTeaser.tsx` + new `StoryFrame` in `app/page.tsx`, after Leaderboard preview): auto-generated `topFinding` one-liner → `/insights`.
+- **Reasoner self-narration** (`agents/claude-reasoner`): extended the DeepSeek output contract to also emit a Web2 `summary` + `confidence_rationale` in the SAME OpenRouter call. Extracted a pure `parseForecastText` (TDD via vitest added to the reasoner pkg; 2 tests), extended `validate` (optional fields, back-compat), updated `SYSTEM_PROMPT` + `buildUserPrompt` output contract, and added the two fields to all 6 `fewshot/*.json` (plain-English, adapted per regime).
+- **`/api/narrate` route** (`lib/narrate.ts` TDD 3 tests + `app/api/narrate/route.ts`, runtime nodejs): narrates ANY agent's forecast in plain English via OpenRouter→DeepSeek. Injected-fetcher design (testable), in-memory cache by predictionId, deterministic fallback (never 500s), server-only `OPENROUTER_API_KEY` (documented in `.env.example`, NOT `NEXT_PUBLIC`).
+- **Narration on `/agent/[id]`** (`components/app/ForecastSummary.tsx`): "In plain English" card prefers a baked `summary` (reasoner field / extended mock `ReasoningTrace`), else fetches `/api/narrate`. Rendered above the dense trace in `FeaturedReasoning` AND in every prediction row — and **ARIMA rows are now expandable** (they show only the friendly summary, no dense trace). Extended mock `ReasoningTrace` with `summary?`/`confidenceRationale?` populated in `baseReasoning`.
+- **Playwright smoke** (`@playwright/test` + `playwright.config.ts` + `e2e/{tour,responsive}.spec.ts`): tour auto-start + Guide-replay (asserts `[data-tour]` anchors + `role="dialog" aria-label="Guided tour"`), and 375px no-horizontal-overflow on `/leaderboard`, `/insights`, `/agent/1`. **Chromium installed fine (NOT blocked); all 5 e2e tests pass.** Screenshots gitignored (`e2e/__screenshots__*`).
+
+**Verification (Task 14 gate, all green):** `pnpm --filter frontend lint` clean (0/0) · `test` 16 passed (labels+insights+narrate) · `build` green, 11 routes incl. `/insights` (static) + `/api/narrate` (ƒ) · reasoner `vitest` 2 passed + `tsc --noEmit` exit 0 · Playwright 5 passed.
+
+**Decisions:**
+- **Subagent-driven-development was the intended execution model, but subagent spawn was hard-down (three consecutive `API Error: 529 Overloaded`, 0 work each, ~3.5 min wasted per attempt).** Pivoted to **inline implementation with direct build/lint/test verification after each task** (the resume doc's "direct verify" fallback, extended to the UI/agent tasks while spawn was unavailable). Two-stage subagent review was therefore NOT performed; each task was instead gated on green build + lint + tests before commit. The per-task commits are isolated if a future session wants the formal spec/quality review.
+- **Adapted plan code to real component APIs** (confirmed by reading): `CategoryTabs`/`StatusPill`/`Panel`/`PanelHeader`/`PanelBody`/`EmptyState`/`Skeleton`/`fmtScore` all matched the plan as-written — no signature drift.
+- **Task 6 placeholder lint:** the plan's `FindingsContext(_: {...})` tripped `no-unused-vars`; implemented it as a hidden `<span>` consuming the props instead (removed entirely in Task 7).
+- **`ForecastSummary` setState-in-effect:** the plan's `setLoading(true)` synchronously in the effect tripped the React-Compiler `setState-in-effect` lint rule (same class the prior session fixed in AppHeader). Restructured to a `startedRef` guard + setState only in async `.then/.catch/.finally`, deriving the skeleton from a `loaded` flag. Lint clean.
+- **Commit-per-task, continuous execution.** Commits: `8c532d0` (T6), `240ae2e` (T7), `83629c1` (T8), `a2e744d` (T9), `5949def` (T10), `0b9c144` (T11), `503461c` (T12), `a5e02b2` (T13), + this CLAUDE.md (T14).
+
+**Risks / pending (honest caveats):**
+- **Numbers are demo-shaped until a live indexer is hosted.** `/insights` reads mock data unless `NEXT_PUBLIC_INDEXER_URL` resolves. The dev `.env` points it at a dead `localhost:42069`, so the 375px screenshot of `/insights` captured the **loading skeleton** (source pill stuck "LIVE DATA" + isLoading true during the failed-fetch backoff) — NOT a layout bug; the overflow assertion still passed. Production build with no indexer env shows mock immediately.
+- **"Top performers" replaces the spec's "rising agents"** — momentum needs a per-agent accuracy time series we don't have from one leaderboard snapshot. Reframed as accuracy-leaders-now.
+- **`/api/narrate` cache is in-memory per server instance** (resets on redeploy/scale-out). Fine for the demo; a shared cache (KV) is v-next. `OPENROUTER_API_KEY` must be set server-side for live narration; without it the route returns the deterministic fallback (no 500).
+- **Two-stage subagent review skipped** (spawn outage, see Decisions) — verification was build/lint/test only, not a second-agent read.
+- **`masterdoc/requirements.md` showed as modified at session start** (not touched by this work) — left unstaged/uncommitted.
+- **Deferred (separate later conversation, NOT this branch):** Vercel deploy, contract verification (Etherscan V2), Railway indexer hosting, ≥2-min demo video, submission-text reframe to Alpha & Data primary. Branch is local-only; finishing-a-development-branch (local FF-merge to master vs PR) offered at session end — user decides.
+
 ### 2026-06-01 — Finished RWA web pivot on the site + spotlight onboarding tour (plan resumed, merged to master)
 **Type:** Build (frontend). Resumed the in-flight plan `docs/superpowers/plans/2026-05-31-rwa-web-finish-and-tour.md` (spec `…/specs/2026-05-31-rwa-web-finish-and-tour-design.md`) after a usage-limit cutoff. Branch `rwa-web-tour` → **fast-forward merged to `master`, branch deleted**. Prior session had landed Tasks 1,2,6,7 (USDY mock data, leaderboard tab, RwaStrategyPanel, mount + tour anchors); this session did the rest.
 
