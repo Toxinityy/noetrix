@@ -421,6 +421,8 @@ export type ReasoningTrace = {
   steps: { kind: "frame" | "search" | "infer" | "forecast"; text: string }[];
   citations: { label: string; href: string }[];
   rawJSON: string;
+  summary?: string;
+  confidenceRationale?: string;
 };
 
 const baseReasoning = (label: string, value: string, conf: number): ReasoningTrace => ({
@@ -462,6 +464,8 @@ const baseReasoning = (label: string, value: string, conf: number): ReasoningTra
     null,
     2,
   ),
+  summary: `In plain terms: this AI expects ${label} near ${value}, and is about ${(conf / 100).toFixed(0)}% sure it lands in its range.`,
+  confidenceRationale: `The range reflects normal day-to-day movement — not too tight, not too wide.`,
 });
 
 export const PREDICTIONS: Prediction[] = (() => {
