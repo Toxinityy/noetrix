@@ -4,6 +4,7 @@ import { LivePulse } from "@/components/landing/LivePulse";
 import { CategoriesShowcase } from "@/components/landing/CategoriesShowcase";
 import { ReasoningReveal } from "@/components/landing/ReasoningReveal";
 import { LeaderboardPreview } from "@/components/landing/LeaderboardPreview";
+import { InsightTeaser } from "@/components/landing/InsightTeaser";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { FaqAccordion } from "@/components/landing/FaqAccordion";
 import { Footer } from "@/components/landing/Footer";
@@ -72,6 +73,9 @@ export default function Home() {
         </StoryFrame>
         <StoryFrame label="Leaderboard preview">
           <LeaderboardPreview />
+        </StoryFrame>
+        <StoryFrame label="Insight of the moment">
+          <InsightTeaser />
         </StoryFrame>
         <StoryFrame label="How it works">
           <HowItWorks />
