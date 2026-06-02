@@ -2,6 +2,8 @@
   "category": "AAVE_MANTLE_TVL_24H",
   "context": "Recent composite feed (Aave-on-Mantle TVL, USD 8-dec): 14050000000000000, 14120000000000000, 13980000000000000, 14200000000000000, 14160000000000000. Hovering around $141M with ~$2M daily noise. No incentive-program changes; MNT price flat over 24h.",
   "reasoning": "Observed: TVL is range-bound near 1.416e16 (~$141.6M), oscillating within ±$2M and no net drift over five snapshots. Hypothesis: with stable MNT price and no incentive catalyst, TVL stays near its recent mean; supply/withdraw flows roughly net out day to day. I center on the recent average (~$141M) and set the band to cover the observed ±$2M noise plus a little headroom, landing at roughly $138.5M–$143.5M. Bands narrower than the observed noise would be overconfident. Confidence ~72%: calm regime, but a single whale deposit or withdrawal can move TVL a few million in a day.",
+  "summary": "Deposits in Aave on Mantle have held steady around $141M, so I expect them to stay roughly $139M to $144M.",
+  "confidence_rationale": "I set a fairly tight range because deposits have only moved a couple of million dollars a day.",
   "predicted_value": { "lower": 13850000000000000, "upper": 14350000000000000 },
   "confidence": 7200
 }

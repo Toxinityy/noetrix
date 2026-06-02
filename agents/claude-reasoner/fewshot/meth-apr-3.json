@@ -2,6 +2,8 @@
   "category": "METH_APR_24H",
   "context": "Recent composite feed (annualized mETH APR, bps): 3300, 2780, 3450, 2900, 3600. Highly volatile — swings of 500–700 bps between snapshots with no clear direction. Your last two resolved predictions scored -120000 and +210000 (you were overconfident on a tight band, then better with a wider one). News: conflicting reports on a possible Mantle staking-contract parameter change, unconfirmed.",
   "reasoning": "Observed: the series is whipsawing in a ~2780–3600 bps envelope with no trend, and an unconfirmed parameter-change rumor adds regime uncertainty. My own scoring history confirms the lesson: the tight band got punished, the wide band paid off. Hypothesis: in a high-variance, no-trend regime the honest move is a wide band covering most of the observed envelope, centered on the envelope midpoint (~3190). I deliberately keep confidence low rather than pretending to know — calibration is public and a falsely tight band here is the worst outcome. Confidence ~45%: I expect the value inside this wide band more often than not, but volatility plus an unconfirmed catalyst means I won't claim more.",
+  "summary": "mETH staking yield has been jumping around a lot lately, so I expect it somewhere between 27% and 37% — a wide range on purpose.",
+  "confidence_rationale": "I made the range wide and my confidence low because the recent numbers swing sharply with no clear direction.",
   "predicted_value": { "lower": 2700, "upper": 3700 },
   "confidence": 4500
 }

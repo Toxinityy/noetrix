@@ -4,6 +4,8 @@ export interface ParsedForecast {
   predicted_value: { lower: number; upper: number };
   confidence: number;
   reasoning: string;
+  summary?: string; // ≤140 char plain-English, Web2 reader
+  confidence_rationale?: string; // one sentence on band width
 }
 
 export interface ForecastResult {
@@ -33,11 +35,27 @@ function validate(obj: unknown): ParsedForecast {
   if (typeof o.reasoning !== "string" || o.reasoning.length === 0) {
     throw new Error("reasoning missing");
   }
+  const summary =
+    typeof o.summary === "string" && o.summary.trim().length > 0
+      ? o.summary.trim().slice(0, 200)
+      : undefined;
+  const confidence_rationale =
+    typeof o.confidence_rationale === "string" && o.confidence_rationale.trim().length > 0
+      ? o.confidence_rationale.trim()
+      : undefined;
   return {
     predicted_value: { lower: pv.lower, upper: pv.upper },
     confidence: Math.round(o.confidence),
     reasoning: o.reasoning,
+    summary,
+    confidence_rationale,
   };
+}
+
+/// Pure parser: raw model text → validated forecast. Extracted so it can be unit-tested
+/// without a network call. Tolerates ```json fences via extractJson.
+export function parseForecastText(rawText: string): ParsedForecast {
+  return validate(JSON.parse(extractJson(rawText)));
 }
 
 interface ChatCompletion {
@@ -79,6 +97,6 @@ export async function getForecast(
   const rawText = (json.choices?.[0]?.message?.content ?? "").trim();
   if (!rawText) throw new Error("empty completion from model");
 
-  const parsed = validate(JSON.parse(extractJson(rawText)));
+  const parsed = parseForecastText(rawText);
   return { parsed, rawText };
 }

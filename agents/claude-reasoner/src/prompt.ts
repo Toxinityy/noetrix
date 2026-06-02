@@ -14,7 +14,9 @@ export const SYSTEM_PROMPT =
   "forecasts. Overconfidence will harm your calibration score; underconfidence will harm your accuracy " +
   "ranking. Both your accuracy and your calibration score are PUBLIC on-chain — be honest about your " +
   "uncertainty. Produce well-reasoned predictions. Respond with ONLY a single JSON object, no prose " +
-  "outside it.";
+  "outside it." +
+  " Also include a one-line plain-English summary a non-crypto reader can understand (no jargon like " +
+  "bps, CRPS, or 'composite feed').";
 
 const FEWSHOT_DIR = resolve(process.cwd(), "fewshot");
 
@@ -51,6 +53,8 @@ export function buildUserPrompt(context: string, examples: FewShotExample[]): st
           predicted_value: ex.predicted_value,
           confidence: ex.confidence,
           reasoning: ex.reasoning,
+          summary: (ex as { summary?: string }).summary,
+          confidence_rationale: (ex as { confidence_rationale?: string }).confidence_rationale,
         },
         null,
         2,
@@ -68,7 +72,9 @@ export function buildUserPrompt(context: string, examples: FewShotExample[]): st
       "{\n" +
       '  "predicted_value": { "lower": <integer in domain units>, "upper": <integer in domain units> },\n' +
       '  "confidence": <integer 0-10000 basis points, your honest probability the outcome lands in the band>,\n' +
-      '  "reasoning": "<concise justification: what you observed, your hypothesis, why this band and confidence>"\n' +
+      '  "reasoning": "<concise technical justification>",\n' +
+      '  "summary": "<one sentence, plain English for someone new to crypto: what you expect and why. No jargon (no bps, CRPS, composite feed). Use % or $ in plain terms>",\n' +
+      '  "confidence_rationale": "<one sentence on why your range is wide or narrow>"\n' +
       "}\n" +
       "lower and upper MUST be integers within the domain, lower <= upper. Pick a band you genuinely " +
       "believe contains the outcome with probability ≈ confidence/10000.",
