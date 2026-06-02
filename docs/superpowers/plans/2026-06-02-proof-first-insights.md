@@ -502,6 +502,17 @@ const riskManagerAbi = [{
   inputs: [{ name: "categoryId", type: "bytes32" }], outputs: [{ type: "uint8" }],
 }] as const;
 
+const compositeFeedReadAbi = [{
+  type: "function", name: "read", stateMutability: "view",
+  inputs: [{ name: "categoryId", type: "bytes32" }],
+  outputs: [{
+    type: "tuple", components: [
+      { name: "value", type: "bytes" }, { name: "confidence", type: "uint16" },
+      { name: "contributingAgents", type: "uint256" }, { name: "lastUpdatedBlock", type: "uint256" },
+    ],
+  }],
+}] as const;
+
 const compositeFeedRefreshedEvent = {
   type: "event", name: "CompositeFeedRefreshed",
   inputs: [
@@ -636,6 +647,25 @@ async function main() {
       console.warn(`[snapshot] feed logs failed ${cat}:`, (e as Error).message);
     }
 
+    // Fallback: if no refresh logs, read the current composite value as a single point so the
+    // page always has a real crowd value (crowdValue drives several cards).
+    if (feedHistory.length === 0) {
+      try {
+        const f = (await client.readContract({ address: deployments.CompositeFeed as Hex, abi: compositeFeedReadAbi, functionName: "read", args: [catHash(cat)] })) as {
+          value: Hex; confidence: number; contributingAgents: bigint; lastUpdatedBlock: bigint;
+        };
+        if (f.value && f.value !== "0x") {
+          const [v] = decodeAbiParameters([{ type: "uint256" }], f.value) as [bigint];
+          const fb = Number(f.lastUpdatedBlock) || block;
+          if (Number(v) > 0) {
+            feedHistory = [{ block: fb, value: Number(v) / scale, confidence: Number(f.confidence), contributors: Number(f.contributingAgents) }];
+          }
+        }
+      } catch (e) {
+        console.warn(`[snapshot] feed read fallback failed ${cat}:`, (e as Error).message);
+      }
+    }
+
     // Risk state (best-effort).
     let risk: SnapCategory["risk"] = null;
     try {
@@ -699,12 +729,14 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```ts
 import type { InsightsSnapshot, SnapCategory } from "@/lib/snapshot";
 import { leaderRowsFromSnapshot, bandsFromSnapshot, feedFromSnapshot } from "@/lib/snapshot";
+import { crowdConsensus } from "@/lib/insights";
 
 export interface InsightsData {
   source: DataSource;
   board: LeaderRow[];
   feed: LiveFeedPoint[];
   bands: AgentBand[];
+  crowdValue: number | null; // feed last value, else mean of usable band midpoints (crowdConsensus)
   category: SnapCategory | null;
   allocation: { methBps: number; usdyBps: number } | null;
   generatedAt: string | null;
@@ -735,14 +767,17 @@ export function useInsightsData(category: CategoryId): InsightsData {
   const hasSnap = !!cat && cat.predictions.length > 0;
 
   if (snap.isLoading) {
-    return { source: "live", board: [], feed: [], bands: [], category: null, allocation: null, generatedAt: null, block: null, isLoading: true };
+    return { source: "live", board: [], feed: [], bands: [], crowdValue: null, category: null, allocation: null, generatedAt: null, block: null, isLoading: true };
   }
   if (hasSnap && cat) {
+    const feed = feedFromSnapshot(cat);
+    const bands = bandsFromSnapshot(cat);
     return {
       source: "live",
       board: leaderRowsFromSnapshot(cat),
-      feed: feedFromSnapshot(cat),
-      bands: bandsFromSnapshot(cat),
+      feed,
+      bands,
+      crowdValue: feed[feed.length - 1]?.value ?? crowdConsensus(bands),
       category: cat,
       allocation: snap.data?.allocation ?? null,
       generatedAt: snap.data?.generatedAt ?? null,
@@ -751,11 +786,13 @@ export function useInsightsData(category: CategoryId): InsightsData {
     };
   }
   // No snapshot → curated mock (demo-shaped).
+  const feed = mockFeedPoints(category);
   return {
     source: "mock",
     board: mockLeaderRows(category),
-    feed: mockFeedPoints(category),
+    feed,
     bands: mockBands(category),
+    crowdValue: feed[feed.length - 1]?.value ?? null,
     category: null,
     allocation: { methBps: 6000, usdyBps: 4000 },
     generatedAt: null,
@@ -829,12 +866,12 @@ Update the import line `import { useLeaderboard, useFeedHistory, useSmartMoneyBa
             <SmartMoneyCard
               categoryId={categoryId}
               bands={data.bands}
-              crowdValue={data.feed[data.feed.length - 1]?.value ?? null}
+              crowdValue={data.crowdValue}
             />
             <DisagreementCallout
               categoryId={categoryId}
               bands={data.bands}
-              crowdValue={data.feed[data.feed.length - 1]?.value ?? null}
+              crowdValue={data.crowdValue}
             />
             <ConsensusBandCard categoryId={categoryId} history={data.feed} bands={data.bands} />
             <NotableMoveCard categoryId={categoryId} history={data.feed} />
@@ -1023,6 +1060,7 @@ import { Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { friendlyValue, FRIENDLY_CATEGORY } from "@/lib/labels";
+import { isUsableBand } from "@/lib/insights";
 import type { SnapPrediction } from "@/lib/snapshot";
 import type { CategoryId } from "@/lib/mockData";
 
@@ -1072,7 +1110,7 @@ function ReplayRow({ categoryId, p }: { categoryId: CategoryId; p: SnapPredictio
 
 export function ReplayCard({ categoryId, predictions }: { categoryId: CategoryId; predictions: SnapPrediction[] }) {
   const resolved = predictions
-    .filter((p) => p.status === "Resolved" && p.outcome != null && p.high >= p.low)
+    .filter((p) => p.status === "Resolved" && p.outcome != null && isUsableBand(p.low, p.high))
     .sort((a, b) => b.resolutionBlock - a.resolutionBlock)
     .slice(0, 4);
 
@@ -1348,7 +1386,7 @@ const RISK_UI = {
 };
 
 export function YourMoveStrip({ categoryId, data }: { categoryId: CategoryId; data: InsightsData }) {
-  const crowd = data.feed[data.feed.length - 1]?.value ?? null;
+  const crowd = data.crowdValue;
   const div = smartMoneyDivergence(data.bands, crowd);
   const move = notableMove(data.feed, 16, 1);
   const briefing = topFinding(div, move, FRIENDLY_CATEGORY[categoryId]);
