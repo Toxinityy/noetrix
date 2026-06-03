@@ -2,13 +2,12 @@
 
 import {
   motion,
-  useMotionTemplate,
   useMotionValue,
   useReducedMotion,
   useSpring,
   useTransform,
 } from "motion/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { DitheringShader } from "@/components/ui/dithering-shader";
 
@@ -39,22 +38,11 @@ export function Hero() {
   const cursorPxX = useMotionValue(-9999);
   const cursorPxY = useMotionValue(-9999);
 
-  // ONE spring config. Ring + spotlight + title-parallax all derive from this so they
+  // ONE spring config. Ring + halo + title-parallax all derive from this so they
   // stay locked together visually. Dot remains raw for an intentional "leader" feel.
   const SPRING = { stiffness: 260, damping: 32, mass: 0.55 } as const;
   const sCursorX = useSpring(cursorPxX, SPRING);
   const sCursorY = useSpring(cursorPxY, SPRING);
-
-  // Spotlight mask = spring px ÷ section dims → %. Derived from the same spring as the ring.
-  const maskPosX = useTransform(
-    [sCursorX, widthMV] as const,
-    ([x, w]) => `${(((x as number) / Math.max(1, w as number)) * 100).toFixed(2)}%`,
-  );
-  const maskPosY = useTransform(
-    [sCursorY, heightMV] as const,
-    ([y, h]) => `${(((y as number) / Math.max(1, h as number)) * 100).toFixed(2)}%`,
-  );
-  const spotlightMask = useMotionTemplate`radial-gradient(circle 340px at ${maskPosX} ${maskPosY}, #000 0%, rgba(0,0,0,0.4) 35%, transparent 75%)`;
 
   // Title parallax — same spring, normalized about section center.
   // Guard the off-screen sentinel (-9999): real in-section coords are always >= 0, so before the
@@ -80,54 +68,57 @@ export function Hero() {
     return () => ro.disconnect();
   }, [widthMV, heightMV]);
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      const el = sectionRef.current;
-      if (!el) return;
+  // Track the cursor at the WINDOW level (not a React onMouseMove on the section, which the GSAP
+  // z-stacked wrapper could cover). Attached ONCE — hovering lives in a ref so the listener never
+  // detaches/re-attaches mid-interaction — and listens to BOTH pointermove and mousemove, since some
+  // browser setups/extensions don't deliver pointermove to window (mousemove is the universal
+  // fallback). clientX/Y are mapped to hero-local coords via getBoundingClientRect.
+  const hoveringRef = useRef(false);
+  useEffect(() => {
+    if (!hoverable) return;
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const onMove = (e: PointerEvent | MouseEvent) => {
       const rect = el.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      cursorPxX.set(x);
-      cursorPxY.set(y);
-      // Resync dims in case GSAP pinned the section between resizes.
-      if (Math.abs(rect.width - widthMV.get()) > 1) widthMV.set(rect.width || 1);
-      if (Math.abs(rect.height - heightMV.get()) > 1) heightMV.set(rect.height || 1);
-    },
-    [cursorPxX, cursorPxY, widthMV, heightMV],
-  );
+      const inside = x >= 0 && y >= 0 && x <= rect.width && y <= rect.height;
 
-  const handleMouseEnter = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      const el = sectionRef.current;
-      if (!el) return;
-      // Seed all followers at the cursor entry point so they don't fly in from -9999.
-      const rect = el.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      cursorPxX.set(x);
-      cursorPxY.set(y);
-      sCursorX.jump(x);
-      sCursorY.jump(y);
-      setHovering(true);
-    },
-    [cursorPxX, cursorPxY, sCursorX, sCursorY],
-  );
+      if (inside) {
+        if (Math.abs(rect.width - widthMV.get()) > 1) widthMV.set(rect.width || 1);
+        if (Math.abs(rect.height - heightMV.get()) > 1) heightMV.set(rect.height || 1);
+        if (!hoveringRef.current) {
+          hoveringRef.current = true;
+          // Seed the springs at the entry point so the followers don't fly in from the sentinel.
+          sCursorX.jump(x);
+          sCursorY.jump(y);
+          setHovering(true);
+        }
+        cursorPxX.set(x);
+        cursorPxY.set(y);
+      } else if (hoveringRef.current) {
+        hoveringRef.current = false;
+        setHovering(false);
+        // Reset to the sentinel so the title parallax re-centers (guarded transforms return 0).
+        cursorPxX.set(-9999);
+        cursorPxY.set(-9999);
+        sCursorX.jump(-9999);
+        sCursorY.jump(-9999);
+      }
+    };
 
-  const handleMouseLeave = useCallback(() => {
-    setHovering(false);
-    // Reset to the sentinel so the title parallax re-centers (guarded transforms return 0).
-    cursorPxX.set(-9999);
-    cursorPxY.set(-9999);
-    sCursorX.jump(-9999);
-    sCursorY.jump(-9999);
-  }, [cursorPxX, cursorPxY, sCursorX, sCursorY]);
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("mousemove", onMove);
+    };
+  }, [hoverable, cursorPxX, cursorPxY, sCursorX, sCursorY, widthMV, heightMV]);
 
   return (
     <section
       ref={sectionRef}
-      onMouseMove={hoverable ? handleMouseMove : undefined}
-      onMouseEnter={hoverable ? handleMouseEnter : undefined}
-      onMouseLeave={hoverable ? handleMouseLeave : undefined}
       className="relative isolate flex min-h-screen w-full flex-1 items-center justify-center overflow-hidden"
       style={{ cursor: hoverable && hovering ? "none" : undefined }}
     >
@@ -145,32 +136,6 @@ export function Hero() {
         />
       </div>
 
-      {/* Layer 2: cursor-driven spotlight lens (intensified swirl beneath the cursor) */}
-      {hoverable ? (
-        <motion.div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0"
-          style={{
-            opacity: hovering ? 1 : 0,
-            transition: "opacity 400ms cubic-bezier(0.22,1,0.36,1)",
-            WebkitMaskImage: spotlightMask,
-            maskImage: spotlightMask,
-            mixBlendMode: "screen",
-          }}
-        >
-          <DitheringShader
-            fill
-            shape="ripple"
-            type="2x2"
-            colorBack="#050607"
-            colorFront="#33EAB3"
-            pxSize={2}
-            speed={reduced ? 0 : 1.4}
-            style={{ opacity: 0.95 }}
-          />
-        </motion.div>
-      ) : null}
-
       {/* Layer 3: parallax grids */}
       <div className="absolute inset-0 bg-grid mask-radial-fade" />
       <div className="absolute inset-0 bg-grid-fine opacity-30 mask-radial-fade" />
@@ -178,12 +143,33 @@ export function Hero() {
       {/* Layer 4: glow ring */}
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,_var(--color-accent-glow)_0%,_transparent_70%)] opacity-70" />
 
+      {/* Layer 4b: cursor glow halo — a self-contained teal glow that travels with the cursor.
+          Unlike the shader-reveal lens (Layer 2), this is visible even over dark regions, so the
+          "glow on the cursor" reads everywhere. Same spring as the ring → they move locked together.
+          Sits below the title (z-10) so text stays legible; screen-blends additively on the dark bg. */}
+      {hoverable ? (
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-0 z-[5] h-[440px] w-[440px] rounded-full mix-blend-screen"
+          style={{
+            x: sCursorX,
+            y: sCursorY,
+            translateX: "-50%",
+            translateY: "-50%",
+            opacity: hovering ? 1 : 0,
+            transition: "opacity 300ms cubic-bezier(0.22,1,0.36,1)",
+            background:
+              "radial-gradient(circle, rgba(51,234,179,0.22) 0%, rgba(51,234,179,0.08) 38%, transparent 72%)",
+          }}
+        />
+      ) : null}
+
       {/* Layer 5: cursor follower ring + dot */}
       {hoverable ? (
         <>
           <motion.div
             aria-hidden="true"
-            className="pointer-events-none absolute z-30 h-12 w-12 rounded-full border border-[var(--color-accent)] mix-blend-screen"
+            className="pointer-events-none absolute left-0 top-0 z-30 h-12 w-12 rounded-full border border-[var(--color-accent)] mix-blend-screen"
             style={{
               x: sCursorX,
               y: sCursorY,
@@ -196,7 +182,7 @@ export function Hero() {
           />
           <motion.div
             aria-hidden="true"
-            className="pointer-events-none absolute z-30 h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]"
+            className="pointer-events-none absolute left-0 top-0 z-30 h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]"
             style={{
               x: cursorPxX,
               y: cursorPxY,

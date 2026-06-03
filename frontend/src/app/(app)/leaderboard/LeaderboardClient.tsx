@@ -15,7 +15,7 @@ import { NumberFlow } from "@/components/ui/NumberFlow";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { RwaStrategyPanel } from "@/components/app/RwaStrategyPanel";
-import { CATEGORIES, type CategoryId, type AgentKind, RECENT_EPOCHS } from "@/lib/mockData";
+import { CATEGORIES, KIND_COLOR, KIND_GLYPH, type CategoryId, type AgentKind, RECENT_EPOCHS } from "@/lib/mockData";
 import { useLeaderboard, useFeedHistory } from "@/lib/hooks";
 import type { LeaderRow } from "@/lib/indexer";
 import { fmtScore, fmtBlock, fmtBps } from "@/lib/format";
@@ -492,13 +492,7 @@ function KpiCard({
 }
 
 function KindGlyph({ kind, size = 28 }: { kind: AgentKind; size?: number }) {
-  const map: Record<AgentKind, { label: string; color: string }> = {
-    CLAUDE: { label: "CL", color: "var(--color-accent)" },
-    ARIMA: { label: "AR", color: "#9DC8FF" },
-    QUANT: { label: "QU", color: "#F8D97A" },
-    ENSEMBLE: { label: "EN", color: "#C7B6FF" },
-  };
-  const m = map[kind];
+  const m = { label: KIND_GLYPH[kind], color: KIND_COLOR[kind] };
   return (
     <span
       className="inline-flex items-center justify-center rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg)] font-mono font-medium uppercase tabular"

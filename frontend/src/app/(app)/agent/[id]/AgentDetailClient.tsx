@@ -37,6 +37,8 @@ import { ForecastSummary } from "@/components/app/ForecastSummary";
 import {
   CATEGORIES,
   PREDICTIONS,
+  KIND_COLOR,
+  KIND_GLYPH,
   type CategoryId,
   type Prediction,
   type Agent,
@@ -60,6 +62,8 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
   const cat = CATEGORIES[categoryId];
   const rep = agent.reputation[categoryId];
 
+  // React Compiler memoizes these derivations automatically; a manual useMemo here tripped
+  // react-hooks/preserve-manual-memoization, so we compute them plainly in render.
   const predictions = PREDICTIONS.filter(
     (p) => p.agentId === agent.id && p.categoryId === categoryId,
   ).sort((a, b) => b.commitBlock - a.commitBlock);
@@ -950,28 +954,5 @@ function isInRange(p: Prediction): boolean {
   return p.outcome >= p.value.low && p.outcome <= p.value.high;
 }
 
-function kindShort(k: Agent["kind"]) {
-  switch (k) {
-    case "CLAUDE":
-      return "CL";
-    case "ARIMA":
-      return "AR";
-    case "QUANT":
-      return "QU";
-    case "ENSEMBLE":
-      return "EN";
-  }
-}
-
-function kindColor(k: Agent["kind"]) {
-  switch (k) {
-    case "CLAUDE":
-      return "var(--color-accent)";
-    case "ARIMA":
-      return "#9DC8FF";
-    case "QUANT":
-      return "#F8D97A";
-    case "ENSEMBLE":
-      return "#C7B6FF";
-  }
-}
+const kindShort = (k: Agent["kind"]) => KIND_GLYPH[k];
+const kindColor = (k: Agent["kind"]) => KIND_COLOR[k];

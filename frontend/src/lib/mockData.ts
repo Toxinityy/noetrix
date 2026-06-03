@@ -56,6 +56,24 @@ export const CATEGORIES: Record<CategoryId, Category> = {
 
 export type AgentKind = "ARIMA" | "CLAUDE" | "QUANT" | "ENSEMBLE";
 
+/// Per-kind visual encoding — single source of truth shared by the leaderboard glyph and the
+/// agent-detail page (previously duplicated as raw hex in both). CLAUDE uses the brand accent
+/// token; ARIMA/ENSEMBLE are distinct series hues; QUANT's #F8D97A intentionally matches --color-warn.
+export const KIND_COLOR: Record<AgentKind, string> = {
+  CLAUDE: "var(--color-accent)",
+  ARIMA: "#9DC8FF",
+  QUANT: "#F8D97A",
+  ENSEMBLE: "#C7B6FF",
+};
+
+/// Two-character monogram per kind (terminal-core glyph).
+export const KIND_GLYPH: Record<AgentKind, string> = {
+  CLAUDE: "CL",
+  ARIMA: "AR",
+  QUANT: "QU",
+  ENSEMBLE: "EN",
+};
+
 export type Agent = {
   id: number;
   name: string;

@@ -31,7 +31,7 @@ The Grand Champion nomination is justified by full-stack depth (11 production co
 
 ## What was built (concrete)
 
-- **Smart contracts (Foundry, Solidity 0.8.24, 147/147 tests):** AgentRegistry (ERC-8004 soulbound + per-category top-20), PredictionMarket (commit-reveal escrow), ResolutionEngine, ScoringEngine + RangeCrpsScorer (closed-form CRPS with a Python reference matching the Solidity bit-for-bit), MethAprResolver + AaveMantleTvlResolver, CompositeFeed (rank-weighted, calibration-multiplier), BonusDistributor (pull-claim epochs), SubscriptionGate, DemoFeedConsumer (business-logic views), + mocks. Full deploy + smoke + end-to-end pipeline scripts/tests.
+- **Smart contracts (Foundry, Solidity 0.8.24, 157/157 tests):** AgentRegistry (ERC-8004 soulbound + per-category top-20), PredictionMarket (commit-reveal escrow), ResolutionEngine, ScoringEngine + RangeCrpsScorer (closed-form CRPS with a Python reference matching the Solidity bit-for-bit), MethAprResolver + AaveMantleTvlResolver + UsdyApyResolver, CompositeFeed (rank-weighted, calibration-multiplier), BonusDistributor (pull-claim epochs), SubscriptionGate, DemoFeedConsumer (business-logic views), and the AI × RWA consumers **YieldAllocator** (confidence-weighted dynamic allocation across mETH + USDY) + **RiskManager** (automated risk state from forecast confidence + freshness), + mocks. Full deploy + smoke + end-to-end pipeline scripts/tests.
 - **Reference agents (TypeScript):** a shared SDK (commit/reveal/submit, nonce batching, retry, IPFS), an **ARIMA(1,1,1)** statistical baseline (pure-TS), and a **DeepSeek reasoner** (demo highlight) that builds context from on-chain data + news, prompts DeepSeek with a calibration-aware system prompt + hand-written few-shot examples, and pins the full prompt/response/forecast as the on-chain content hash. Plus a permissionless refresher cron.
 - **Indexer (Ponder):** event handlers + REST API (leaderboard, agent, predictions, feed history).
 - **Frontend (Next.js 16, Radix + Tailwind + Motion):** cinematic landing + terminal-core app — leaderboard, agent detail with the **DeepSeek reasoning trace as the visual peak**, composite feed, and a live demo-consumer with on-chain decision cards. wagmi wallet connect, TanStack Query live data with a static cached fallback + "showing cached data" banner.
@@ -50,8 +50,8 @@ The Grand Champion nomination is justified by full-stack depth (11 production co
 | GitHub | https://github.com/Toxinityy/mantle-hackathon |
 | Live frontend | _TBD — Vercel deploy pending_ |
 | Demo video | _TBD — record from `docs/DEMO_SCRIPT.md`_ |
-| Deployed addresses | _TBD — see `contracts/deployments/mantle-sepolia.json` after deploy_ |
-| Network | Mantle Sepolia (testnet) |
+| Deployed addresses | 17 contracts live — full table in [`README.md`](../README.md#deployed-addresses-mantle-sepolia-chainid-5003); source: `contracts/deployments/mantle-sepolia.json`. Headline: CompositeFeed `0xc962011f…`, YieldAllocator `0x3dde2344…`, RiskManager `0x2bFC2561…`, DemoFeedConsumer `0x85F0cb23…` |
+| Network | Mantle Sepolia (testnet), chainId 5003 |
 
 ## Team
 

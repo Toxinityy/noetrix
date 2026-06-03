@@ -3,26 +3,42 @@
 import { useState } from "react";
 import { AllocationBar } from "./AllocationBar";
 import { SafetyBadge } from "./SafetyBadge";
+import { simulateMarket, riskReason, type MarketBase } from "@/lib/rwaSim";
 
 export interface SimInputs {
   methApyPct: number; // forecast mETH yield, %
   usdyApyPct: number; // forecast USDY yield, %
-  allocMethBps: number; // from YieldAllocator
+  allocMethBps: number; // from YieldAllocator (calm baseline)
   allocUsdyBps: number;
-  riskState: 0 | 1 | 2; // worst of the two assets
+  riskState: 0 | 1 | 2; // worst of the two assets at calm
 }
 
-/// Web2 deposit simulator — no wallet, no chain write. Projects a year of yield from a deposit
-/// amount and the live (or demo) forecast/allocation, updating instantly client-side.
+// AI confidence at "calm" (stress 0). Demo baseline; when live, the calm state approximates the
+// on-chain feed confidence. Stress drives it down per-asset in simulateMarket.
+const BASE_CONF_BPS = 9_000;
+
+/// Web2 deposit simulator — no wallet, no chain write. Two controls drive it:
+///   1. deposit amount → scales the dollar projection
+///   2. Market conditions (Calm→Stressed) → the HERO control: re-weights the AI allocation and
+///      flips the safety state live, client-side, mirroring the on-chain YieldAllocator/RiskManager
+///      math (see lib/rwaSim.ts). This is the demo's interactive peak: move the market, watch the
+///      AI re-balance and the safety badge flip.
 export function DepositSimulator({ sim }: { sim: SimInputs }) {
   const [amount, setAmount] = useState(10_000);
-  const mShare = sim.allocMethBps / 10_000;
-  const uShare = sim.allocUsdyBps / 10_000;
-  const blendedApy = mShare * sim.methApyPct + uShare * sim.usdyApyPct;
-  const projectedYear = (amount * blendedApy) / 100;
+  const [stress, setStress] = useState(0); // 0 = calm, 100 = stressed
+
+  const base: MarketBase = {
+    methApyPct: sim.methApyPct,
+    usdyApyPct: sim.usdyApyPct,
+    baseConfBps: BASE_CONF_BPS,
+  };
+  const market = simulateMarket(stress, base);
+  const projectedYear = (amount * market.blendedApyPct) / 100;
+  const reason = riskReason(market);
 
   return (
     <div className="rounded-3xl bg-gradient-to-b from-teal-400/[0.07] to-transparent p-6 ring-1 ring-white/10">
+      {/* 1. Deposit amount */}
       <label htmlFor="rwa-amt" className="text-sm text-white/70">
         If you deposited
       </label>
@@ -47,25 +63,58 @@ export function DepositSimulator({ sim }: { sim: SimInputs }) {
         value={Math.min(amount, 100_000)}
         onChange={(e) => setAmount(Number(e.target.value))}
         className="mt-4 w-full cursor-pointer accent-teal-400"
-        aria-label="Deposit amount"
+        aria-label="Deposit amount in dollars"
       />
 
+      {/* 2. Market conditions — the hero control. Drives allocation + safety below. */}
+      <div className="mt-7 rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/10">
+        <div className="flex items-baseline justify-between">
+          <label htmlFor="rwa-market" className="text-sm font-medium text-white/80">
+            Market conditions
+          </label>
+          <span className="num text-xs text-white/50">drag to stress-test the AI</span>
+        </div>
+        <input
+          id="rwa-market"
+          type="range"
+          min={0}
+          max={100}
+          step={1}
+          value={stress}
+          onChange={(e) => setStress(Number(e.target.value))}
+          className="mt-3 h-6 w-full cursor-pointer accent-teal-400"
+          aria-label="Market stress, calm to stressed"
+          aria-valuetext={stress < 34 ? "Calm" : stress < 67 ? "Volatile" : "Stressed"}
+        />
+        <div className="mt-1 flex justify-between text-xs text-white/45">
+          <span>Calm</span>
+          <span>Volatile</span>
+          <span>Stressed</span>
+        </div>
+      </div>
+
+      {/* 3. Allocation — re-weights as market conditions change */}
+      <div className="mt-6">
+        <div className="mb-2 text-sm text-white/60">How the AI would balance it</div>
+        <AllocationBar methBps={market.allocMethBps} usdyBps={market.allocUsdyBps} />
+      </div>
+
+      {/* 4. Safety — flips Normal→Caution→Frozen, with a plain-English reason when it leaves Normal */}
+      <div className="mt-6 flex items-center justify-between">
+        <span className="text-sm text-white/60">Safety check</span>
+        <SafetyBadge state={market.riskState} />
+      </div>
+      <p className="mt-2 min-h-[1rem] text-xs text-amber-300/80" role="status" aria-live="polite">
+        {reason}
+      </p>
+
+      {/* 5. Outcome */}
       <div className="mt-6 grid gap-1">
         <div className="text-sm text-white/60">Projected yield in a year</div>
         <div className="num text-4xl font-semibold text-teal-300">
           ${projectedYear.toLocaleString(undefined, { maximumFractionDigits: 0 })}
         </div>
-        <div className="num text-sm text-white/50">≈ {blendedApy.toFixed(2)}% blended yearly return</div>
-      </div>
-
-      <div className="mt-6">
-        <div className="mb-2 text-sm text-white/60">How the AI would balance it</div>
-        <AllocationBar methBps={sim.allocMethBps} usdyBps={sim.allocUsdyBps} />
-      </div>
-
-      <div className="mt-6 flex items-center justify-between">
-        <span className="text-sm text-white/60">Safety check</span>
-        <SafetyBadge state={sim.riskState} />
+        <div className="num text-sm text-white/50">≈ {market.blendedApyPct.toFixed(2)}% blended yearly return</div>
       </div>
 
       <p className="mt-5 text-xs text-white/40">
