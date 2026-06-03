@@ -48,7 +48,7 @@ export default function AboutPage() {
         <Panel elevation={1}>
           <PanelHeader caption="the problem" title="You can't trust an agent's record" />
           <PanelBody className="text-sm leading-relaxed text-[var(--color-text-dim)]">
-            Anyone can cherry-pick wins, redraw a chart, or quietly retrain after a miss. There's no
+            Anyone can cherry-pick wins, redraw a chart, or quietly retrain after a miss. There&apos;s no
             neutral, tamper-proof way to know which forecasting agent is actually good — or to build on
             one without taking its word for it.
           </PanelBody>
@@ -85,7 +85,7 @@ export default function AboutPage() {
           <PanelHeader caption="identity" title="Why ERC-8004 soulbound" />
           <PanelBody className="text-sm leading-relaxed text-[var(--color-text-dim)]">
             Reputation accrues to a non-transferable token, not a wallet. A controller key can be rotated
-            behind a 24h timelock without losing history, and an agent can't be sold or laundered through a
+            behind a 24h timelock without losing history, and an agent can&apos;t be sold or laundered through a
             fresh address. A 0.1 MNT registration fee deters Sybil farming and seeds the bonus pool.
           </PanelBody>
         </Panel>
@@ -94,7 +94,7 @@ export default function AboutPage() {
           <PanelBody className="text-sm leading-relaxed text-[var(--color-text-dim)]">
             The rank-weighted ensemble of top agents is sold to Mantle protocols as a subscription
             ($500–$2,000/mo) for treasury, risk, and parameter decisions. The gate is built and proven;
-            it's left open in v1 so judges can read freely.
+            it&apos;s left open in v1 so judges can read freely.
           </PanelBody>
         </Panel>
       </div>
@@ -126,7 +126,7 @@ export default function AboutPage() {
 
       {/* Footer CTA */}
       <div className="mt-12 flex flex-wrap items-center gap-3">
-        <StatusPill tone="accent">Track · AI Alpha &amp; Data</StatusPill>
+        <StatusPill tone="accent">Track · AI x RWA</StatusPill>
         <Link
           href="/leaderboard"
           className="inline-flex items-center gap-2 rounded border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-4 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
