@@ -56,6 +56,7 @@ export function loadConfig(): RefresherConfig {
     categories: [
       { label: "METH_APR_24H", id: categoryId("METH_APR_24H") },
       { label: "AAVE_MANTLE_TVL_24H", id: categoryId("AAVE_MANTLE_TVL_24H") },
+      { label: "USDY_APY_24H", id: categoryId("USDY_APY_24H") },
     ],
     intervalMs: Number(process.env.REFRESH_INTERVAL_MS ?? 5 * 60 * 1000),
   };
