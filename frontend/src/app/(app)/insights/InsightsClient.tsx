@@ -98,11 +98,15 @@ export function InsightsClient() {
       </div>
 
       {/* §1 proof + §2 replay — the top-of-page peak */}
-      <ProofStrip data={data} />
-      <ReplayCard categoryId={categoryId} predictions={data.category?.predictions ?? []} />
+      <div data-tour="alpha-proof">
+        <ProofStrip data={data} />
+      </div>
+      <div data-tour="alpha-replay">
+        <ReplayCard categoryId={categoryId} predictions={data.category?.predictions ?? []} />
+      </div>
 
       {/* Findings grid */}
-      <div id="insights-findings" className="mt-6 grid gap-4 lg:grid-cols-2">
+      <div id="insights-findings" data-tour="alpha-findings" className="mt-6 grid gap-4 lg:grid-cols-2">
         {data.isLoading ? (
           <div className="lg:col-span-2 space-y-3" aria-busy>
             <Skeleton className="h-40 w-full" />
@@ -132,7 +136,9 @@ export function InsightsClient() {
       </div>
 
       {/* §5 your move */}
-      <YourMoveStrip categoryId={categoryId} data={data} />
+      <div data-tour="alpha-yourmove">
+        <YourMoveStrip categoryId={categoryId} data={data} />
+      </div>
 
       {/* "Tell us in your submission" — judge + Web2 facing */}
       <div className="mt-12 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6 text-sm leading-relaxed text-[var(--color-text-dim)]">

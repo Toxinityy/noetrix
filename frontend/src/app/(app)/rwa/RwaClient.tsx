@@ -116,7 +116,7 @@ export function RwaClient() {
         AI agents forecast the best yield across mETH and USDY, so you don’t have to. No wallet needed to explore.
       </p>
 
-      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2" data-tour="earn-yields">
         <YieldCard
           name={RWA_LABELS.meth.name}
           blurb={RWA_LABELS.meth.blurb}
@@ -131,15 +131,15 @@ export function RwaClient() {
         />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6" data-tour="earn-simulator">
         <DepositSimulator sim={sim} />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6" data-tour="earn-how">
         <HowItWorks />
       </div>
 
-      <div className="mt-8 text-center">
+      <div className="mt-8 text-center" data-tour="earn-more">
         <Link href="/leaderboard" className="text-sm text-teal-300 hover:underline focus-visible:underline">
           Want the full picture? See the live agent leaderboard →
         </Link>
