@@ -76,9 +76,11 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     [pathname, router, start],
   );
 
-  // On every navigation: run a pending requested tour if its page matches; else
-  // auto-start the leaderboard tour on first visit — UNLESS the onboarding modal
-  // owns first-run (ONBOARDED_KEY set) or the user has already seen a tour.
+  // On every navigation: run a pending requested tour if its page matches.
+  // First-run onboarding is owned by OnboardingModal (which arms a tour via
+  // requestStart), so there is no separate leaderboard auto-start to avoid a
+  // modal+tour double-trigger. The leaderboard tour is reachable via the Guide
+  // button (requestStart("leaderboard")).
   React.useEffect(() => {
     let pendingId: string | null = null;
     try {
@@ -97,22 +99,6 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
         start();
       }, 600);
       return () => clearTimeout(t);
-    }
-
-    if (pathname === "/leaderboard") {
-      let seen = false;
-      let onboarded = false;
-      try {
-        seen = localStorage.getItem(SEEN_KEY) === "1";
-        onboarded = localStorage.getItem(ONBOARDED_KEY) === "1";
-      } catch {}
-      if (!seen && !onboarded) {
-        const t = setTimeout(() => {
-          setTourId("leaderboard");
-          start();
-        }, 600);
-        return () => clearTimeout(t);
-      }
     }
   }, [pathname, start]);
 
