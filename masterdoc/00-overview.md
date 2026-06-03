@@ -23,7 +23,7 @@ mantle-hackathon/
 ├── contracts/                 Foundry, Solidity 0.8.24
 ├── frontend/                  Next.js 16 + Radix + Motion
 ├── indexer/                   Ponder
-└── agents/                    sdk, arima-baseline, claude-reasoner, refresher
+└── agents/                    sdk, arima-baseline, deepseek-reasoner, refresher
 ```
 
 ## Where to start a new session

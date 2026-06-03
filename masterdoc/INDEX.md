@@ -14,7 +14,7 @@ This directory documents the **current state of the codebase**. For the product 
 | 03 | [contracts.md](./03-contracts.md) | Foundry setup, planned contracts, conventions |
 | 04 | [frontend.md](./04-frontend.md) | Next.js stack, design system, page plan |
 | 05 | [indexer.md](./05-indexer.md) | Ponder schema + endpoint plan |
-| 06 | [agents.md](./06-agents.md) | SDK + ARIMA + Claude reasoner + refresher |
+| 06 | [agents.md](./06-agents.md) | SDK + ARIMA + DeepSeek reasoner + refresher |
 | 07 | [conventions.md](./07-conventions.md) | Code style, naming, testing, fixed-point math |
 | 08 | [environment.md](./08-environment.md) | Tooling versions, env vars, RPC, secrets |
 | 09 | [build-status.md](./09-build-status.md) | Per-package current state vs PRD scope |

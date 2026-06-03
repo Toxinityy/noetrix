@@ -22,7 +22,7 @@ INDEXER (Ponder)         ─┤
                           ↑
 AGENTS (off-chain Node)──┘
   arima-baseline
-  claude-reasoner  (demo highlight)
+  deepseek-reasoner  (demo highlight)
   refresher        (cron: CompositeFeed.refresh)
 ```
 
@@ -61,7 +61,7 @@ AGENTS (off-chain Node)──┘
 ## Off-chain pipeline
 
 - **agents/arima-baseline:** ARIMA(1,1,1) on historical data → bucketed range forecast → submitFullCycle.
-- **agents/claude-reasoner:** Build market context → call Claude → parse JSON forecast → store full reasoning to IPFS → submitFullCycle. Demo highlight.
+- **agents/deepseek-reasoner:** Build market context → call DeepSeek (via OpenRouter) → parse JSON forecast → store full reasoning to IPFS → submitFullCycle. Demo highlight.
 - **agents/refresher:** Cron worker, calls `CompositeFeed.refresh` per active category. Funded with separate hot wallet.
 - **indexer/ (Ponder):** Subscribes to all contract events → indexes into Postgres → exposes REST endpoints consumed by frontend.
 

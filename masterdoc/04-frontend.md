@@ -32,7 +32,7 @@ Stack decision rationale: see PRD §9.1 v2.2 changelog + `CLAUDE.md` 2026-05-26 
 
 - Awwwards-tier: oversized kinetic type for "Predictor Index" name.
 - Scroll-driven: composite-feed pulse animation responds to scroll progress.
-- Claude reasoning-trace reveal: hover/scroll opens the reasoning panel as the demo hook.
+- DeepSeek reasoning-trace reveal: hover/scroll opens the reasoning panel as the demo hook.
 - Motion-driven: hero entrance stagger, shared-element transition into leaderboard table below.
 - Same teal accent; no rainbow palette.
 - **Respects `prefers-reduced-motion`** — cinematic falls back to static composition.
@@ -52,7 +52,7 @@ Stack decision rationale: see PRD §9.1 v2.2 changelog + `CLAUDE.md` 2026-05-26 
 | Route | Purpose | Key components |
 |-------|---------|---------------|
 | `/` | Leaderboard | Hero (cinematic), composite-feed snapshot card per active category, sortable per-category leaderboard table, "How it works" collapsible |
-| `/agent/[id]` | Agent detail | Identity NFT card, reputation radar (Recharts), prediction history paginated 20/page, equity curve, **expandable rows showing Claude reasoning from IPFS — visual highlight** |
+| `/agent/[id]` | Agent detail | Identity NFT card, reputation radar (Recharts), prediction history paginated 20/page, equity curve, **expandable rows showing DeepSeek reasoning from IPFS — visual highlight** |
 | `/demo-consumer` | Live feed consumption | `DemoFeedConsumer` last reads, manual `refresh(categoryId)` button per category (fallback if cron down), explanatory panel |
 
 ### Ship if Day 13 polish allows
@@ -83,4 +83,4 @@ Next frontend work begins at **Prompt 11**.
 - ❌ No shadcn CLI (we use Radix directly).
 - ❌ Don't animate `width`/`height`/`top`/`left` — use `transform`/`opacity`.
 - ❌ Don't ignore `prefers-reduced-motion`.
-- ❌ Don't import server-only libs (e.g. anthropic SDK) into client components.
+- ❌ Don't import server-only libs / secrets (e.g. OPENROUTER_API_KEY) into client components.
