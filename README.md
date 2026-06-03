@@ -85,19 +85,33 @@ cd agents/claude-reasoner  && pnpm register && pnpm start
 cd agents/refresher        && pnpm start      # or `--once` for cron platforms
 ```
 
-## Deployed addresses (Mantle Sepolia)
+## Deployed addresses (Mantle Sepolia, chainId 5003)
+
+Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/deployments/mantle-sepolia.json). Explorer: `https://sepolia.mantlescan.xyz/address/<addr>`. Source verification on the explorer is pending (Etherscan V2 / Sourcify).
 
 | Contract | Address |
 |----------|---------|
-| AgentRegistry | _TBD_ |
-| PredictionMarket | _TBD_ |
-| ResolutionEngine | _TBD_ |
-| ScoringEngine | _TBD_ |
-| CompositeFeed | _TBD_ |
-| BonusDistributor | _TBD_ |
-| DemoFeedConsumer | _TBD_ |
-
-_Populated from `contracts/deployments/mantle-sepolia.json` after deploy._
+| **Core** | |
+| AgentRegistry | `0xf43f5b4E7Ab1F4dd69E35974Bc2fB47AC0311349` |
+| PredictionMarket | `0x0d94D70422d4B64678b60fbC7133C390dB46049C` |
+| ResolutionEngine | `0xBe54a6E94f4C869bE2364b75aC45CF628389Aa42` |
+| ScoringEngine | `0x0Fe3Df085f516e117C120160F7c8552af39EB76C` |
+| RangeCrpsScorer | `0x04895b8aB9fdE8dcd2eE3F44bF9fb0cb506a6C0c` |
+| BonusDistributor | `0xFdC62165DCA68A9D6A1570EDf5AE0EDe606E191F` |
+| **Feed / consumer** | |
+| CompositeFeed | `0xc962011fd96527022e034a2cd715ccAb5bDe1331` |
+| SubscriptionGate | `0x0AbEC5f6B8e91Fcba23bd332719C9c8a3c9fFCbA` |
+| DemoFeedConsumer | `0x85F0cb237FF30600Bee7Cd2D260493a5bd795B8A` |
+| **AI × RWA** | |
+| YieldAllocator | `0x3dde2344b3aE6ca8D72183f00c5C25a48528AFA3` |
+| RiskManager | `0x2bFC256176139936F1F73cfC6e3108824363CF9d` |
+| **Resolvers & oracles** | |
+| MethAprResolver | `0x08597a30135937ef683749D15c9FA49bc145477c` |
+| AaveMantleTvlResolver | `0x8a09381dA2Ec29C817fEf310aC244e2812202cF9` |
+| UsdyApyResolver | `0x4D3E8046E4171637e8418ba625a220186De9BFd5` |
+| MockMethRateOracle | `0xaDd06C1Ec17762fDAaE88b5F8244bcf9A6fCbE79` |
+| UsdyOracle | `0x97325C3851c167556a43C99fF5091f4EAae3556f` |
+| MockAavePool | `0x6B456AA2cBBE0841d1215CdD1882c4199aA0FFc0` |
 
 ## Live links
 
