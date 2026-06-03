@@ -36,7 +36,7 @@ function norm(k) {
 const WALLETS = [
   { label: "deployer / treasury", envFile: "contracts/.env", keyVar: "PRIVATE_KEY" },
   { label: "arima controller", envFile: "agents/arima-baseline/.env", keyVar: "CONTROLLER_PRIVATE_KEY" },
-  { label: "reasoner controller", envFile: "agents/claude-reasoner/.env", keyVar: "CONTROLLER_PRIVATE_KEY" },
+  { label: "reasoner controller", envFile: "agents/deepseek-reasoner/.env", keyVar: "CONTROLLER_PRIVATE_KEY" },
   { label: "resolver bot", envFile: "agents/resolver/.env", keyVar: "RESOLVER_PRIVATE_KEY" },
   { label: "refresher bot", envFile: "agents/refresher/.env", keyVar: "REFRESHER_PRIVATE_KEY" },
 ];
