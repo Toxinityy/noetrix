@@ -1,0 +1,7 @@
+{
+  "category": "USDY_APY_24H",
+  "context": "Recent composite feed (annualized USDY APY, bps): 500, 512, 524, 533, 541. A clear upward drift over five snapshots. The latest FOMC statement signaled rates 'higher for longer'; 3-month T-bill yields ticked up ~15 bps this week. USDY's underlying treasury basket reprices toward the new front-end curve.",
+  "reasoning": "Observed: a steady ~40 bps climb with a concrete macro catalyst behind it — higher-for-longer guidance pushes the short-end yields USDY tracks. Hypothesis: the drift continues at a slower pace as the basket finishes repricing. I shift the band UP to 540–580 rather than anchoring to the pre-catalyst ~500 level (anchoring to the stale mean is the classic trap that wrecks accuracy on a real trend). I widen modestly to cover an uncertain pace. Confidence ~70%: the direction is well-supported but the exact landing depends on basket roll timing. RWA implication: a rising, catalyst-backed USDY yield with steady confidence lets the allocator tilt further toward USDY for better safe yield while the risk state comfortably holds Normal — the AI leans in because both the yield AND the confidence support it.",
+  "predicted_value": { "lower": 540, "upper": 580 },
+  "confidence": 7000
+}
