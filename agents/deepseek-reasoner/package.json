@@ -1,5 +1,5 @@
 {
-  "name": "@predictor-index/claude-reasoner",
+  "name": "@predictor-index/deepseek-reasoner",
   "version": "0.1.0",
   "private": true,
   "type": "module",

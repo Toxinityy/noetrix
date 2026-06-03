@@ -12,7 +12,7 @@ export interface ContextInput {
   news: NewsItem[];
 }
 
-/// Render a structured Markdown context block fed to Claude as the bulk of the user prompt.
+/// Render a structured Markdown context block fed to the reasoner model as the bulk of the user prompt.
 export function buildContext(input: ContextInput): string {
   const lines: string[] = [];
 

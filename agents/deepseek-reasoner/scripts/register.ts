@@ -27,7 +27,7 @@ async function main(): Promise<void> {
   const rpcUrl = process.env.MANTLE_SEPOLIA_RPC ?? "https://rpc.sepolia.mantle.xyz";
   const controllerPrivateKey = required("CONTROLLER_PRIVATE_KEY") as Hex;
   const addresses = loadAddresses();
-  const model = process.env.OPENROUTER_MODEL ?? "deepseek/deepseek-v4-flash";
+  const model = process.env.OPENROUTER_MODEL ?? "deepseek/deepseek-chat-v3.1";
 
   const metadata = {
     name: "DeepSeek Reasoner",

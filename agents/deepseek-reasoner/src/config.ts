@@ -5,7 +5,7 @@ import type { Hex } from "viem";
 export interface CategoryDef {
   /// SDK category label.
   label: string;
-  /// Human description of what's being predicted + units (fed to Claude).
+  /// Human description of what's being predicted + units (fed to the reasoner model).
   description: string;
   /// CryptoPanic currency codes to pull news for.
   newsCurrencies: string[];

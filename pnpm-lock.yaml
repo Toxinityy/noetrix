@@ -37,7 +37,7 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
-  agents/claude-reasoner:
+  agents/deepseek-reasoner:
     dependencies:
       '@predictor-index/sdk':
         specifier: workspace:*
