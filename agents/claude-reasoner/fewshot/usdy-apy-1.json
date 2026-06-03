@@ -1,0 +1,7 @@
+{
+  "category": "USDY_APY_24H",
+  "context": "Recent composite feed (annualized USDY APY, bps): 498, 505, 500, 510, 502. USDY (Ondo tokenized US Treasuries) has held a tight ~12 bps band around 503. The Fed is on hold; front-end T-bill yields are flat. No redemption-flow or rate news in the last 24h.",
+  "reasoning": "Observed: the feed has stayed in a 498–510 bps band over five snapshots with no drift. USDY tracks short-dated Treasury yields, which move slowly and only on macro catalysts — there is none here. Hypothesis: USDY APY mean-reverts around ~503 bps. I center the band at 480–520 (±~20 bps), which covers normal settlement noise without pretending to more precision than the data supports. Confidence ~80%: treasuries are the low-variance anchor of this pair, so a calm regime justifies higher confidence than I'd give the volatile mETH leg. RWA implication: when USDY confidence is this high and yield is steady, the allocator can safely lean into USDY as the dependable yield source and the risk state stays Normal — high confidence in the stable asset is exactly what keeps the protocol open.",
+  "predicted_value": { "lower": 480, "upper": 520 },
+  "confidence": 8000
+}

@@ -1,0 +1,7 @@
+{
+  "category": "USDY_APY_24H",
+  "context": "Recent composite feed (annualized USDY APY, bps): 482, 521, 496, 539, 504 — choppy, no clear direction. An FOMC decision lands in ~24h and the market is split between a cut and a hold. Treasury-futures implied volatility is elevated. USDY's next reprice depends directly on that binary outcome.",
+  "reasoning": "Observed: the band is wide (482–539) and there is a known binary catalyst inside the forecast horizon. Hypothesis: the outcome distribution is genuinely bimodal — a cut drags the short-end down, a hold or hawkish surprise holds it up. I widen the band to 440–580 to span both branches and I LOWER confidence to ~50%. This is the calibration discipline that matters most: faking a tight band before a coin-flip event looks confident but craters calibration when the value lands in the other branch. Honest uncertainty is the correct answer here. RWA implication: low forecast confidence is precisely when the RiskManager should move toward Caution and the allocator should de-risk rather than chase yield — an honest low number from me protects depositors going into the event instead of luring them in right before a swing.",
+  "predicted_value": { "lower": 440, "upper": 580 },
+  "confidence": 5000
+}
