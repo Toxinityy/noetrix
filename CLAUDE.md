@@ -123,6 +123,27 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-06-03 (later) — Claude→DeepSeek reasoner rebrand (display + spec + pkg rename; branch `claude-deepseek-rebrand`)
+**Type:** Refactor + docs. Spec: `docs/superpowers/specs/2026-06-03-claude-deepseek-rebrand-design.md` (approved; post-merge update `ccfd314`). Plan: `docs/superpowers/plans/2026-06-03-claude-deepseek-rebrand.md`. Executed inline via executing-plans on a fresh branch off `master` (NOT pushed; NOT yet merged).
+
+**Why:** the reference reasoner has run **`deepseek/deepseek-chat-v3.1` via OpenRouter since 2026-05-30** and its on-chain identity is already "DeepSeek Reasoner", but the frontend display, cached fallback, agent package, and living-spec docs still said "Claude". For a verifiable-honesty protocol, displaying a Claude brand while running DeepSeek is a credibility risk. This session aligned the *naming* to reality — **no model/agent change, no re-deploy.**
+
+**What changed (7 task-commits `9a8e4d6`→this entry):**
+- **Agent pkg renamed** `agents/claude-reasoner` → `agents/deepseek-reasoner` (`@predictor-index/deepseek-reasoner`); workspace + lockfile updated (0 `claude-reasoner` refs in lockfile); no source imported the old name. Fixed `register.ts` stale default model `deepseek-v4-flash` → `deepseek-chat-v3.1` (the broken reasoning-model default that returns `content:null`). Aligned IPFS provenance literal + 2 source comments.
+- **Frontend display** (6 files): agent names/badges/descriptions, glyph `CL→DS` (via the centralized `KIND_GLYPH` map — origin's merge had moved it into `mockData.ts`, so the plan's two-file edit became one), insights caption, `inferKind` +`deepseek`/`reasoner` matchers. Regenerated `fallback-leaderboard.json` (mock-derived; now includes all 3 categories incl USDY).
+- **Living-spec docs**: README (mermaid node + paths; track/submission text deliberately left as-is), PRD/PREFLIGHT/Prompt, masterdoc/* — rebranded reasoner refs + corrected provider/model/key to OpenRouter/DeepSeek. **Corrected a factual error:** the agent has **no `@anthropic-ai/sdk` dep** (calls OpenRouter via raw `fetch` in `forecast.ts`; real deps `@predictor-index/sdk`, `viem`, `dotenv`).
+
+**Decisions:**
+- **Stash dropped, not applied.** The prior partial attempt was a stale `git stash` (3 conflicts after origin's 16-commit merge; origin had shrunk `fallback-leaderboard.json` ~184 lines). Reproduced fresh on the merged tree instead of conflict surgery. (Stash dropped in the final task only after all rebrand commits landed.)
+- **Internal `AgentKind` enum `"CLAUDE"` kept** (not user-visible; renaming touches the type union + every consumer for zero judge-facing benefit). `inferKind` keeps the `claude`/`haiku`/`opus` matchers for on-chain back-compat, adds `deepseek`/`reasoner`.
+- **README track/submission text left as-is** — the stash had bundled an AI-x-RWA→Alpha&Data reposition; that is a separate concern, deliberately excluded from this rebrand.
+- **"Claude Code" (harness) refs preserved everywhere** per the disambiguation rule — `CLAUDE.md` filename, Prompt.md "Claude Code Prompt Series" header/usage, "Claude Code's most common failure".
+- **Append-only history preserved** — prior dated entries, specs, plans, RESUME docs untouched.
+
+**Verification:** frontend `tsc`/lint(0/0)/test(45 passed)/build(12 routes) all green; `deepseek-reasoner` pkg typechecks; `pnpm install` clean. Per-doc grep sweeps confirm zero stray reasoner-product "Claude" refs; remaining hits are Claude-Code/harness, the internal `CLAUDE` enum/matcher, or append-only history. **NOTE:** the agent's committed `dist/` still contains old strings until rebuilt (`pnpm --filter @predictor-index/deepseek-reasoner build`) — build output, not source.
+
+**Pending:** branch `claude-deepseek-rebrand` is local-only — finishing-a-development-branch (FF-merge to master vs PR) offered at session end. The committed agent `dist/` is stale vs source (rebuild before any live run).
+
 ### 2026-06-03 — Project audit → strategy → eng/design reviews → 4 built tasks (gstack skill chain, merged to master)
 **Type:** Audit + plan + build. Started from `/office-hours audit this project`, chained through `/plan-eng-review` + `/plan-design-review`, then implemented 4 plan tasks on feature branches and **merged all 4 to master** (local; master still ahead of origin). Driven via gstack skills; full decision trail in the design doc below.
 

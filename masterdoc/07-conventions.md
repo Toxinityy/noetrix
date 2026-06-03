@@ -11,7 +11,7 @@
 | Category IDs | `bytes32` keccak256 of human name, e.g. `keccak256("METH_APR_24H")` |
 | TS files | `kebab-case.ts` for utilities; `PascalCase.tsx` for React components |
 | TS exports | `camelCase` functions, `PascalCase` types/classes |
-| Folders | `kebab-case` (`arima-baseline`, `claude-reasoner`) |
+| Folders | `kebab-case` (`arima-baseline`, `deepseek-reasoner`) |
 
 ## Solidity style
 
@@ -62,7 +62,7 @@
 
 - Next 16 App Router. Read `node_modules/next/dist/docs/` first — Next 16 has breaking changes.
 - Server Components by default; `'use client'` only when interactivity needed.
-- Server-only deps (e.g. `@anthropic-ai/sdk`) must NEVER be imported into client components.
+- Server-only secrets (e.g. `OPENROUTER_API_KEY`) must NEVER be imported into client components.
 - Data fetch: TanStack Query for indexer reads (30s `staleTime`); wagmi hooks for on-chain reads/writes.
 - Forms: `react-hook-form` if needed (not yet a dep — add if Prompt 11 needs).
 - Routing: file-system based, App Router conventions (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`).

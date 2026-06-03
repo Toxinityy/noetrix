@@ -444,7 +444,7 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
         </Panel>
       </div>
 
-      {/* Featured reasoning — the visual peak (Claude agents only) */}
+      {/* Featured reasoning — the visual peak (DeepSeek reasoner agents only) */}
       {agent.kind === "CLAUDE" && featuredReasoning?.reasoning ? (
         <div className="mt-10">
           <FeaturedReasoning prediction={featuredReasoning} />

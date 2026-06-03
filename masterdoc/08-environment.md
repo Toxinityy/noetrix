@@ -45,7 +45,7 @@ REFRESHER_PRIVATE_KEY=
 INDEXER_URL=http://localhost:42069
 NEXT_PUBLIC_INDEXER_URL=http://localhost:42069
 NEXT_PUBLIC_RPC_URL=https://rpc.sepolia.mantle.xyz
-ANTHROPIC_API_KEY=
+OPENROUTER_API_KEY=
 WEB3_STORAGE_TOKEN=
 MANTLESCAN_API_KEY=
 ```
@@ -80,8 +80,8 @@ Per agent package:
 - `RPC_URL`
 - `INDEXER_URL`
 - `WEB3_STORAGE_TOKEN`
-- `ANTHROPIC_API_KEY` (claude-reasoner only)
-- `CRYPTOPANIC_API_KEY` (claude-reasoner only, optional)
+- `OPENROUTER_API_KEY` (deepseek-reasoner only)
+- `CRYPTOPANIC_API_KEY` (deepseek-reasoner only, optional)
 
 ### Refresher
 

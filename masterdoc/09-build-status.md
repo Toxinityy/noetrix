@@ -62,7 +62,7 @@ Snapshot: **2026-05-29** (post Prompt 12 code — DemoFeedConsumer business logi
   - `Nav` — sticky, backdrop-blur on scroll
   - `Hero` — **WebGL ambient swirl** (`DitheringShader`, deepest layer, Mantle teal on near-black, 4×4 dithering, swirl shape, speed=0.55, `mix-blend-mode: screen`); **cursor-driven spotlight lens** (2nd shader instance with `ripple` shape revealed via radial mask following spring-smoothed cursor); **cursor follower ring + dot** (system cursor hidden over hero, replaced with teal accent ring + 1.5px dot, both spring-tracked); **char hover** (each title letter lifts 8px + tints teal); **title parallax** (subtle magnetic offset toward cursor); kinetic char-stagger title, glow ring, corner meta. Touch devices skip all cursor effects via `(hover: hover) and (pointer: fine)` media query.
   - `LivePulse` — `requestAnimationFrame`-driven synthetic composite-feed chart (SVG paths animate, value motion-tweens, pulsing latest-dot)
-  - `ReasoningReveal` — scroll-driven Claude trace card with parsed JSON sidebar (4-step trace)
+  - `ReasoningReveal` — scroll-driven DeepSeek trace card with parsed JSON sidebar (4-step trace)
   - `LeaderboardPreview` — terminal aesthetic, row stagger on viewport enter
   - `HowItWorks` — 5-step grid with stagger reveal
   - `Footer`
@@ -97,7 +97,7 @@ Snapshot: **2026-05-29** (post Prompt 12 code — DemoFeedConsumer business logi
 - ✓ `Agent` class: `commit / reveal / submitFullCycle / register / getCategoryConfig`. viem clients (custom Mantle Sepolia chain), `nonceManager` for batch nonce caching, 3-attempt retry w/ backoff, default gas estimation. Commit hash matches PredictionMarket.reveal recomputation exactly; predictionId parsed from `PredictionCommitted` receipt log. Reveal polls block number into `[commit+DELAY, commit+WINDOW]`.
 - ✓ Categories (keccak label ids + domains mirroring Deploy.s.sol), 3-tier address loader (same as indexer), `uploadContent` (keccak contentHash + optional Pinata IPFS pin).
 - ✗ Live exercise pending deployed addresses + funded key.
-- Next: consumed by Prompt 10 (Claude reasoner) + Prompt 11 (refresher).
+- Next: consumed by Prompt 10 (DeepSeek reasoner) + Prompt 11 (refresher).
 
 ### agents/arima-baseline (Prompt 9 Parts B+C+D)
 - ✓ `src/{arima,config,state,indexer,index}.ts` + `scripts/register.ts` + `.env.example`. `tsc` clean, dist emitted.
@@ -107,13 +107,13 @@ Snapshot: **2026-05-29** (post Prompt 12 code — DemoFeedConsumer business logi
 - ✗ NOT run live (needs deployed addresses + funded controller key + ideally live indexer). Hosting (GH Actions cron / Railway) deferred.
 - Next: live register + run once Prompt 7 Part C deploys.
 
-### agents/claude-reasoner (Prompt 10 — demo highlight)
+### agents/deepseek-reasoner (Prompt 10 — demo highlight)
 - ✓ `src/{config,state,indexer,news,context,prompt,forecast,index}.ts` + `scripts/register.ts` + `.env.example`. `tsc` clean, dist emitted.
-- ✓ Pipeline: per category → getCategoryConfig → parallel [feed history, agent resolved history+scores, CryptoPanic 24h news] → Markdown context → few-shot + user prompt → Anthropic `messages.create` → parse/validate JSON → clamp band+confidence → upload full prompt+response+forecast (contentHash) → `submitFullCycle`. JSONL debug log.
+- ✓ Pipeline: per category → getCategoryConfig → parallel [feed history, agent resolved history+scores, CryptoPanic 24h news] → Markdown context → few-shot + user prompt → OpenRouter `chat/completions` → parse/validate JSON → clamp band+confidence → upload full prompt+response+forecast (contentHash) → `submitFullCycle`. JSONL debug log.
 - ✓ System prompt verbatim per §8.3 + "scores are PUBLIC on-chain" honesty nudge; strict JSON output contract.
 - ✓ **Few-shot (Part B): 6 hand-written examples** (`fewshot/{meth-apr,aave-tvl}-{1,2,3}.json`), 3 regimes each (calm / trend+catalyst / high-variance|regime-break), teaching calibration discipline. `loadFewShot` filters by category. Verified 3+3 load.
-- ✓ SEED_MODE auto-flip (same as ARIMA), register.ts (§8.1.1 metadata → IPFS/data-URI → register 0.1 MNT → AGENT_ID to .env). Default model `claude-opus-4-7` (CLAUDE_MODEL override).
-- ✗ NOT run live: needs deployed addresses + funded key + ANTHROPIC_API_KEY (+ optional PINATA_JWT/CRYPTOPANIC_TOKEN/live indexer). Anthropic call path unexercised (no key this session). Hosting deferred.
+- ✓ SEED_MODE auto-flip (same as ARIMA), register.ts (§8.1.1 metadata → IPFS/data-URI → register 0.1 MNT → AGENT_ID to .env). Default model `deepseek/deepseek-chat-v3.1` (OPENROUTER_MODEL override).
+- ✗ NOT run live: needs deployed addresses + funded key + OPENROUTER_API_KEY (+ optional PINATA_JWT/CRYPTOPANIC_TOKEN/live indexer). OpenRouter call path unexercised (no key this session). Hosting deferred.
 - Next: live register + run once Prompt 7 Part C deploys; then Prompt 11 (refresher + frontend wiring).
 
 ### agents/refresher (Prompt 11 Part D)
@@ -135,8 +135,8 @@ Snapshot: **2026-05-29** (post Prompt 12 code — DemoFeedConsumer business logi
 | `pnpm -C agents/sdk build` | ✓ | 2026-05-26 |
 | `tsc` agents/sdk (full impl) | ✓ clean, dist emitted | 2026-05-29 |
 | `tsc` agents/arima-baseline (full impl + register) | ✓ clean, dist emitted | 2026-05-29 |
-| `tsc` agents/claude-reasoner (full impl + register) | ✓ clean, dist emitted | 2026-05-29 |
-| claude-reasoner few-shot load (3+3) | ✓ | 2026-05-29 |
+| `tsc` agents/deepseek-reasoner (full impl + register) | ✓ clean, dist emitted | 2026-05-29 |
+| deepseek-reasoner few-shot load (3+3) | ✓ | 2026-05-29 |
 | `tsc` agents/refresher (full impl) | ✓ clean, dist emitted | 2026-05-29 |
 | `next build` (frontend, post live-wiring, mock mode) | ✓ 6 routes, TS pass | 2026-05-29 |
 | `forge test` (full suite, post Prompt 12) | ✓ 147/147 pass | 2026-05-29 |
@@ -172,4 +172,4 @@ Snapshot: **2026-05-29** (post Prompt 12 code — DemoFeedConsumer business logi
 | 2 | topAgents insertion-sort bug → wrong leaderboard → wrong composite feed | Extra targeted unit tests (5+ edge cases); single source `_updateTopAgents`. |
 | 3 | Mantle block time != 2s | Verify at start of Prompt 7 (deploy). Affects every block-window constant. |
 | 4 | Indexer lags chain → SEED_MODE never flips | Indexer + Railway monitoring; fallback flip on `48h elapsed`. |
-| 5 | Claude reasoner produces bland predictions in cold-start | Hand-written few-shot examples Day 9 (PRD §8.3 mandate). |
+| 5 | DeepSeek reasoner produces bland predictions in cold-start | Hand-written few-shot examples Day 9 (PRD §8.3 mandate). |

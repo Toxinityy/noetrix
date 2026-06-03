@@ -68,7 +68,7 @@ export const KIND_COLOR: Record<AgentKind, string> = {
 
 /// Two-character monogram per kind (terminal-core glyph).
 export const KIND_GLYPH: Record<AgentKind, string> = {
-  CLAUDE: "CL",
+  CLAUDE: "DS",
   ARIMA: "AR",
   QUANT: "QU",
   ENSEMBLE: "EN",
@@ -102,14 +102,14 @@ const E = (vals: number[]): number[] => vals;
 export const AGENTS: Agent[] = [
   {
     id: 1,
-    name: "claude-reasoner-α",
+    name: "deepseek-reasoner-α",
     kind: "CLAUDE",
     controller: "0xA17C9F2bC8b6f23B6cE19a5E6e1D7Cc1A2bDe041",
-    metadataURI: "ipfs://bafkreieclaudereasoneralpha",
+    metadataURI: "ipfs://bafkreiedeepseekreasoneralpha",
     registeredBlock: 12_120_344,
-    badges: ["Top-1 mETH 7d", "Reasoning trace", "Claude Opus 4.7"],
+    badges: ["Top-1 mETH 7d", "Reasoning trace", "DeepSeek V3.1"],
     description:
-      "Claude-driven reasoning agent. Posts a structured 4-step trace (frame → search → infer → forecast) to IPFS with every commit; reveals are auto-decrypted post-window.",
+      "DeepSeek-driven reasoning agent. Posts a structured 4-step trace (frame → search → infer → forecast) to IPFS with every commit; reveals are auto-decrypted post-window.",
     reputation: {
       METH_APR_24H: {
         accuracyScore: 612_400,
@@ -219,14 +219,14 @@ export const AGENTS: Agent[] = [
   },
   {
     id: 4,
-    name: "claude-reasoner-β",
+    name: "deepseek-reasoner-β",
     kind: "CLAUDE",
     controller: "0xD9C9e15c80Cc1c4F2A0eD5e9E8Bc9D0E2F1a3B22",
-    metadataURI: "ipfs://bafkreiclaudereasonerbeta",
+    metadataURI: "ipfs://bafkreideepseekreasonerbeta",
     registeredBlock: 12_120_988,
     badges: ["Reasoning trace", "Calibration-led"],
     description:
-      "Variant of claude-reasoner with confidence-tempering: deliberately understates confidence to climb the calibration leaderboard. Lower accuracy, far higher calibration.",
+      "Variant of deepseek-reasoner with confidence-tempering: deliberately understates confidence to climb the calibration leaderboard. Lower accuracy, far higher calibration.",
     reputation: {
       METH_APR_24H: {
         accuracyScore: 421_600,
@@ -297,10 +297,10 @@ export const AGENTS: Agent[] = [
   },
   {
     id: 6,
-    name: "claude-reasoner-γ",
+    name: "deepseek-reasoner-γ",
     kind: "CLAUDE",
     controller: "0x18f3eF49a7C0a3B5C7B19eDe0F8C1D6e2A4F3B11",
-    metadataURI: "ipfs://bafkreiclaudereasonergamma",
+    metadataURI: "ipfs://bafkreideepseekreasonergamma",
     registeredBlock: 12_122_701,
     badges: ["Reasoning trace", "Aggressive"],
     description:
@@ -375,14 +375,14 @@ export const AGENTS: Agent[] = [
   },
   {
     id: 8,
-    name: "claude-haiku-fast",
+    name: "deepseek-chat-fast",
     kind: "CLAUDE",
     controller: "0x4488ABcde11f2233E5d6F7a8B9c0d1e2F3a4B5c6",
-    metadataURI: "ipfs://bafkreiclaudehaikufast",
+    metadataURI: "ipfs://bafkreideepseekchatfast",
     registeredBlock: 12_125_100,
-    badges: ["Claude Haiku 4.5", "Low-cost"],
+    badges: ["DeepSeek V3.1", "Low-cost"],
     description:
-      "Lightweight Haiku-driven agent for cheap, fast forecasts. Lower accuracy ceiling but submits 5x more often.",
+      "Lightweight DeepSeek-driven agent for cheap, fast forecasts. Lower accuracy ceiling but submits 5x more often.",
     reputation: {
       METH_APR_24H: {
         accuracyScore: 261_300,

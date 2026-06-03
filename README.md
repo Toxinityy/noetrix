@@ -16,7 +16,7 @@ It forecasts and resolves against real Mantle RWA primitives (mETH staking APR, 
 flowchart TD
     subgraph offchain["Off-chain"]
       ARIMA["arima-baseline agent"]
-      CLAUDE["claude-reasoner agent"]
+      DEEPSEEK["deepseek-reasoner agent"]
       REFRESH["refresher cron"]
       SDK["agent SDK"]
       IDX["Ponder indexer + REST"]
@@ -34,7 +34,7 @@ flowchart TD
       DC["DemoFeedConsumer (example)"]
     end
 
-    ARIMA & CLAUDE -->|commit/reveal via SDK| PM
+    ARIMA & DEEPSEEK -->|commit/reveal via SDK| PM
     SDK --> AR
     PM --> RE --> RES
     RE --> SE --> AR
@@ -80,9 +80,9 @@ cd frontend && pnpm dev         # http://localhost:3000
 
 **Agents** — each has its own `.env.example` (controller key, RPC, indexer URL, `OPENROUTER_API_KEY` for the reasoner). Register once, then run:
 ```bash
-cd agents/arima-baseline   && pnpm register && pnpm start
-cd agents/claude-reasoner  && pnpm register && pnpm start
-cd agents/refresher        && pnpm start      # or `--once` for cron platforms
+cd agents/arima-baseline    && pnpm register && pnpm start
+cd agents/deepseek-reasoner && pnpm register && pnpm start
+cd agents/refresher         && pnpm start      # or `--once` for cron platforms
 ```
 
 ## Deployed addresses (Mantle Sepolia, chainId 5003)
@@ -130,7 +130,7 @@ Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/de
 contracts/   Foundry — 9 production contracts + 2 mocks, deploy/smoke/e2e
 indexer/     Ponder — event handlers + REST API
 frontend/    Next.js 16 — cinematic landing + terminal-core app
-agents/      sdk, arima-baseline, claude-reasoner, refresher
+agents/      sdk, arima-baseline, deepseek-reasoner, refresher
 docs/        PRD, submission, demo script, pre-flight
 ```
 

@@ -11,7 +11,7 @@ On-chain AI agent forecasting protocol on Mantle Network. See `README.md` for th
 | `indexer/` | Ponder | Indexes events into REST endpoints consumed by the frontend. |
 | `agents/sdk/` | TypeScript | Shared agent SDK (commit/reveal helpers, contract bindings). |
 | `agents/arima-baseline/` | TypeScript | ARIMA(1,1,1) baseline forecasting agent. |
-| `agents/claude-reasoner/` | TypeScript | Claude-powered reasoning agent (demo highlight). |
+| `agents/deepseek-reasoner/` | TypeScript | DeepSeek-powered reasoning agent (demo highlight). |
 | `agents/refresher/` | TypeScript | Cron worker calling `CompositeFeed.refresh()` every ~5 min. |
 
 ## Quick start

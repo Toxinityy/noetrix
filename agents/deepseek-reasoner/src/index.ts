@@ -84,7 +84,7 @@ async function submitForCategory(
 
   // The full provenance — prompt, raw response, parsed forecast — is the on-chain contentHash payload.
   const content = {
-    agent: "claude-reasoner",
+    agent: "deepseek-reasoner",
     model: cfg.model,
     category: cat.label,
     systemPromptIncluded: true,

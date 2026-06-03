@@ -54,15 +54,15 @@ export type CategoryConfig = { minStake: bigint; allowedWindowStart: bigint; all
 
 **Current state:** placeholder `src/index.ts` only. deps: `@predictor-index/sdk`, `viem`, `dotenv`. devDeps: `tsx`, `typescript`.
 
-## agents/claude-reasoner
+## agents/deepseek-reasoner
 
-**Purpose:** Demo highlight. Claude-powered reasoning agent. Each prediction stores full prompt + response + parsed forecast to IPFS as the `contentHash`. Frontend renders this on `/agent/[id]` expandable rows.
+**Purpose:** Demo highlight. DeepSeek-powered reasoning agent (OpenRouter). Each prediction stores full prompt + response + parsed forecast to IPFS as the `contentHash`. Frontend renders this on `/agent/[id]` expandable rows.
 
 **Schedule:** same as ARIMA. SEED_MODE flip identical.
 
 **Pipeline (Prompt 10):**
 1. Build context: last 7d category outcomes from indexer + last 24h crypto news from cryptopanic.com → Markdown context block.
-2. Call Claude (`claude-opus-4-7` or `claude-sonnet-4-6`).
+2. Call DeepSeek via OpenRouter (`deepseek/deepseek-chat-v3.1`).
 3. Request structured JSON: `{ predicted_value: {lower, upper}, confidence: 0-10000, reasoning: string }`.
 4. Validate JSON shape.
 5. Upload full prompt + response + parsed forecast to IPFS → `contentHash`.
@@ -71,9 +71,9 @@ export type CategoryConfig = { minStake: bigint; allowedWindowStart: bigint; all
 **System prompt anchor:**
 > "You are a forecasting agent for Mantle ecosystem metrics. Your reputation depends on calibrated forecasts. Overconfidence will harm your calibration score; underconfidence will harm your accuracy ranking. Produce honest, well-reasoned predictions."
 
-**Few-shot examples:** `agents/claude-reasoner/fewshot/*.json`. **HAND-WRITTEN Day-9 deliverable** — NOT auto-generated. 2-3 examples showing: observed data → hypothesis → forecast range → confidence with justification. Concatenated into user prompt.
+**Few-shot examples:** `agents/deepseek-reasoner/fewshot/*.json`. **HAND-WRITTEN Day-9 deliverable** — NOT auto-generated. 2-3 examples showing: observed data → hypothesis → forecast range → confidence with justification. Concatenated into user prompt.
 
-**Current state:** placeholder + empty `fewshot/`. deps: `@predictor-index/sdk`, `@anthropic-ai/sdk`, `viem`, `dotenv`.
+**Current state:** built + few-shot examples present. deps: `@predictor-index/sdk`, `viem`, `dotenv` (OpenRouter via fetch — no LLM SDK).
 
 ## agents/refresher
 
@@ -94,7 +94,7 @@ export type CategoryConfig = { minStake: bigint; allowedWindowStart: bigint; all
 Per agent, run once before scheduling:
 
 ```bash
-pnpm -C agents/arima-baseline register   # or claude-reasoner
+pnpm -C agents/arima-baseline register   # or deepseek-reasoner
 ```
 
 `scripts/register.ts`:
@@ -111,8 +111,8 @@ AGENT_ID=                       set after register
 RPC_URL=                        Mantle Sepolia/mainnet RPC
 INDEXER_URL=                    e.g. https://predictor-index-indexer.up.railway.app
 WEB3_STORAGE_TOKEN=             for IPFS uploads
-ANTHROPIC_API_KEY=              claude-reasoner only
-CRYPTOPANIC_API_KEY=            claude-reasoner only (optional)
+OPENROUTER_API_KEY=             deepseek-reasoner only
+CRYPTOPANIC_API_KEY=            deepseek-reasoner only (optional)
 ```
 
 ## Deployment options

@@ -42,7 +42,7 @@ export interface InsightsSnapshot {
 
 function inferKind(name: string): AgentKind {
   const n = name.toLowerCase();
-  if (n.includes("claude") || n.includes("haiku") || n.includes("opus") || n.includes("reasoner")) return "CLAUDE";
+  if (n.includes("deepseek") || n.includes("claude") || n.includes("haiku") || n.includes("opus") || n.includes("reasoner")) return "CLAUDE";
   if (n.includes("arima")) return "ARIMA";
   if (n.includes("ensemble")) return "ENSEMBLE";
   return "QUANT";

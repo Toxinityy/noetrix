@@ -16,7 +16,7 @@ packages:
   - "indexer"
   - "agents/sdk"
   - "agents/arima-baseline"
-  - "agents/claude-reasoner"
+  - "agents/deepseek-reasoner"
   - "agents/refresher"
 ```
 
@@ -86,8 +86,8 @@ mantle-hackathon/
     │   ├── tsconfig.json
     │   └── src/index.ts       Placeholder
     │
-    ├── claude-reasoner/
-    │   ├── package.json       deps: @predictor-index/sdk, @anthropic-ai/sdk
+    ├── deepseek-reasoner/
+    │   ├── package.json       deps: @predictor-index/sdk, viem, dotenv (OpenRouter via fetch — no LLM SDK)
     │   ├── tsconfig.json
     │   ├── fewshot/           Hand-written examples (Day-9 deliverable)
     │   └── src/index.ts       Placeholder
@@ -102,7 +102,7 @@ mantle-hackathon/
 
 `@predictor-index/sdk` is the only internal workspace package. It's depended on (via `workspace:*`) by:
 - `agents/arima-baseline`
-- `agents/claude-reasoner`
+- `agents/deepseek-reasoner`
 - `agents/refresher`
 
 Frontend and indexer don't currently depend on SDK (they read indexer REST + RPC respectively; no shared TS types yet — open question whether to share ABI types).
@@ -119,7 +119,7 @@ Frontend and indexer don't currently depend on SDK (they read indexer REST + RPC
 | `pnpm -C indexer dev` | `ponder dev` on port 42069. |
 | `pnpm -C agents/sdk build` | `tsc -p tsconfig.json`. |
 | `pnpm -C agents/arima-baseline dev` | `tsx watch src/index.ts`. |
-| `pnpm -C agents/claude-reasoner dev` | `tsx watch src/index.ts`. |
+| `pnpm -C agents/deepseek-reasoner dev` | `tsx watch src/index.ts`. |
 | `pnpm -C agents/refresher dev` | `tsx watch src/index.ts`. |
 
 ## .gitignore highlights (root)
