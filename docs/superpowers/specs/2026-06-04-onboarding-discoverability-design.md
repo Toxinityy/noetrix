@@ -35,10 +35,12 @@ These three paths are the single source of truth reused by the StartHere strip, 
 - **Create:** `frontend/src/lib/personaPaths.ts` — exports `PERSONA_PATHS: PersonaPath[]` where `PersonaPath = { id: "earn" | "alpha" | "build"; label; blurb; href; icon; tourId }`.
 - Consumed by StartHere, AppHeader (optional), OnboardingModal, TourProvider. No copy duplicated across components.
 
-### Component 2 — Landing hybrid (`app/page.tsx` + `Hero`)
-- **Modify:** `frontend/src/components/landing/Hero.tsx` — rewrite the subtitle **plain-English first** ("Watch AI agents forecast Mantle yields — and earn, track, or build on it."), jargon second/smaller. Add a secondary "↓ Start here" affordance next to the existing CTAs (anchor to the StartHere section).
-- **Create:** `frontend/src/components/landing/StartHere.tsx` — 3 path cards from `PERSONA_PATHS` (icon + label + one-line blurb + arrow → `href`). Terminal-core styling, responsive (stack on mobile, 3-col `md`). No GSAP requirement of its own.
-- **Modify:** `frontend/src/app/page.tsx` — insert `<StartHere />` as a `StoryFrame` in slot 2 (immediately after Hero, before LivePulse). Keep all other sections.
+### Component 2 — Landing: ADDITIVE only (do NOT overhaul)
+**Hard constraint (user):** the landing page must NOT be substantially rewritten. The cinematic hero and all existing scroll sections stay as-is. The only *required* landing change is inserting one new section.
+
+- **Required — Create:** `frontend/src/components/landing/StartHere.tsx` — 3 path cards from `PERSONA_PATHS` (icon + label + one-line blurb + arrow → `href`). Terminal-core styling, responsive (stack on mobile, 3-col `md`). No GSAP requirement of its own.
+- **Required — Modify (insertion only):** `frontend/src/app/page.tsx` — insert `<StartHere />` as a `StoryFrame` in slot 2 (immediately after Hero, before LivePulse). **Do not touch, reorder, or remove any other section.** Reuse the existing `StoryFrame` wrapper verbatim so the GSAP pin contract is preserved.
+- **Optional (nice-to-have) — Hero touch, minimal:** at most add a small secondary "↓ Start here" affordance next to the existing CTAs (anchor-scroll to the StartHere section). A subtitle rewrite is OPTIONAL and, if done, must be copy-only (no structural/layout change to `Hero.tsx`). If in doubt, leave `Hero.tsx` untouched.
 
 ### Component 3 — Nav simplification (`AppHeader`)
 - **Modify:** `frontend/src/components/app/AppHeader.tsx`:
@@ -71,7 +73,7 @@ These three paths are the single source of truth reused by the StartHere strip, 
 
 - **No full Coinglass-style dashboard hero** (rejected option C — biggest build, needs snapshot wired into hero).
 - **No persona-grouped nav dropdowns** (rejected option B for nav — too many clicks).
-- **No deletion of the cinematic landing** — it is demoted to below-the-fold story, not removed.
+- **No landing overhaul (hard user constraint).** Landing changes are ADDITIVE ONLY: insert the StartHere section, optionally a tiny hero affordance. Do NOT restructure, reorder, remove, or re-theme existing sections; the cinematic hero stays intact.
 - **No backend / contract / indexer / agent changes.** Frontend-only.
 - **No rename of routes** (`/rwa`, `/insights`, etc. stay; only nav *labels* change).
 - Not coupled to the `claude-deepseek-rebrand` branch (independent; both merge to master separately).
