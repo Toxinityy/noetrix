@@ -1,0 +1,396 @@
+{
+  "generatedAt": "2026-06-02T19:16:31.811Z",
+  "chainId": 5003,
+  "block": 39441549,
+  "source": "chain",
+  "allocation": {
+    "methBps": 5000,
+    "usdyBps": 5000
+  },
+  "categories": {
+    "METH_APR_24H": {
+      "reputations": [
+        {
+          "agentId": 1,
+          "accuracyScore": 340344,
+          "calibrationScore": 0,
+          "resolvedCount": 4
+        },
+        {
+          "agentId": 2,
+          "accuracyScore": 131397,
+          "calibrationScore": 0,
+          "resolvedCount": 4
+        }
+      ],
+      "predictions": [
+        {
+          "id": 1,
+          "agentId": 1,
+          "status": "Resolved",
+          "low": 2994,
+          "high": 2999,
+          "confidence": 5000,
+          "score": 998334,
+          "outcome": 2999,
+          "commitBlock": 39307691,
+          "resolutionBlock": 39308038
+        },
+        {
+          "id": 2,
+          "agentId": 2,
+          "status": "Resolved",
+          "low": 0,
+          "high": 100000,
+          "confidence": 1000,
+          "score": 382084,
+          "outcome": 2999,
+          "commitBlock": 39307694,
+          "resolutionBlock": 39308041
+        },
+        {
+          "id": 5,
+          "agentId": 1,
+          "status": "Resolved",
+          "low": 3010,
+          "high": 3016,
+          "confidence": 5000,
+          "score": 983334,
+          "outcome": 2999,
+          "commitBlock": 39307768,
+          "resolutionBlock": 39308114
+        },
+        {
+          "id": 6,
+          "agentId": 2,
+          "status": "Resolved",
+          "low": 0,
+          "high": 100000,
+          "confidence": 2000,
+          "score": 382084,
+          "outcome": 2999,
+          "commitBlock": 39307771,
+          "resolutionBlock": 39308118
+        },
+        {
+          "id": 11,
+          "agentId": 1,
+          "status": "Committed",
+          "low": 0,
+          "high": 0,
+          "confidence": 0,
+          "score": null,
+          "outcome": null,
+          "commitBlock": 39308079,
+          "resolutionBlock": 39308425
+        },
+        {
+          "id": 12,
+          "agentId": 2,
+          "status": "Committed",
+          "low": 0,
+          "high": 0,
+          "confidence": 0,
+          "score": null,
+          "outcome": null,
+          "commitBlock": 39308085,
+          "resolutionBlock": 39308430
+        },
+        {
+          "id": 14,
+          "agentId": 1,
+          "status": "Resolved",
+          "low": 3006,
+          "high": 3010,
+          "confidence": 5000,
+          "score": 983334,
+          "outcome": 2999,
+          "commitBlock": 39308991,
+          "resolutionBlock": 39309337
+        },
+        {
+          "id": 16,
+          "agentId": 2,
+          "status": "Resolved",
+          "low": 0,
+          "high": 100000,
+          "confidence": 10000,
+          "score": 382084,
+          "outcome": 2999,
+          "commitBlock": 39309024,
+          "resolutionBlock": 39309371
+        },
+        {
+          "id": 20,
+          "agentId": 1,
+          "status": "Resolved",
+          "low": 2996,
+          "high": 3000,
+          "confidence": 5000,
+          "score": 994167,
+          "outcome": 2999,
+          "commitBlock": 39309948,
+          "resolutionBlock": 39310295
+        },
+        {
+          "id": 23,
+          "agentId": 2,
+          "status": "Resolved",
+          "low": 0,
+          "high": 100000,
+          "confidence": 9900,
+          "score": 382084,
+          "outcome": 2999,
+          "commitBlock": 39309984,
+          "resolutionBlock": 39310331
+        },
+        {
+          "id": 26,
+          "agentId": 1,
+          "status": "Revealed",
+          "low": 2994,
+          "high": 2998,
+          "confidence": 5000,
+          "score": null,
+          "outcome": null,
+          "commitBlock": 39310901,
+          "resolutionBlock": 39311248
+        }
+      ],
+      "feedHistory": [],
+      "risk": "Frozen"
+    },
+    "USDY_APY_24H": {
+      "reputations": [
+        {
+          "agentId": 1,
+          "accuracyScore": 270209,
+          "calibrationScore": 0,
+          "resolvedCount": 3
+        },
+        {
+          "agentId": 2,
+          "accuracyScore": 186841,
+          "calibrationScore": 0,
+          "resolvedCount": 2
+        }
+      ],
+      "predictions": [
+        {
+          "id": 9,
+          "agentId": 1,
+          "status": "Resolved",
+          "low": 499,
+          "high": 500,
+          "confidence": 5000,
+          "score": 994167,
+          "outcome": 500,
+          "commitBlock": 39307807,
+          "resolutionBlock": 39308154
+        },
+        {
+          "id": 10,
+          "agentId": 2,
+          "status": "Resolved",
+          "low": 400,
+          "high": 550,
+          "confidence": 8000,
+          "score": 981042,
+          "outcome": 500,
+          "commitBlock": 39307816,
+          "resolutionBlock": 39308163
+        },
+        {
+          "id": 13,
+          "agentId": 2,
+          "status": "Committed",
+          "low": 0,
+          "high": 0,
+          "confidence": 0,
+          "score": null,
+          "outcome": null,
+          "commitBlock": 39308104,
+          "resolutionBlock": 39308451
+        },
+        {
+          "id": 17,
+          "agentId": 1,
+          "status": "Resolved",
+          "low": 500,
+          "high": 501,
+          "confidence": 5000,
+          "score": 998334,
+          "outcome": 500,
+          "commitBlock": 39309029,
+          "resolutionBlock": 39309376
+        },
+        {
+          "id": 19,
+          "agentId": 2,
+          "status": "Committed",
+          "low": 0,
+          "high": 0,
+          "confidence": 0,
+          "score": null,
+          "outcome": null,
+          "commitBlock": 39309068,
+          "resolutionBlock": 39309415
+        },
+        {
+          "id": 22,
+          "agentId": 1,
+          "status": "Resolved",
+          "low": 500,
+          "high": 501,
+          "confidence": 5000,
+          "score": 998334,
+          "outcome": 500,
+          "commitBlock": 39309982,
+          "resolutionBlock": 39310329
+        },
+        {
+          "id": 25,
+          "agentId": 2,
+          "status": "Resolved",
+          "low": 420,
+          "high": 550,
+          "confidence": 8500,
+          "score": 985477,
+          "outcome": 500,
+          "commitBlock": 39310029,
+          "resolutionBlock": 39310374
+        }
+      ],
+      "feedHistory": [],
+      "risk": "Frozen"
+    },
+    "AAVE_MANTLE_TVL_24H": {
+      "reputations": [
+        {
+          "agentId": 1,
+          "accuracyScore": 342684,
+          "calibrationScore": 0,
+          "resolvedCount": 4
+        },
+        {
+          "agentId": 2,
+          "accuracyScore": 199902,
+          "calibrationScore": 0,
+          "resolvedCount": 4
+        }
+      ],
+      "predictions": [
+        {
+          "id": 3,
+          "agentId": 1,
+          "status": "Resolved",
+          "low": 139983313.57869777,
+          "high": 140121135.77292314,
+          "confidence": 5000,
+          "score": 994167,
+          "outcome": 142000000,
+          "commitBlock": 39307710,
+          "resolutionBlock": 39308057
+        },
+        {
+          "id": 4,
+          "agentId": 2,
+          "status": "Resolved",
+          "low": 0,
+          "high": 1000000000,
+          "confidence": 10000,
+          "score": 581284,
+          "outcome": 142000000,
+          "commitBlock": 39307715,
+          "resolutionBlock": 39308062
+        },
+        {
+          "id": 7,
+          "agentId": 1,
+          "status": "Resolved",
+          "low": 139969496.60994172,
+          "high": 140073059.40545815,
+          "confidence": 5000,
+          "score": 994167,
+          "outcome": 142000000,
+          "commitBlock": 39307788,
+          "resolutionBlock": 39308135
+        },
+        {
+          "id": 8,
+          "agentId": 2,
+          "status": "Resolved",
+          "low": 0,
+          "high": 1000000000,
+          "confidence": 10000,
+          "score": 581284,
+          "outcome": 142000000,
+          "commitBlock": 39307796,
+          "resolutionBlock": 39308143
+        },
+        {
+          "id": 15,
+          "agentId": 1,
+          "status": "Resolved",
+          "low": 140056924.99075487,
+          "high": 140197914.3405702,
+          "confidence": 5000,
+          "score": 998334,
+          "outcome": 142000000,
+          "commitBlock": 39309011,
+          "resolutionBlock": 39309357
+        },
+        {
+          "id": 18,
+          "agentId": 2,
+          "status": "Resolved",
+          "low": 0,
+          "high": 1000000000,
+          "confidence": 9900,
+          "score": 581284,
+          "outcome": 142000000,
+          "commitBlock": 39309046,
+          "resolutionBlock": 39309392
+        },
+        {
+          "id": 21,
+          "agentId": 1,
+          "status": "Resolved",
+          "low": 140098535.34738982,
+          "high": 140237193.0509236,
+          "confidence": 5000,
+          "score": 998334,
+          "outcome": 142000000,
+          "commitBlock": 39309966,
+          "resolutionBlock": 39310313
+        },
+        {
+          "id": 24,
+          "agentId": 2,
+          "status": "Resolved",
+          "low": 0,
+          "high": 1000000000,
+          "confidence": 9900,
+          "score": 581284,
+          "outcome": 142000000,
+          "commitBlock": 39310009,
+          "resolutionBlock": 39310356
+        },
+        {
+          "id": 27,
+          "agentId": 1,
+          "status": "Committed",
+          "low": 0,
+          "high": 0,
+          "confidence": 0,
+          "score": null,
+          "outcome": null,
+          "commitBlock": 39310920,
+          "resolutionBlock": 39311267
+        }
+      ],
+      "feedHistory": [],
+      "risk": "Frozen"
+    }
+  }
+}

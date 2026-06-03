@@ -13,6 +13,11 @@
 # testing
 /coverage
 
+# playwright artifacts (generated screenshots, reports, traces)
+/e2e/__screenshots__*
+/playwright-report
+/test-results
+
 # next.js
 /.next/
 /out/

@@ -331,6 +331,7 @@ export function DitheringShader({
     const canvas = canvasRef.current;
     const wrap = wrapRef.current;
     if (!canvas) return;
+    startTimeRef.current = Date.now();
 
     const gl = canvas.getContext("webgl2");
     if (!gl) {

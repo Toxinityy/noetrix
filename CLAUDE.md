@@ -8,7 +8,7 @@
 
 - **Project:** Predictor Index — on-chain AI agent forecasting protocol on Mantle Network
 - **Hackathon:** The Turing Test Hackathon 2026 (Mantle × Bybit × Byreal × BGA)
-- **Tracks:** AI x RWA (primary — pivoted from AI Alpha & Data after the org redefined the tracks 2026-05-30), Best UX / Smoothest Web2 Onboarding (second award via `/rwa`), Grand Champion (stretch)
+- **Tracks:** AI Alpha & Data (primary — pivoted from AI Alpha & Data after the org redefined the tracks 2026-05-30), Best UX / Smoothest Web2 Onboarding (second award via `/rwa`), Grand Champion (stretch)
 - **Build window:** 2 weeks
 - **Team size assumption:** 1–3 builders
 - **Working dir:** `D:\Hackathon\mantle-hackathon`
@@ -139,7 +139,66 @@ If a future session is tempted to add any of these, push back to the user first.
 **Heads-up / provenance:** my 4 branches were created while the working tree carried **Vico's own commit `6a7a423`** (`web-cursor-fix-and-frontend-cleanup` — hero cursor fix + lint/consistency cleanup, already pushed to `origin/web-cursor-fix-and-frontend-cleanup`). So the merge to master also folded that 11-file commit in. It's legit pushed work (Hero.tsx, about/page, AgentDetailClient, dithering-shader, AppHeader, mockData, .gitignore, etc.), and merged master builds clean — but master now contains the cursor-fix branch content alongside the 4 tasks. Verified: `next build` green (10 routes), `pnpm --filter frontend test` 11/11.
 
 **Remaining (operational, needs creds):** T2 Vercel deploy on cached tier; T4 re-run reasoner→resolve→IPFS-pin a fresh USDY hero trace (API keys); explorer source-verification of the 17 contracts (Etherscan V2 / Sourcify); the 2-min video; grow resolvedCount ≥10 then re-run `CHAIN_RPC=… pnpm --filter frontend gen:fallback` for the final snapshot. Task JSONLs for `/autoplan`: `~/.gstack/projects/Toxinityy-mantle-hackathon/tasks-{eng,design}-review-*.jsonl`.
+### 2026-06-03 — Proof-first `/insights`: investor/judge surface on a build-time chain snapshot (plan resumed Tasks 5–11)
+**Type:** Build (frontend). Resumed the in-flight plan `docs/superpowers/plans/2026-06-02-proof-first-insights.md` (spec `…/specs/2026-06-02-proof-first-insights-design.md`) via **executing-plans (inline, no subagents** — not requested this session, and last session already pivoted to inline after the spawn outage). Branch `insights-pixel-gradient` (off `master`, local-only, NOT pushed). Tasks 1–4 were already committed (`c5b6928`→`af4ee51`, plus thin-data fit-fix `1b7b93c`); this session landed **Tasks 5–11**.
 
+**Goal:** Extend the shipped `/insights` findings page into a proof surface (why-trust strip → forecast-vs-reality replay → disagreement → anomaly feed → your-move) backed by **real on-chain numbers** captured in a committed build-time chain snapshot (`public/insights-snapshot.json`), with mock fallback so the page always renders.
+
+**What was built (Tasks 5–11):**
+- **§1 `ProofStrip`** (`elevation=2`, top-of-page): three tiles — *top-AIs-vs-crowd* (`topVsCrowdAccuracy`), *forecasts-graded-on-chain* count, *landed-in-range* (`signalTrackRecord`), + explorer link with the snapshot block. (Plan passed an unused `categoryId` prop → removed it + its import + the call-site arg to keep lint 0/0.)
+- **§2 `ReplayCard`**: per-resolved-forecast rail — accent predicted band + white actual-outcome marker, plain-English "AI predicted X–Y; real value landed at Z", `inRange`/`near miss` pill. Sorts by `resolutionBlock` desc, top 4, `isUsableBand` filtered, EmptyState when none resolved.
+- **§3 `DisagreementCallout`** (in findings grid): `biggestDisagreement` — most-bullish vs most-bearish qualified AIs, spread% tone (down>6 / warn>2 / up).
+- **§4 `AnomalyFeed`** (`lg:col-span-2`): `anomalyTimeline(16,2)` list + an inline **Telegram/Discord `AlertPreview`** mock (concretizes the productized anomaly bot for the Alpha & Data track).
+- **§5 `YourMoveStrip`** (`elevation=2`, below grid): AI briefing (`topFinding`), on-chain **risk monitor** (Normal/Caution/Frozen → friendly labels), and **AI yield allocation** bar (mETH vs USDY from snapshot `allocation`).
+- **`InsightsClient` rewire (Task 5):** swapped the three separate hooks (`useLeaderboard`/`useFeedHistory`/`useSmartMoneyBands`) for the single **`useInsightsData(categoryId)`** snapshot-first hook; added §0 caption ("Live on-chain data · snapshot @ block #…"), mounted §1/§2 above the grid + §5 below it, added §3/§4 into the grid, expanded the §6 footer with an **honesty note** (seeded outcome oracle; N-small-and-growing; figures from Mantle Sepolia @ block).
+
+**Verification (Task 11 gate, all green):** `tsc --noEmit` exit 0 · `pnpm lint` 0/0 · `pnpm test` 34 passed (snapshot 3 + insights 24 + labels 4 + narrate 3) · `pnpm build` green, 12 routes incl. `/insights` (static) + `/api/narrate` (ƒ) · Playwright `pnpm test:e2e` **5 passed** incl `/insights` 375px no-horizontal-overflow. Re-ran `pnpm gen:insights` against the Alchemy RPC — identical real data (27 preds / 21 resolved across 3 cats, 2 reps each, risk Frozen, alloc 50/50); only block# + timestamp changed (no regression).
+
+**Decisions:**
+- **Inline executing-plans, not subagent-driven** — per the no-spawn-unless-asked guidance + last session's pivot. Each task gated on green build/lint/test before its per-task commit (`ac08346` T6 … `1532568` T5).
+- **Snapshot is the live tier for `/insights`** (the REST indexer doesn't serve replay/outcome/risk). `useInsightsData` prefers the committed chain snapshot, falls back to curated mock.
+- **Feed history degrades to a single composite-read point** — Alchemy free tier caps `eth_getLogs` at a 10-block range, so `CompositeFeedRefreshed` log scans fail; the script's fallback reads the current composite value as one point. `feedHistory` is therefore length 0–1 in the snapshot (anomaly/consensus-over-time cards show their EmptyState until a wider-range RPC or hosted indexer backfills logs). Snapshot write is atomic-at-end, so a throttle/failure never corrupts the committed JSON.
+
+**Risks / pending (honest caveats):**
+- **Numbers are real-but-thin and demo-seeded.** Outcomes are graded against a deterministic seeded oracle (footer states this); track-record N is small and growing; the snapshot is **static until re-run** (`pnpm gen:insights`). Bots are stopped, so chain state is ~frozen.
+- **`feedHistory` is sparse** (RPC log-range cap) → the time-series cards lean on EmptyStates; a hosted indexer or PAYG RPC is the fix.
+- **Branch `insights-pixel-gradient` is local-only**, ahead of master, NOT pushed. Deployment (Vercel/Railway/Etherscan-verify/demo video) still deferred to a separate conversation. `masterdoc/requirements.md` shows large pre-existing churn unrelated to this work — left untouched/uncommitted.
+- **finishing-a-development-branch** offered at session end (local FF-merge to master vs PR — user decides).
+
+### 2026-06-02 — Alpha & Data repositioning: `/insights` findings page + Web2 narration (plan resumed Tasks 6–14)
+**Type:** Build (frontend + reasoner agent). Resumed the in-flight plan `docs/superpowers/plans/2026-06-01-alpha-data-insights-and-narration.md` (spec `…/specs/2026-06-01-alpha-data-insights-and-narration-design.md`) after a usage-limit cutoff at Task 6 (RESUME doc `docs/superpowers/RESUME-2026-06-02.md`). Branch `alpha-data-insights-narration` (off `master`, local-only, NOT pushed). Tasks 1–5 were already done (HEAD `d25c52c`); this session landed **Tasks 6–14**.
+
+**Strategy:** Primary track repositioned to **Alpha & Data** (Mirana); AI x RWA secondary. Awards chased: Alpha&Data + Best UI/UX + 20-Project-Deployment. Web2-legibility is a hard requirement on every new surface (no bps/CRPS/feed jargon shown to end users).
+
+**What was built (Tasks 6–14):**
+- **`/insights` page** (new route, terminal-core aesthetic): `page.tsx` + `InsightsClient.tsx` (category tabs reusing `FRIENDLY_CATEGORY`, skippable Web2 "what is this" intro, source pill, cached banner, "how this works" judge/Web2 footer) + `AppHeader` nav link (after Leaderboard). Findings grid renders four cards built on the already-shipped pure fns (`lib/insights.ts`) + hooks (`useLeaderboard`/`useFeedHistory`/`useSmartMoneyBands`):
+  - **`SmartMoneyCard`** (centerpiece, `lg:col-span-2`): accuracy-weighted smart-money-vs-crowd divergence, bullet-style marker viz + sr-only text, EmptyState when <enough qualified AIs.
+  - **`ConsensusBandCard`**: Recharts Area+Line consensus over time with a dispersion band + uncertainty badge (Low/Med/High) + a **"View as data table"** `<details>` a11y fallback.
+  - **`NotableMoveCard`**: 24h move (notableMove) with direction icon + plain-English sentence.
+  - **`TopPerformersCard`**: accuracy leaders (reframed from "rising agents" — momentum needs history we lack; documented), links to `/agent/[id]`.
+  - Loading skeleton + empty states wired in the grid.
+- **Landing teaser** (`components/landing/InsightTeaser.tsx` + new `StoryFrame` in `app/page.tsx`, after Leaderboard preview): auto-generated `topFinding` one-liner → `/insights`.
+- **Reasoner self-narration** (`agents/claude-reasoner`): extended the DeepSeek output contract to also emit a Web2 `summary` + `confidence_rationale` in the SAME OpenRouter call. Extracted a pure `parseForecastText` (TDD via vitest added to the reasoner pkg; 2 tests), extended `validate` (optional fields, back-compat), updated `SYSTEM_PROMPT` + `buildUserPrompt` output contract, and added the two fields to all 6 `fewshot/*.json` (plain-English, adapted per regime).
+- **`/api/narrate` route** (`lib/narrate.ts` TDD 3 tests + `app/api/narrate/route.ts`, runtime nodejs): narrates ANY agent's forecast in plain English via OpenRouter→DeepSeek. Injected-fetcher design (testable), in-memory cache by predictionId, deterministic fallback (never 500s), server-only `OPENROUTER_API_KEY` (documented in `.env.example`, NOT `NEXT_PUBLIC`).
+- **Narration on `/agent/[id]`** (`components/app/ForecastSummary.tsx`): "In plain English" card prefers a baked `summary` (reasoner field / extended mock `ReasoningTrace`), else fetches `/api/narrate`. Rendered above the dense trace in `FeaturedReasoning` AND in every prediction row — and **ARIMA rows are now expandable** (they show only the friendly summary, no dense trace). Extended mock `ReasoningTrace` with `summary?`/`confidenceRationale?` populated in `baseReasoning`.
+- **Playwright smoke** (`@playwright/test` + `playwright.config.ts` + `e2e/{tour,responsive}.spec.ts`): tour auto-start + Guide-replay (asserts `[data-tour]` anchors + `role="dialog" aria-label="Guided tour"`), and 375px no-horizontal-overflow on `/leaderboard`, `/insights`, `/agent/1`. **Chromium installed fine (NOT blocked); all 5 e2e tests pass.** Screenshots gitignored (`e2e/__screenshots__*`).
+
+**Verification (Task 14 gate, all green):** `pnpm --filter frontend lint` clean (0/0) · `test` 16 passed (labels+insights+narrate) · `build` green, 11 routes incl. `/insights` (static) + `/api/narrate` (ƒ) · reasoner `vitest` 2 passed + `tsc --noEmit` exit 0 · Playwright 5 passed.
+
+**Decisions:**
+- **Subagent-driven-development was the intended execution model, but subagent spawn was hard-down (three consecutive `API Error: 529 Overloaded`, 0 work each, ~3.5 min wasted per attempt).** Pivoted to **inline implementation with direct build/lint/test verification after each task** (the resume doc's "direct verify" fallback, extended to the UI/agent tasks while spawn was unavailable). Two-stage subagent review was therefore NOT performed; each task was instead gated on green build + lint + tests before commit. The per-task commits are isolated if a future session wants the formal spec/quality review.
+- **Adapted plan code to real component APIs** (confirmed by reading): `CategoryTabs`/`StatusPill`/`Panel`/`PanelHeader`/`PanelBody`/`EmptyState`/`Skeleton`/`fmtScore` all matched the plan as-written — no signature drift.
+- **Task 6 placeholder lint:** the plan's `FindingsContext(_: {...})` tripped `no-unused-vars`; implemented it as a hidden `<span>` consuming the props instead (removed entirely in Task 7).
+- **`ForecastSummary` setState-in-effect:** the plan's `setLoading(true)` synchronously in the effect tripped the React-Compiler `setState-in-effect` lint rule (same class the prior session fixed in AppHeader). Restructured to a `startedRef` guard + setState only in async `.then/.catch/.finally`, deriving the skeleton from a `loaded` flag. Lint clean.
+- **Commit-per-task, continuous execution.** Commits: `8c532d0` (T6), `240ae2e` (T7), `83629c1` (T8), `a2e744d` (T9), `5949def` (T10), `0b9c144` (T11), `503461c` (T12), `a5e02b2` (T13), + this CLAUDE.md (T14).
+
+**Risks / pending (honest caveats):**
+- **Numbers are demo-shaped until a live indexer is hosted.** `/insights` reads mock data unless `NEXT_PUBLIC_INDEXER_URL` resolves. The dev `.env` points it at a dead `localhost:42069`, so the 375px screenshot of `/insights` captured the **loading skeleton** (source pill stuck "LIVE DATA" + isLoading true during the failed-fetch backoff) — NOT a layout bug; the overflow assertion still passed. Production build with no indexer env shows mock immediately.
+- **"Top performers" replaces the spec's "rising agents"** — momentum needs a per-agent accuracy time series we don't have from one leaderboard snapshot. Reframed as accuracy-leaders-now.
+- **`/api/narrate` cache is in-memory per server instance** (resets on redeploy/scale-out). Fine for the demo; a shared cache (KV) is v-next. `OPENROUTER_API_KEY` must be set server-side for live narration; without it the route returns the deterministic fallback (no 500).
+- **Two-stage subagent review skipped** (spawn outage, see Decisions) — verification was build/lint/test only, not a second-agent read.
+- **`masterdoc/requirements.md` showed as modified at session start** (not touched by this work) — left unstaged/uncommitted.
+- **Deferred (separate later conversation, NOT this branch):** Vercel deploy, contract verification (Etherscan V2), Railway indexer hosting, ≥2-min demo video, submission-text reframe to Alpha & Data primary. Branch is local-only; finishing-a-development-branch (local FF-merge to master vs PR) offered at session end — user decides.
 ### 2026-06-01 — Finished RWA web pivot on the site + spotlight onboarding tour (plan resumed, merged to master)
 **Type:** Build (frontend). Resumed the in-flight plan `docs/superpowers/plans/2026-05-31-rwa-web-finish-and-tour.md` (spec `…/specs/2026-05-31-rwa-web-finish-and-tour-design.md`) after a usage-limit cutoff. Branch `rwa-web-tour` → **fast-forward merged to `master`, branch deleted**. Prior session had landed Tasks 1,2,6,7 (USDY mock data, leaderboard tab, RwaStrategyPanel, mount + tour anchors); this session did the rest.
 

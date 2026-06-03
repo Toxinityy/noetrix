@@ -33,6 +33,7 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { AddressChip } from "@/components/ui/AddressChip";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ForecastSummary } from "@/components/app/ForecastSummary";
 import {
   CATEGORIES,
   PREDICTIONS,
@@ -552,7 +553,6 @@ function PredictionsTable({
       <ul className="min-w-[760px]">
         {predictions.map((p) => {
           const isOpen = expanded.has(p.id);
-          const hasReasoning = p.reasoning && agent.kind === "CLAUDE";
           const formatter = fmt(p);
           const statusTone =
             p.status === "Resolved"
@@ -571,18 +571,16 @@ function PredictionsTable({
             >
               <button
                 type="button"
-                disabled={!hasReasoning}
-                onClick={() => hasReasoning && toggle(p.id)}
+                onClick={() => toggle(p.id)}
+                aria-expanded={isOpen}
                 className={cn(
                   "grid w-full grid-cols-[40px_120px_1fr_140px_120px_120px_120px] items-center gap-0 px-4 py-3 text-left text-sm transition-colors",
-                  hasReasoning && "cursor-pointer hover:bg-[var(--color-bg-elev-2)]",
-                  !hasReasoning && "cursor-default",
+                  "cursor-pointer hover:bg-[var(--color-bg-elev-2)]",
                 )}
               >
                 <span
                   className={cn(
-                    "inline-flex h-5 w-5 items-center justify-center rounded-sm border border-[var(--color-border)] transition-transform",
-                    hasReasoning ? "text-[var(--color-accent)]" : "text-[var(--color-border-strong)]",
+                    "inline-flex h-5 w-5 items-center justify-center rounded-sm border border-[var(--color-border)] text-[var(--color-accent)] transition-transform",
                     isOpen && "rotate-180",
                   )}
                   aria-hidden
@@ -638,6 +636,22 @@ function PredictionsTable({
                   {p.stake.toFixed(2)} MNT
                 </span>
               </button>
+
+              {isOpen ? (
+                <div className="bg-[var(--color-bg)] px-5 pt-4">
+                  <ForecastSummary
+                    summary={p.reasoning?.summary}
+                    confidenceRationale={p.reasoning?.confidenceRationale}
+                    predictionId={p.id}
+                    agentKind={agent.kind}
+                    category={p.categoryId}
+                    low={p.value.low}
+                    high={p.value.high}
+                    confidence={p.confidence}
+                    accuracyScore={agent.reputation[p.categoryId].accuracyScore}
+                  />
+                </div>
+              ) : null}
 
               {isOpen && p.reasoning ? (
                 <motion.div
@@ -703,6 +717,19 @@ function FeaturedReasoning({ prediction }: { prediction: Prediction }) {
 
       <div className="grid gap-8 p-6 lg:grid-cols-[1.5fr_1fr]">
         <div>
+          <div className="mb-5">
+            <ForecastSummary
+              summary={r.summary}
+              confidenceRationale={r.confidenceRationale}
+              predictionId={prediction.id}
+              agentKind="CLAUDE"
+              category={prediction.categoryId}
+              low={prediction.value.low}
+              high={prediction.value.high}
+              confidence={prediction.confidence}
+              accuracyScore={0}
+            />
+          </div>
           <ol className="relative space-y-6 border-l-2 border-[var(--color-border-strong)] pl-7">
             {r.steps.map((s, i) => (
               <li key={i} className="relative">

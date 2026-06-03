@@ -7,8 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "gen:fallback": "tsx scripts/gen-fallback.ts",
+    "gen:insights": "tsx scripts/gen-insights-snapshot.ts",
     "test": "vitest run",
-    "gen:fallback": "tsx scripts/gen-fallback.ts"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
@@ -35,6 +38,7 @@
     "wagmi": "^3.6.15"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

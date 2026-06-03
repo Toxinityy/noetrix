@@ -12,6 +12,7 @@ import { cn } from "@/lib/cn";
 const navItems = [
   { href: "/rwa", label: "Earn" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/insights", label: "Insights" },
   { href: "/feed/meth-apr-24h", label: "Feed" },
   { href: "/demo-consumer", label: "Consumer" },
   { href: "/submit", label: "Submit" },
@@ -99,8 +100,7 @@ function ConnectButton() {
   const { connect, connectors, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   // Wallet state is client-only; render a stable placeholder until mounted to avoid hydration drift.
-  // useSyncExternalStore yields the server snapshot (false) during SSR + hydration, then the client
-  // snapshot (true) after mount — no setState-in-effect, no hydration mismatch.
+  // Hydration-safe "client mounted" flag — store never changes, so subscribe is intentionally a no-op.
   const mounted = React.useSyncExternalStore(
     () => () => {},
     () => true,
