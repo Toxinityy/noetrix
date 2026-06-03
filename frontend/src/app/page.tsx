@@ -1,6 +1,7 @@
 import { Nav } from "@/components/landing/Nav";
 import { Hero } from "@/components/landing/Hero";
 import { LivePulse } from "@/components/landing/LivePulse";
+import { StartHere } from "@/components/landing/StartHere";
 import { CategoriesShowcase } from "@/components/landing/CategoriesShowcase";
 import { ReasoningReveal } from "@/components/landing/ReasoningReveal";
 import { LeaderboardPreview } from "@/components/landing/LeaderboardPreview";
@@ -61,6 +62,9 @@ export default function Home() {
       <FlowArt aria-label="Noetrix landing">
         <StoryFrame label="Hero">
           <Hero />
+        </StoryFrame>
+        <StoryFrame label="Start here">
+          <StartHere />
         </StoryFrame>
         <StoryFrame label="Composite feed">
           <LivePulse />
