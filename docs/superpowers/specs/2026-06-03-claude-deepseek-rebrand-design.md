@@ -22,8 +22,24 @@ would find DeepSeek, contradicting the UI.
 without rewriting append-only history and without corrupting references to **Claude Code** (the coding
 harness that authored these docs).
 
-A working-tree diff already partially did this for 6 frontend files (display strings + glyph). This spec
-completes and extends it.
+A working-tree diff partially did this for 8 files (frontend display + glyph + README + `fallback-leaderboard.json`).
+**Update 2026-06-03 (post-merge):** that diff is now a **stale `git stash`** — after pulling origin's 16 commits,
+re-applying it produces **3 content conflicts** (`fallback-leaderboard.json`, `AgentDetailClient.tsx`,
+`LeaderboardClient.tsx`), and origin intentionally shrank `fallback-leaderboard.json` by ~184 lines (re-applying
+the stash would bloat it back). **Decision:** the rebrand edits are trivial string swaps → **drop the stash and
+redo fresh against the merged tree** per the scope below (cheaper + safer than conflict surgery). Do NOT
+`git stash drop` until the fresh rebrand is committed.
+
+**Confirmations against the merged tree (2026-06-03):**
+- Pkg rename is **safe** — zero source imports of `@predictor-index/claude-reasoner` (only its own `package.json`
+  + append-only history docs).
+- Tier 1 item 5 (env vars) is **already done** — `config.ts` + `.env.example` read `OPENROUTER_API_KEY` /
+  `OPENROUTER_MODEL` (default `deepseek/deepseek-chat-v3.1`). No change needed there.
+- Tier 1 item 4 (correctness fix) is **real**: `agents/claude-reasoner/scripts/register.ts:30` still defaults to
+  the broken `deepseek/deepseek-v4-flash` → fix to `deepseek/deepseek-chat-v3.1`.
+- Folder rename + README are **coupled**: the README rename of `agents/claude-reasoner → agents/deepseek-reasoner`
+  (architecture diagram + repo layout) is only honest if the folder is actually `git mv`'d. Full scope chosen, so
+  both happen together.
 
 ---
 
@@ -45,10 +61,11 @@ ambiguous occurrence is read in context before editing.
 
 ### Tier 1 — Code + assets (mechanical, no judgment)
 
-1. **Frontend display (already in working tree, 6 files):** `mockData.ts` agent names/badges/descriptions,
-   `AgentDetailClient.tsx` glyph `CL→DS` + comment, `LeaderboardClient.tsx` `KindGlyph` label `CL→DS`,
-   `InsightsClient.tsx` caption, `indexer.ts` + `snapshot.ts` `inferKind` add `deepseek`/`reasoner` matchers.
-   *Keep these edits; they are correct.*
+1. **Frontend display (redo fresh on merged tree — stash dropped, 6 files):** `mockData.ts` agent
+   names/badges/descriptions, `AgentDetailClient.tsx` glyph `CL→DS` + comment, `LeaderboardClient.tsx`
+   `KindGlyph` label `CL→DS`, `InsightsClient.tsx` caption (`a Claude/DeepSeek reasoner` → `a DeepSeek reasoner`),
+   `indexer.ts` + `snapshot.ts` `inferKind` add `deepseek`/`reasoner` matchers (keep `claude` matcher for
+   on-chain back-compat). *These were the stash content; reproduce them directly — they are the correct target.*
 2. **`frontend/public/fallback-leaderboard.json` (8 refs — MISSED by the working-tree diff):** the cached
    display tier, user-visible. **Regenerate** via `pnpm --filter frontend gen:fallback` *after* the
    `mockData.ts` edit (it is mock-derived when no indexer is set, so names propagate automatically). If the
