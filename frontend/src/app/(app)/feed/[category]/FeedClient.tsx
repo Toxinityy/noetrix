@@ -6,7 +6,6 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -15,7 +14,6 @@ import {
 } from "recharts";
 import { motion, useReducedMotion } from "motion/react";
 import { Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
-import { Stat } from "@/components/ui/Stat";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
 import { NumberFlow } from "@/components/ui/NumberFlow";

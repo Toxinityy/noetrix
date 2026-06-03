@@ -32,12 +32,12 @@ import { Stat } from "@/components/ui/Stat";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { AddressChip } from "@/components/ui/AddressChip";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
-import { DataTable, type Column } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
-  AGENTS,
   CATEGORIES,
   PREDICTIONS,
+  KIND_COLOR,
+  KIND_GLYPH,
   type CategoryId,
   type Prediction,
   type Agent,
@@ -61,37 +61,28 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
   const cat = CATEGORIES[categoryId];
   const rep = agent.reputation[categoryId];
 
-  const predictions = React.useMemo(
-    () =>
-      PREDICTIONS.filter(
-        (p) => p.agentId === agent.id && p.categoryId === categoryId,
-      ).sort((a, b) => b.commitBlock - a.commitBlock),
-    [agent.id, categoryId],
-  );
+  // React Compiler memoizes these derivations automatically; a manual useMemo here tripped
+  // react-hooks/preserve-manual-memoization, so we compute them plainly in render.
+  const predictions = PREDICTIONS.filter(
+    (p) => p.agentId === agent.id && p.categoryId === categoryId,
+  ).sort((a, b) => b.commitBlock - a.commitBlock);
 
   // Most recent prediction that carries a reasoning trace — surfaced as the page's visual peak.
-  const featuredReasoning = React.useMemo(
-    () =>
-      predictions.find((p) => p.reasoning) ??
-      PREDICTIONS.filter((p) => p.agentId === agent.id && p.reasoning).sort(
-        (a, b) => b.commitBlock - a.commitBlock,
-      )[0],
-    [predictions, agent.id],
-  );
+  const featuredReasoning =
+    predictions.find((p) => p.reasoning) ??
+    PREDICTIONS.filter((p) => p.agentId === agent.id && p.reasoning).sort(
+      (a, b) => b.commitBlock - a.commitBlock,
+    )[0];
 
   const equity = agent.equityCurve;
   const equityCurrent = equity[equity.length - 1].value;
   const equityStart = equity[0].value;
   const equityDelta = ((equityCurrent - equityStart) / equityStart) * 100;
 
-  const radarData = React.useMemo(
-    () =>
-      RADAR_AXES.map((axis) => ({
-        axis: axis.label,
-        value: radarValue(agent, categoryId, axis.id),
-      })),
-    [agent, categoryId],
-  );
+  const radarData = RADAR_AXES.map((axis) => ({
+    axis: axis.label,
+    value: radarValue(agent, categoryId, axis.id),
+  }));
 
   const calibrationData = rep.bucketAccuracy.map((acc, i) => ({
     bucket: `${i * 10}-${i * 10 + 10}%`,
@@ -936,28 +927,5 @@ function isInRange(p: Prediction): boolean {
   return p.outcome >= p.value.low && p.outcome <= p.value.high;
 }
 
-function kindShort(k: Agent["kind"]) {
-  switch (k) {
-    case "CLAUDE":
-      return "CL";
-    case "ARIMA":
-      return "AR";
-    case "QUANT":
-      return "QU";
-    case "ENSEMBLE":
-      return "EN";
-  }
-}
-
-function kindColor(k: Agent["kind"]) {
-  switch (k) {
-    case "CLAUDE":
-      return "var(--color-accent)";
-    case "ARIMA":
-      return "#9DC8FF";
-    case "QUANT":
-      return "#F8D97A";
-    case "ENSEMBLE":
-      return "#C7B6FF";
-  }
-}
+const kindShort = (k: Agent["kind"]) => KIND_GLYPH[k];
+const kindColor = (k: Agent["kind"]) => KIND_COLOR[k];

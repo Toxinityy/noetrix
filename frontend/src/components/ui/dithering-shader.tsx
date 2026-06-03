@@ -302,6 +302,9 @@ function createProgram(
   return program;
 }
 
+// Warn at most once: WebGL2 absence is a graceful-degradation path, not a recurring error.
+let warnedNoWebGL2 = false;
+
 export function DitheringShader({
   width = 800,
   height = 800,
@@ -321,7 +324,7 @@ export function DitheringShader({
   const programRef = useRef<WebGLProgram | null>(null);
   const glRef = useRef<WebGL2RenderingContext | null>(null);
   const uniformLocationsRef = useRef<Record<string, WebGLUniformLocation | null>>({});
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(0);
   const sizeRef = useRef<{ w: number; h: number }>({ w: width, h: height });
 
   useEffect(() => {
@@ -331,7 +334,13 @@ export function DitheringShader({
 
     const gl = canvas.getContext("webgl2");
     if (!gl) {
-      console.error("DitheringShader: WebGL2 not supported");
+      // WebGL2 unavailable (headless, GPU blocklist, or context exhaustion across many HMR reloads).
+      // The hero degrades gracefully to its grid + glow ring + cursor halo, so warn once instead of
+      // spamming console.error — which Next's dev overlay surfaces as a red runtime error.
+      if (!warnedNoWebGL2) {
+        warnedNoWebGL2 = true;
+        console.warn("DitheringShader: WebGL2 unavailable — skipping the ambient shader layer.");
+      }
       return;
     }
     glRef.current = gl;
@@ -379,6 +388,9 @@ export function DitheringShader({
       applySize(width, height);
     }
 
+    // Anchor the animation clock here in the effect — Date.now() is impure during render.
+    startTimeRef.current = Date.now();
+
     const draw = () => {
       const currentTime = (Date.now() - startTimeRef.current) * 0.001 * speed;
       const context = glRef.current;
@@ -418,8 +430,9 @@ export function DitheringShader({
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       if (ro) ro.disconnect();
-      if (glRef.current && programRef.current) {
-        glRef.current.deleteProgram(programRef.current);
+      if (glRef.current) {
+        if (programRef.current) glRef.current.deleteProgram(programRef.current);
+        if (positionBuffer) glRef.current.deleteBuffer(positionBuffer);
       }
     };
   }, [width, height, fill, colorBack, colorFront, shape, type, pxSize, speed]);
