@@ -2,18 +2,20 @@
 
 import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { LEADERBOARD_STEPS, type TourStep } from "./steps";
+import { TOURS, TOUR_PAGES, type TourId, type TourStep } from "./steps";
 import { Spotlight } from "./Spotlight";
 
 const SEEN_KEY = "noetrix.tour.v1";
-const REQUEST_KEY = "noetrix.tour.request";
+const REQUEST_KEY = "noetrix.tour.request"; // sessionStorage: holds the pending TourId
+export const ONBOARDED_KEY = "noetrix.onboarded.v1"; // set by OnboardingModal
 
 interface TourCtx {
   steps: TourStep[];
+  tourId: TourId;
   isOpen: boolean;
   index: number;
   start: () => void;
-  requestStart: () => void;
+  requestStart: (tourId?: TourId) => void;
   next: () => void;
   prev: () => void;
   skip: () => void;
@@ -31,11 +33,10 @@ export function useTour(): TourCtx {
 export function TourProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const steps = LEADERBOARD_STEPS;
+  const [tourId, setTourId] = React.useState<TourId>("leaderboard");
   const [isOpen, setIsOpen] = React.useState(false);
   const [index, setIndex] = React.useState(0);
-
-  const onLeaderboard = pathname === "/leaderboard";
+  const steps = TOURS[tourId];
 
   const start = React.useCallback(() => {
     setIndex(0);
@@ -57,39 +58,76 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
   const skip = React.useCallback(() => close(), [close]);
   const finish = React.useCallback(() => close(), [close]);
 
-  // Replay from any terminal page: if not on the leaderboard, navigate there and start on arrival.
-  const requestStart = React.useCallback(() => {
-    if (onLeaderboard) {
-      start();
-      return;
-    }
-    try {
-      sessionStorage.setItem(REQUEST_KEY, "1");
-    } catch {}
-    router.push("/leaderboard");
-  }, [onLeaderboard, router, start]);
+  // Start a specific tour. If we're not on its page, stash the id and navigate;
+  // the effect below picks it up on arrival.
+  const requestStart = React.useCallback(
+    (id: TourId = "leaderboard") => {
+      const page = TOUR_PAGES[id];
+      if (pathname === page) {
+        setTourId(id);
+        start();
+        return;
+      }
+      try {
+        sessionStorage.setItem(REQUEST_KEY, id);
+      } catch {}
+      router.push(page);
+    },
+    [pathname, router, start],
+  );
 
-  // Auto-start on first leaderboard visit, or when a cross-page replay is pending.
+  // On every navigation: run a pending requested tour if its page matches; else
+  // auto-start the leaderboard tour on first visit — UNLESS the onboarding modal
+  // owns first-run (ONBOARDED_KEY set) or the user has already seen a tour.
   React.useEffect(() => {
-    if (!onLeaderboard) return;
-    let pending = false;
-    let seen = false;
+    let pendingId: string | null = null;
     try {
-      pending = sessionStorage.getItem(REQUEST_KEY) === "1";
-      seen = localStorage.getItem(SEEN_KEY) === "1";
+      pendingId = sessionStorage.getItem(REQUEST_KEY);
     } catch {}
-    if (pending) {
+
+    if (pendingId && TOUR_PAGES[pendingId as TourId] === pathname) {
       try {
         sessionStorage.removeItem(REQUEST_KEY);
       } catch {}
-    }
-    if (pending || !seen) {
-      const t = setTimeout(start, 600); // let the page settle before measuring targets
+      const id = pendingId as TourId;
+      // Defer setState out of the effect body (React-Compiler: no synchronous
+      // setState in effects); also lets the page settle before measuring targets.
+      const t = setTimeout(() => {
+        setTourId(id);
+        start();
+      }, 600);
       return () => clearTimeout(t);
     }
-  }, [onLeaderboard, start]);
 
-  const value: TourCtx = { steps, isOpen, index, start, requestStart, next, prev, skip, finish };
+    if (pathname === "/leaderboard") {
+      let seen = false;
+      let onboarded = false;
+      try {
+        seen = localStorage.getItem(SEEN_KEY) === "1";
+        onboarded = localStorage.getItem(ONBOARDED_KEY) === "1";
+      } catch {}
+      if (!seen && !onboarded) {
+        const t = setTimeout(() => {
+          setTourId("leaderboard");
+          start();
+        }, 600);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [pathname, start]);
+
+  const value: TourCtx = {
+    steps,
+    tourId,
+    isOpen,
+    index,
+    start,
+    requestStart,
+    next,
+    prev,
+    skip,
+    finish,
+  };
 
   return (
     <Ctx.Provider value={value}>
