@@ -68,17 +68,18 @@ export function Hero() {
     return () => ro.disconnect();
   }, [widthMV, heightMV]);
 
-  // Track the cursor at the WINDOW level (not via React onMouseMove on the section). The hero sits
-  // inside a GSAP-pinned, z-stacked FlowArt wrapper where a higher-z sibling section can sit over
-  // the hero and swallow its pointer events — which froze the follower. A window listener always
-  // fires; we map clientX/Y into section-local coords via getBoundingClientRect (which reflects the
-  // pin transform) and gate "hovering" on whether the pointer is inside the hero's box.
+  // Track the cursor at the WINDOW level (not a React onMouseMove on the section, which the GSAP
+  // z-stacked wrapper could cover). Attached ONCE — hovering lives in a ref so the listener never
+  // detaches/re-attaches mid-interaction — and listens to BOTH pointermove and mousemove, since some
+  // browser setups/extensions don't deliver pointermove to window (mousemove is the universal
+  // fallback). clientX/Y are mapped to hero-local coords via getBoundingClientRect.
+  const hoveringRef = useRef(false);
   useEffect(() => {
     if (!hoverable) return;
     const el = sectionRef.current;
     if (!el) return;
 
-    const onMove = (e: PointerEvent) => {
+    const onMove = (e: PointerEvent | MouseEvent) => {
       const rect = el.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -87,7 +88,8 @@ export function Hero() {
       if (inside) {
         if (Math.abs(rect.width - widthMV.get()) > 1) widthMV.set(rect.width || 1);
         if (Math.abs(rect.height - heightMV.get()) > 1) heightMV.set(rect.height || 1);
-        if (!hovering) {
+        if (!hoveringRef.current) {
+          hoveringRef.current = true;
           // Seed the springs at the entry point so the followers don't fly in from the sentinel.
           sCursorX.jump(x);
           sCursorY.jump(y);
@@ -95,7 +97,8 @@ export function Hero() {
         }
         cursorPxX.set(x);
         cursorPxY.set(y);
-      } else if (hovering) {
+      } else if (hoveringRef.current) {
+        hoveringRef.current = false;
         setHovering(false);
         // Reset to the sentinel so the title parallax re-centers (guarded transforms return 0).
         cursorPxX.set(-9999);
@@ -106,8 +109,12 @@ export function Hero() {
     };
 
     window.addEventListener("pointermove", onMove, { passive: true });
-    return () => window.removeEventListener("pointermove", onMove);
-  }, [hoverable, hovering, cursorPxX, cursorPxY, sCursorX, sCursorY, widthMV, heightMV]);
+    window.addEventListener("mousemove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("mousemove", onMove);
+    };
+  }, [hoverable, cursorPxX, cursorPxY, sCursorX, sCursorY, widthMV, heightMV]);
 
   return (
     <section
@@ -143,7 +150,7 @@ export function Hero() {
       {hoverable ? (
         <motion.div
           aria-hidden="true"
-          className="pointer-events-none absolute z-[5] h-[440px] w-[440px] rounded-full mix-blend-screen"
+          className="pointer-events-none absolute left-0 top-0 z-[5] h-[440px] w-[440px] rounded-full mix-blend-screen"
           style={{
             x: sCursorX,
             y: sCursorY,
@@ -162,7 +169,7 @@ export function Hero() {
         <>
           <motion.div
             aria-hidden="true"
-            className="pointer-events-none absolute z-30 h-12 w-12 rounded-full border border-[var(--color-accent)] mix-blend-screen"
+            className="pointer-events-none absolute left-0 top-0 z-30 h-12 w-12 rounded-full border border-[var(--color-accent)] mix-blend-screen"
             style={{
               x: sCursorX,
               y: sCursorY,
@@ -175,7 +182,7 @@ export function Hero() {
           />
           <motion.div
             aria-hidden="true"
-            className="pointer-events-none absolute z-30 h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]"
+            className="pointer-events-none absolute left-0 top-0 z-30 h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]"
             style={{
               x: cursorPxX,
               y: cursorPxY,
