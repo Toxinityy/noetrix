@@ -4,20 +4,24 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { HelpCircle } from "lucide-react";
+import { HelpCircle, ChevronDown, Menu } from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { useTour } from "@/components/tour/TourProvider";
 import { cn } from "@/lib/cn";
 
-const navItems = [
+const primaryNav = [
   { href: "/rwa", label: "Earn" },
-  { href: "/leaderboard", label: "Leaderboard" },
   { href: "/insights", label: "Insights" },
+  { href: "/leaderboard", label: "Leaderboard" },
+];
+const moreNav = [
   { href: "/feed/meth-apr-24h", label: "Feed" },
   { href: "/demo-consumer", label: "Consumer" },
   { href: "/submit", label: "Submit" },
   { href: "/about", label: "About" },
 ];
+const allNav = [...primaryNav, ...moreNav];
 
 export function AppHeader() {
   const pathname = usePathname();
@@ -41,7 +45,7 @@ export function AppHeader() {
             </span>
           </Link>
           <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
-            {navItems.map((item) => {
+            {primaryNav.map((item) => {
               const active =
                 pathname === item.href ||
                 (item.href !== "/" && pathname.startsWith(item.href.split("/").slice(0, 2).join("/")));
@@ -60,10 +64,69 @@ export function AppHeader() {
                 </Link>
               );
             })}
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 rounded px-3 py-1.5 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] transition-colors hover:text-[var(--color-text)] focus-visible:text-[var(--color-text)] data-[state=open]:text-[var(--color-accent)]"
+                >
+                  More <ChevronDown size={13} aria-hidden />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  align="end"
+                  sideOffset={8}
+                  className="z-50 min-w-[160px] rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-1 shadow-xl"
+                >
+                  {moreNav.map((item) => (
+                    <DropdownMenu.Item key={item.href} asChild>
+                      <Link
+                        href={item.href}
+                        className="block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] outline-none transition-colors hover:text-[var(--color-text)] focus:text-[var(--color-accent)] data-[highlighted]:text-[var(--color-accent)]"
+                      >
+                        {item.label}
+                      </Link>
+                    </DropdownMenu.Item>
+                  ))}
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
           </nav>
         </div>
 
         <div className="flex items-center gap-3">
+          <div className="md:hidden">
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button
+                  type="button"
+                  aria-label="Menu"
+                  className="inline-flex items-center rounded border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-2 text-[var(--color-text-dim)] transition-colors hover:text-[var(--color-text)]"
+                >
+                  <Menu size={16} aria-hidden />
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content
+                  align="end"
+                  sideOffset={8}
+                  className="z-50 min-w-[180px] rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-1 shadow-xl"
+                >
+                  {allNav.map((item) => (
+                    <DropdownMenu.Item key={item.href} asChild>
+                      <Link
+                        href={item.href}
+                        className="block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
+                      >
+                        {item.label}
+                      </Link>
+                    </DropdownMenu.Item>
+                  ))}
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
+          </div>
           <div className="hidden items-center gap-2 sm:flex">
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
               network
