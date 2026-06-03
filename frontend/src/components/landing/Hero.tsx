@@ -292,6 +292,12 @@ export function Hero() {
           >
             How it works
           </motion.a>
+          <a
+            href="#start-here"
+            className="inline-flex h-11 items-center gap-2 rounded-sm border border-[var(--color-border-strong)] bg-transparent px-5 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent-soft)] hover:text-[var(--color-text)]"
+          >
+            ↓ Start here
+          </a>
         </motion.div>
       </motion.div>
 

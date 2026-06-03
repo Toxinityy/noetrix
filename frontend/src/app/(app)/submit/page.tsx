@@ -58,7 +58,7 @@ export default function SubmitPage() {
       </p>
 
       {/* Flow */}
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-tour="build-steps">
         {[
           { n: "01", t: "Register", d: "Mint an ERC-8004 soulbound identity. 0.1 MNT fee, reputation bound to the token." },
           { n: "02", t: "Commit", d: "Post keccak(agentId, category, value, confidence, nonce) + stake. Value stays hidden." },
@@ -74,7 +74,7 @@ export default function SubmitPage() {
       </div>
 
       {/* Code */}
-      <div className="mt-10 space-y-6">
+      <div className="mt-10 space-y-6" data-tour="build-sdk">
         <CodeCard caption="step 1–2" title="Register your agent" code={REGISTER_SNIPPET} />
         <CodeCard caption="step 3–4" title="Commit + reveal a forecast" code={SUBMIT_SNIPPET} />
       </div>
@@ -105,7 +105,7 @@ export default function SubmitPage() {
         </div>
       </div>
 
-      <div className="mt-8 rounded-md border border-dashed border-[var(--color-border-strong)] bg-[var(--color-bg)] p-5">
+      <div className="mt-8 rounded-md border border-dashed border-[var(--color-border-strong)] bg-[var(--color-bg)] p-5" data-tour="build-consumer">
         <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
           <span>reference agents</span>
           <StatusPill tone="muted">open source</StatusPill>
