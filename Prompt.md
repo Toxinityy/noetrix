@@ -46,7 +46,7 @@ Set up the monorepo structure exactly as specified in §16 of README.md.
 Requirements:
 - pnpm workspaces at root
 - Four packages: contracts/, frontend/, indexer/, agents/sdk/
-- Two sub-packages under agents/: arima-baseline/, claude-reasoner/
+- Two sub-packages under agents/: arima-baseline/, deepseek-reasoner/
 - (NOTE: specialized-quant is CUT per §14 — do not create)
 - contracts/: Foundry only. NO HARDHAT. foundry.toml configured for Solidity 0.8.24, Mantle Sepolia default. OpenZeppelin remapping.
 - frontend/: Next.js 14 App Router, TypeScript, Tailwind CSS, Radix UI (headless primitives, no shadcn CLI), Motion (animation), wagmi v2, viem, TanStack Query, Recharts, next/font (Inter + JetBrains Mono). Stack per README §9.1 v2.2.
@@ -631,20 +631,20 @@ Deploy as GitHub Actions cron OR Railway-hosted service. Run register.ts once lo
 
 ---
 
-## Prompt 10 — Claude reasoner agent (THE DEMO HIGHLIGHT)
+## Prompt 10 — DeepSeek reasoner agent (THE DEMO HIGHLIGHT)
 
 ```
-Build the Claude reasoner per §8.3 of README.md. This is the project's demo highlight. Invest in quality.
+Build the DeepSeek reasoner per §8.3 of docs/PRD.md. This is the project's demo highlight. Invest in quality.
 
-Part A — agents/claude-reasoner/:
+Part A — agents/deepseek-reasoner/:
 - TypeScript Node app
-- Uses @anthropic-ai/sdk
+- Calls OpenRouter (OpenAI-compatible Chat Completions) via fetch — no LLM SDK dependency
 - On schedule, for each category:
   1. Build context:
      - Fetch last 7 days of category outcomes from indexer
      - Fetch last 24h of crypto news from cryptopanic.com free API (filter to relevant tokens)
      - Format as a structured Markdown context block
-  2. Build prompt (use claude-opus-4-7 or claude-sonnet-4-5):
+  2. Build prompt (use deepseek/deepseek-chat-v3.1 via OpenRouter):
      - System: "You are a forecasting agent for Mantle ecosystem metrics. Your reputation depends on calibrated forecasts. Overconfidence will harm your calibration score; underconfidence will harm your accuracy ranking. Produce honest, well-reasoned predictions."
      - User: includes the context + category spec + resolution rules + few-shot examples (2-3 well-reasoned past predictions)
      - Request structured JSON: { predicted_value: { lower: number, upper: number }, confidence: number 0-10000, reasoning: string }
@@ -655,16 +655,16 @@ Part A — agents/claude-reasoner/:
   7. Log everything locally + structured logs to a file for debugging
 
 Part B — Prompt design quality:
-- Few-shot examples live in agents/claude-reasoner/fewshot/*.json — HAND-WRITE these on Day 9 BEFORE deploying. Cold-start outputs without good examples are bland. 2-3 examples each show: observed data → hypothesis → forecast range → confidence with justification. These get concatenated into the user prompt.
-- System prompt explicitly tells Claude that the calibration score will be visible publicly — incentivizes honest confidence
-- Include a clear note about resolution rules so Claude knows exactly what's being predicted
+- Few-shot examples live in agents/deepseek-reasoner/fewshot/*.json — HAND-WRITE these on Day 9 BEFORE deploying. Cold-start outputs without good examples are bland. 2-3 examples each show: observed data → hypothesis → forecast range → confidence with justification. These get concatenated into the user prompt.
+- System prompt explicitly tells the model that the calibration score will be visible publicly — incentivizes honest confidence
+- Include a clear note about resolution rules so the model knows exactly what's being predicted
 
 Part C — Same SEED_MODE behavior as ARIMA agent for first 24h (see Prompt 9 Part C — indexer poll on resolvedCount).
 
 Part D — Registration script with rich metadata:
-- name: "Claude Reasoner"
+- name: "DeepSeek Reasoner"
 - description includes a paragraph about the agent's methodology
-- model: "claude-opus-4-7"
+- model: "deepseek/deepseek-chat-v3.1"
 - homepage: link to the agent's source
 
 Deploy. Run register, then start the schedule.
@@ -703,7 +703,7 @@ Part B — /agent/[id]:
 - Reputation radar chart (Recharts): accuracy + calibration per category
 - Prediction history table (paginated 20/page):
   - Columns: id, category, status, value (if revealed), confidence, score (if resolved), resolutionBlock, link to explorer
-  - For Claude reasoner: rows are expandable — clicking opens reasoning trace from IPFS in a panel
+  - For the DeepSeek reasoner: rows are expandable — clicking opens reasoning trace from IPFS in a panel
 - Equity curve (line chart): cumulative score over time, optionally per category
 - "Stake on this agent" button, disabled with tooltip "Coming in v2"
 
@@ -731,7 +731,7 @@ Terminal core (leaderboard table, agent detail tables, demo consumer panel):
 - Motion: subtle — value flips, sparkline draws, row enter on data update only. No bouncy.
 
 Cinematic landing (hero section above leaderboard on /):
-- Awwwards-tier: oversized kinetic type for "Predictor Index", scroll-driven composite-feed pulse, Claude reasoning-trace reveal as demo hook
+- Awwwards-tier: oversized kinetic type for "Predictor Index", scroll-driven composite-feed pulse, DeepSeek reasoning-trace reveal as demo hook
 - Motion-driven: hero entrance, stagger reveals, shared-element transition to leaderboard below
 - Same teal accent only; respects prefers-reduced-motion (cinematic → static fallback)
 
@@ -786,7 +786,7 @@ Run the full pipeline in 1 hour:
 
 Verify the entire flow visually on the deployed frontend. Take screenshots of:
 - Leaderboard with at least 2 agents and at least 5 resolved predictions
-- Agent detail page with a Claude reasoning trace visible
+- Agent detail page with a DeepSeek reasoning trace visible
 - Demo consumer reading the feed and showing a true/false decision
 
 If anything's broken in the pipeline, fix it now — Day 13 polish is too late.
@@ -809,9 +809,9 @@ Part A — Frontend polish pass:
 - Loading states: skeletons not spinners
 - Empty states for every data-fetching component
 - Error states (e.g., indexer down → "Showing cached data" banner + serve from static JSON fallback)
-- Cinematic landing animation on / hero (Motion — hero kinetic-type entrance, scroll-driven composite-feed pulse, Claude reasoning-trace reveal). Terminal-core surfaces below remain subtle (value flips, sparkline draws only). Respect prefers-reduced-motion.
+- Cinematic landing animation on / hero (Motion — hero kinetic-type entrance, scroll-driven composite-feed pulse, DeepSeek reasoning-trace reveal). Terminal-core surfaces below remain subtle (value flips, sparkline draws only). Respect prefers-reduced-motion.
 - Typography consistency, spacing audit
-- Make Claude reasoning display the visual peak of the agent detail page (large readable text, code-block-style for the JSON, clear "reasoning →" header)
+- Make the DeepSeek reasoning display the visual peak of the agent detail page (large readable text, code-block-style for the JSON, clear "reasoning →" header)
 
 Part B — Generate static fallback for indexer:
 - Pre-fetch the leaderboard JSON, save to public/fallback-leaderboard.json

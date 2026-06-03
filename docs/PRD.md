@@ -33,7 +33,7 @@
 - SEED_MODE auto-flip source spec'd: indexer poll on `resolvedCount` (§8.2, §8.3)
 - Calibration term documented as CRPS-derived proxy (§3 glossary)
 - Block-time consistency: 100 blocks ≈ 3.3 min on Mantle 2s blocks (§13)
-- Few-shot examples for Claude reasoner spec'd as Day-9 deliverable (§8.3)
+- Few-shot examples for DeepSeek reasoner spec'd as Day-9 deliverable (§8.3)
 
 ---
 
@@ -197,7 +197,7 @@ FRONTEND (Next.js)
               │
        AGENT FLEET (off-chain)
          ARIMA baseline
-         Claude reasoner (highlight)
+         DeepSeek reasoner (highlight)
 ```
 
 ---
@@ -537,9 +537,9 @@ Located at `agents/sdk/`. Exports:
 
 ```json
 {
-  "name": "Claude Reasoner",
+  "name": "DeepSeek Reasoner",
   "description": "LLM-driven agent that reasons about Mantle on-chain state and crypto news to produce forecasts with explicit reasoning traces.",
-  "model": "claude-opus-4-7",
+  "model": "deepseek/deepseek-chat-v3.1",
   "operator": "Predictor Index reference team",
   "categories": ["0x...", "0x..."],
   "homepage": "https://github.com/...",
@@ -559,24 +559,24 @@ Uploaded to IPFS via Pinata or web3.storage. Hash committed at registration.
 - **First 24h SEED_MODE: short resolution windows (~100 blocks ≈ 3.3 min on 2s blocks)** to seed the leaderboard with resolved predictions before demo. Cadence in seed mode: every 30 minutes per category.
 - **Auto-flip out of SEED_MODE:** on each schedule tick, agent polls indexer endpoint `GET /agent/:id/predictions?status=Resolved` and counts. If `count ≥ 50` OR `seedStartTimestamp + 48h < now`, flip to normal mode: `resolutionBlock = currentBlock + 43200`, cadence every 6h. Flip persisted to local `agent.state.json`.
 
-### 8.3 Reference agent 2 — Claude reasoner (DEMO HIGHLIGHT)
+### 8.3 Reference agent 2 — DeepSeek reasoner (DEMO HIGHLIGHT)
 
 - TypeScript Node app.
 - Schedule: every 6 hours, per category.
 - Logic:
   1. Build prompt: last 7 days of category data + last 24h crypto news (cryptopanic RSS).
-  2. Send to Claude (claude-opus-4-7 or claude-sonnet-4-5).
+  2. Send to the model via OpenRouter (deepseek/deepseek-chat-v3.1).
   3. Parse JSON: `predicted_value`, `confidence`, `reasoning`.
   4. Upload prompt + response to IPFS; commit hash as `contentHash`.
   5. Submit via SDK.
 - Confidence: AI-stated.
 - Same SEED_MODE behavior as ARIMA (§8.2): 30-min cadence, ~100-block windows, auto-flip on indexer count or 48h elapsed.
 
-**Few-shot examples — Day 9 deliverable.** Before the agent goes live, hand-write 2–3 example forecasts in `agents/claude-reasoner/fewshot/*.json`. Each shows: observed data block → hypothesis → forecast range → confidence with justification. These are concatenated into the user prompt. Without them, early predictions are bland and the reasoning trace doesn't sell the demo.
+**Few-shot examples — Day 9 deliverable.** Before the agent goes live, hand-write 2–3 example forecasts in `agents/deepseek-reasoner/fewshot/*.json`. Each shows: observed data block → hypothesis → forecast range → confidence with justification. These are concatenated into the user prompt. Without them, early predictions are bland and the reasoning trace doesn't sell the demo.
 
 ### 8.4 Specialized quant agent — **CUT for hackathon**
 
-Defer post-hackathon. ARIMA + Claude is sufficient.
+Defer post-hackathon. ARIMA + DeepSeek is sufficient.
 
 ---
 
@@ -609,7 +609,7 @@ Stack decision (v2.2): dropped shadcn/ui in favor of Radix-only + custom Tailwin
 - Reputation radar by category.
 - Prediction history (paginated).
 - Equity curve.
-- **For Claude reasoner: expandable rows with full reasoning from IPFS.** This is the visual highlight — invest here.
+- **For the DeepSeek reasoner: expandable rows with full reasoning from IPFS.** This is the visual highlight — invest here.
 - "Stake on this agent" disabled with v2 tooltip.
 
 **`/demo-consumer` — Live feed consumption**
@@ -630,7 +630,7 @@ Two-mode aesthetic. Don't mix on same surface.
 - Motion: subtle only — value flips, sparkline draws, row enter on data update. No bouncy/spring on data.
 
 **Cinematic landing** — hero section of `/` (top of leaderboard) + `/about` (if shipped):
-- Awwwards-tier: oversized kinetic type for project name, scroll-driven composite-feed pulse, Claude reasoning-trace reveal animation as the demo hook.
+- Awwwards-tier: oversized kinetic type for project name, scroll-driven composite-feed pulse, DeepSeek reasoning-trace reveal animation as the demo hook.
 - Motion-driven: hero entrance, stagger reveals, shared-element transitions to leaderboard table below.
 - Constrained palette: same teal accent + black/near-black, no rainbow.
 - Respects `prefers-reduced-motion`: cinematic falls back to static composition.
@@ -672,7 +672,7 @@ Host: Railway or Fly.io free tier.
 
 - Leaderboard with live equity curves.
 - Trigger manual resolution → reputation updates visibly.
-- Open Claude's latest reasoning trace.
+- Open the DeepSeek reasoner's latest reasoning trace.
 - Show demo consumer reading the feed.
 - Close: open registration, open subscription, Mantle is the canonical home.
 
@@ -692,7 +692,7 @@ Host: Railway or Fly.io free tier.
 
 ### Week 2
 
-**Days 8–9:** Agent SDK with auto-commit-reveal. ARIMA running. Claude reasoner running. Short-window seeding in first 24h.
+**Days 8–9:** Agent SDK with auto-commit-reveal. ARIMA running. DeepSeek reasoner running. Short-window seeding in first 24h.
 
 **Days 10–11:** Frontend 3 must-have pages. Heavy investment in agent detail reasoning display.
 
@@ -716,7 +716,7 @@ Host: Railway or Fly.io free tier.
 | Sybil attacks | Medium | 0.1 MNT registration fee + 0.1 MNT min stake |
 | Indexer downtime during demo | High | Pre-cache leaderboard JSON as static fallback |
 | Aave-Mantle unavailable | Medium | Swap to INIT_CAPITAL_TVL_24H, same interface |
-| Claude API rate limit during demo | Medium | Cache last reasoning trace as static asset |
+| DeepSeek/OpenRouter API rate limit during demo | Medium | Cache last reasoning trace as static asset |
 | Front-running near resolution | High | **Commit-reveal + 200-block submission cutoff** |
 | Reveal-failure griefing | Low | Forfeit-after-window, anyone can trigger |
 
@@ -788,7 +788,7 @@ predictor-index/
 ├── agents/
 │   ├── sdk/
 │   ├── arima-baseline/
-│   ├── claude-reasoner/
+│   ├── deepseek-reasoner/
 │   │   └── fewshot/                       # hand-written examples (Day 9 deliverable)
 │   └── refresher/                         # cron worker that calls CompositeFeed.refresh()
 ├── docs/

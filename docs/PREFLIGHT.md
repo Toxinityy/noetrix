@@ -12,7 +12,7 @@ Snapshot: **2026-05-29**. Legend: ✅ done · 🟡 code complete, blocked on liv
 | # | Criterion | Status | Notes |
 |---|-----------|--------|-------|
 | 1 | Contracts deployed + verified on Mantle | ⛔ | `Deploy.s.sol` ready; dry-run simulated. Needs creds. |
-| 2 | 2 reference agents running live | 🟡 | ARIMA + Claude reasoner built + typecheck clean; need deploy + funded controller keys + `OPENROUTER_API_KEY`. |
+| 2 | 2 reference agents running live | 🟡 | ARIMA + DeepSeek reasoner built + typecheck clean; need deploy + funded controller keys + `OPENROUTER_API_KEY`. |
 | 3 | 2 categories with working resolution | 🟡 | METH_APR + AAVE_MANTLE_TVL resolvers + scorer complete + unit-tested; live resolution needs deploy + seeded oracles. |
 | 4 | Live leaderboard (accuracy + calibration) | 🟡 | Frontend built + wired (live→cached→mock); calibrating badge/skeleton/empty done. Needs live indexer. |
 | 5 | Composite feed callable by external contracts | 🟡 | `CompositeFeed` + `ICompositeFeed` complete + tested. Needs deploy. |
