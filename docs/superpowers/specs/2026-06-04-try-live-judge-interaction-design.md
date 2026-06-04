@@ -23,7 +23,7 @@ This makes the "judges can interact with the platform" claim concrete while keep
 2. **Home:** a new route `frontend/src/app/(app)/try/page.tsx` + `TryClient.tsx`, linked from primary nav and the onboarding tour.
 3. **Action granularity:** judge picks **one** category (mETH / USDY / AAVE) and fires **one** `refresh` tx. No "refresh all" (3 signatures is clunky; partial rate-limiting is confusing).
 4. **Faucet:** `https://faucet.sepolia.mantle.xyz`, held as a configurable const in `lib/env.ts`.
-5. **No-MNT fallback:** include a clearly-labeled **"Preview (no wallet)"** that computes the expected post-refresh state client-side without sending a tx. Distinct from, and never mislabeled as, a real on-chain refresh.
+5. **No-MNT fallback:** include a clearly-labeled **"Preview (no wallet)"** that shows the *current* live feed read plus a plain-English explanation of what a real refresh does (re-aggregate the top-20 agents' latest forecasts and bump `lastUpdatedBlock`). It does **not** fabricate a post-refresh value — the client cannot replicate on-chain top-20 aggregation, and inventing a number would be dishonest. Never mislabeled as a real on-chain refresh.
 
 ## UX — linear state machine
 
@@ -37,7 +37,7 @@ The panel always shows exactly one primary next action, derived from wallet/netw
 | 4. Ready | right network, balance > 0 | category tabs + **Refresh the live AI feed** → one `writeContract` signature. |
 | 5. Success | receipt mined | before→after `lastUpdatedBlock` + `contributingAgents` diff, **View your transaction** (Mantlescan link), **Refresh again** reset. |
 
-"Preview (no wallet)" (available from state 1, or for judges with no injected wallet): reads the current feed, then shows the expected post-refresh snapshot computed client-side, under an explicit **"Preview — not an on-chain transaction"** label. It never calls `writeContract`.
+"Preview (no wallet)" (available from state 1, or for judges with no injected wallet): shows the current `CompositeFeed.read` snapshot plus a plain-English note — "a real refresh re-aggregates the top-20 agents' latest forecasts and updates the block" — under an explicit **"Preview — not an on-chain transaction"** label. It never calls `writeContract` and never invents a post-refresh value.
 
 ## On-chain interaction
 
@@ -68,7 +68,7 @@ The panel always shows exactly one primary next action, derived from wallet/netw
 ## Verification criteria
 
 - `pnpm --filter frontend lint` clean, `tsc --noEmit` exit 0, `pnpm --filter frontend build` green with `/try` in the route list.
-- `pnpm --filter frontend test` green (add a small unit test for the "Preview" expected-state computation if it's non-trivial).
+- `pnpm --filter frontend test` green (add a small unit test for any non-trivial pure helper, e.g. the wallet/network/balance → panel-state derivation).
 - Playwright: `/try` renders at 375px with no horizontal overflow; the disconnected state shows Connect + the read-only snapshot.
 - Manual (documented, since headless can't drive a wallet): connect → switch → refresh → tx link is the runtime path; logic verified by build/lint/test + state-machine review.
 
