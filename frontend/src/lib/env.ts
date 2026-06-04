@@ -10,6 +10,7 @@ export const env = {
   rpcUrl: process.env.NEXT_PUBLIC_RPC_URL ?? "https://rpc.sepolia.mantle.xyz",
   chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID ?? 5003),
   explorerUrl: (process.env.NEXT_PUBLIC_EXPLORER_URL ?? "https://sepolia.mantlescan.xyz").replace(/\/$/, ""),
+  faucetUrl: process.env.NEXT_PUBLIC_FAUCET_URL ?? "https://faucet.sepolia.mantle.xyz",
   addresses: {
     compositeFeed: addr(process.env.NEXT_PUBLIC_ADDR_COMPOSITE_FEED),
     demoConsumer: addr(process.env.NEXT_PUBLIC_ADDR_DEMO_CONSUMER),
@@ -33,4 +34,7 @@ export function explorerAddress(address: string): string {
 }
 export function explorerBlock(block: number | bigint): string {
   return `${env.explorerUrl}/block/${block}`;
+}
+export function explorerTx(hash: string): string {
+  return `${env.explorerUrl}/tx/${hash}`;
 }
