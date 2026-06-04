@@ -1,0 +1,310 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import {
+  useAccount,
+  useBalance,
+  useConnect,
+  useReadContract,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+import { decodeAbiParameters } from "viem";
+import { compositeFeedAbi, categoryHash } from "@/lib/contracts";
+import { env, hasFeed, explorerTx } from "@/lib/env";
+import { derivePanelState } from "@/lib/tryState";
+
+const CATEGORY_OPTIONS = [
+  { id: "METH_APR_24H", name: "mETH staking APR" },
+  { id: "USDY_APY_24H", name: "USDY treasury APY" },
+  { id: "AAVE_MANTLE_TVL_24H", name: "Aave-Mantle TVL" },
+] as const;
+type CatId = (typeof CATEGORY_OPTIONS)[number]["id"];
+
+interface FeedRead {
+  value: bigint;
+  confidence: number;
+  contributors: number;
+  block: number;
+}
+
+function decodeFeed(data: unknown): FeedRead | null {
+  if (!data) return null;
+  const f = data as { value: `0x${string}`; confidence: number; contributingAgents: bigint; lastUpdatedBlock: bigint };
+  let value = BigInt(0);
+  try {
+    value = decodeAbiParameters([{ type: "uint256" }], f.value)[0] as bigint;
+  } catch {
+    value = BigInt(0);
+  }
+  return {
+    value,
+    confidence: Number(f.confidence),
+    contributors: Number(f.contributingAgents),
+    block: Number(f.lastUpdatedBlock),
+  };
+}
+
+export function TryClient() {
+  const [selected, setSelected] = React.useState<CatId>("METH_APR_24H");
+  const [preview, setPreview] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [txHash, setTxHash] = React.useState<`0x${string}` | undefined>(undefined);
+  const [beforeBlock, setBeforeBlock] = React.useState<number | null>(null);
+
+  const { address, isConnected, chainId } = useAccount();
+  const { connect, connectors, isPending: connecting } = useConnect();
+  const { switchChain, isPending: switching } = useSwitchChain();
+  const { data: balance } = useBalance({ address, query: { enabled: !!address } });
+  const { writeContractAsync, isPending: writing } = useWriteContract();
+
+  // Hydration-safe mounted flag (wallet state is client-only).
+  const mounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+  const hasInjectedWallet =
+    mounted && typeof window !== "undefined" && Boolean((window as { ethereum?: unknown }).ethereum);
+
+  const read = useReadContract({
+    address: env.addresses.compositeFeed as `0x${string}`,
+    abi: compositeFeedAbi,
+    functionName: "read",
+    args: [categoryHash(selected)],
+    query: { enabled: hasFeed, refetchInterval: 15_000 },
+  });
+  const feed = decodeFeed(read.data);
+
+  const receipt = useWaitForTransactionReceipt({ hash: txHash, query: { enabled: !!txHash } });
+  React.useEffect(() => {
+    if (receipt.isSuccess) read.refetch();
+  }, [receipt.isSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const state = mounted
+    ? derivePanelState({ isConnected, chainId, expectedChainId: env.chainId, balanceWei: balance?.value })
+    : "disconnected";
+
+  const handleConnect = () => {
+    const connector = connectors[0];
+    if (connector) connect({ connector });
+  };
+
+  const handleRefresh = async () => {
+    setError(null);
+    setTxHash(undefined);
+    setBeforeBlock(feed?.block ?? 0);
+    try {
+      const hash = await writeContractAsync({
+        address: env.addresses.compositeFeed as `0x${string}`,
+        abi: compositeFeedAbi,
+        functionName: "refresh",
+        args: [categoryHash(selected)],
+      });
+      setTxHash(hash);
+    } catch (e) {
+      const msg = (e as Error).message ?? "";
+      setError(
+        msg.includes("RateLimited")
+          ? "This feed was just refreshed — wait ~100 blocks or pick another category."
+          : "Transaction rejected or reverted.",
+      );
+    }
+  };
+
+  const catName = CATEGORY_OPTIONS.find((c) => c.id === selected)!.name;
+
+  return (
+    <div className="mx-auto max-w-2xl px-5 py-12" data-tour="try-refresh">
+      <h1 className="text-3xl font-semibold text-white">Try it live</h1>
+      <p className="mt-3 text-white/60">
+        Connect a wallet and write to the live on-chain AI feed on Mantle Sepolia — one transaction, fully
+        permissionless. No subscription, no signup.
+      </p>
+
+      {/* Category picker */}
+      <div className="mt-8 flex flex-wrap gap-2" role="tablist" aria-label="Category">
+        {CATEGORY_OPTIONS.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            role="tab"
+            aria-selected={selected === c.id}
+            onClick={() => {
+              setSelected(c.id);
+              setTxHash(undefined);
+              setBeforeBlock(null);
+              setError(null);
+            }}
+            className={
+              "rounded border px-3 py-1.5 text-xs font-medium uppercase tracking-[0.12em] transition-colors " +
+              (selected === c.id
+                ? "border-[var(--color-accent)] text-[var(--color-accent)]"
+                : "border-[var(--color-border)] text-[var(--color-text-dim)] hover:text-[var(--color-text)]")
+            }
+          >
+            {c.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Live read-only snapshot — renders in every state */}
+      <div className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-5">
+        <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+          live on-chain feed · {catName}
+        </div>
+        {!hasFeed ? (
+          <p className="mt-2 text-sm text-[var(--color-text-dim)]">
+            Feed address not configured in this build (set NEXT_PUBLIC_ADDR_COMPOSITE_FEED).
+          </p>
+        ) : feed ? (
+          <div className="mt-3 grid grid-cols-3 gap-3 font-mono text-sm">
+            <div>
+              <div className="text-[10px] uppercase text-[var(--color-text-muted)]">value</div>
+              <div className="text-white">{feed.value.toString()}</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase text-[var(--color-text-muted)]">confidence</div>
+              <div className="text-white">{feed.confidence}</div>
+            </div>
+            <div>
+              <div className="text-[10px] uppercase text-[var(--color-text-muted)]">contributors</div>
+              <div className="text-white">{feed.contributors}</div>
+            </div>
+            <div className="col-span-3">
+              <div className="text-[10px] uppercase text-[var(--color-text-muted)]">last updated block</div>
+              <div className="text-white">{feed.block}</div>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-[var(--color-text-dim)]">Reading feed…</p>
+        )}
+      </div>
+
+      {/* The guided action panel */}
+      <div className="mt-4 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg)] p-5">
+        {!mounted ? (
+          <p className="text-sm text-[var(--color-text-dim)]">Loading wallet…</p>
+        ) : preview || (!hasInjectedWallet && state === "disconnected") ? (
+          <div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-warn)]">
+              Preview — not an on-chain transaction
+            </div>
+            <p className="mt-2 text-sm text-[var(--color-text-dim)]">
+              A real refresh re-aggregates the top-20 agents&apos; latest forecasts into a fresh consensus value and
+              updates the block above.{" "}
+              {hasInjectedWallet ? "" : "No wallet detected — install MetaMask to do it for real."}
+            </p>
+            {hasInjectedWallet && (
+              <button
+                type="button"
+                onClick={() => setPreview(false)}
+                className="mt-4 rounded border border-[var(--color-accent)] px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)]"
+              >
+                Do it for real
+              </button>
+            )}
+          </div>
+        ) : state === "disconnected" ? (
+          <div>
+            <p className="text-sm text-[var(--color-text-dim)]">Step 1 — connect your wallet to interact on-chain.</p>
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={handleConnect}
+                disabled={connecting || !connectors[0]}
+                className="rounded border border-[var(--color-accent)] px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)] disabled:opacity-60"
+              >
+                {connecting ? "Connecting…" : "Connect wallet"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreview(true)}
+                className="rounded border border-[var(--color-border)] px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] hover:text-[var(--color-text)]"
+              >
+                Preview (no wallet)
+              </button>
+            </div>
+          </div>
+        ) : state === "wrong-network" ? (
+          <div>
+            <p className="text-sm text-[var(--color-text-dim)]">Step 2 — switch your wallet to Mantle Sepolia.</p>
+            <button
+              type="button"
+              onClick={() => switchChain({ chainId: env.chainId })}
+              disabled={switching}
+              className="mt-4 rounded border border-[var(--color-accent)] px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)] disabled:opacity-60"
+            >
+              {switching ? "Switching…" : "Switch to Mantle Sepolia"}
+            </button>
+          </div>
+        ) : state === "no-gas" ? (
+          <div>
+            <p className="text-sm text-[var(--color-text-dim)]">
+              Step 3 — you need a little testnet MNT for gas. Grab some, then re-check.
+            </p>
+            <div className="mt-4 flex gap-3">
+              <a
+                href={env.faucetUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded border border-[var(--color-accent)] px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)]"
+              >
+                Open faucet
+              </a>
+              <button
+                type="button"
+                onClick={() => read.refetch()}
+                className="rounded border border-[var(--color-border)] px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] hover:text-[var(--color-text)]"
+              >
+                I&apos;ve funded it — re-check
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <p className="text-sm text-[var(--color-text-dim)]">
+              Step 4 — refresh the {catName} feed. One signature writes a fresh consensus on-chain.
+            </p>
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={writing || receipt.isLoading}
+              className="mt-4 rounded border border-[var(--color-accent)] bg-[var(--color-accent)]/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)] disabled:opacity-60"
+            >
+              {writing ? "Confirm in wallet…" : receipt.isLoading ? "Mining…" : "Refresh the live AI feed"}
+            </button>
+
+            {receipt.isSuccess && txHash && (
+              <div className="mt-4 rounded border border-[var(--color-up)]/40 bg-[var(--color-up)]/5 p-3 text-sm">
+                <p className="text-[var(--color-up)]">You just updated the on-chain AI feed.</p>
+                {beforeBlock != null && feed && (
+                  <p className="mt-1 font-mono text-xs text-[var(--color-text-dim)]">
+                    lastUpdatedBlock {beforeBlock} → {feed.block}
+                  </p>
+                )}
+                <a
+                  href={explorerTx(txHash)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-block text-xs text-[var(--color-accent)] hover:underline"
+                >
+                  View your transaction ↗
+                </a>
+              </div>
+            )}
+            {error && <p className="mt-3 text-sm text-[var(--color-warn)]">{error}</p>}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-8 text-center">
+        <Link href="/leaderboard" className="text-sm text-[var(--color-accent)] hover:underline">
+          See the agents behind this feed → leaderboard
+        </Link>
+      </div>
+    </div>
+  );
+}
