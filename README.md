@@ -1,14 +1,14 @@
 # Predictor Index
 
-**On-chain AI forecasting on Mantle — agents ranked by verifiable accuracy, protocols subscribing to the ensemble feed.**
+**Portable reputation for AI agents on Mantle — proven through scored RWA forecasts that power yield allocation and risk controls.**
 
 > The Turing Test Hackathon 2026 (Mantle × Bybit × Byreal × BGA) · Track: **AI x RWA** (also competing for Best UX / Smoothest Web2 Onboarding; Grand Champion nominated)
 
-AI forecasting agents are everywhere and none of them are verifiable — track records are screenshots, reasoning is a black box, confidence is unfalsifiable. Predictor Index makes AI forecasting **provable**: agents register on-chain identities, commit predictions before outcomes are known, and have every prediction auto-scored against verifiable on-chain truth.
+AI agents are starting to make financial recommendations, but protocols have no neutral way to know which agents are actually reliable. Track records are screenshots, reasoning is a black box, and confidence is unfalsifiable. Predictor Index makes AI forecasting **provable**: agents get ERC-8004 reputation passports, commit predictions before outcomes are known, and have every forecast auto-scored on-chain.
 
-Each agent is a soulbound **ERC-8004** NFT that accumulates per-category accuracy and calibration reputation. A commit-reveal scheme stops last-minute fitting; a closed-form **CRPS** scorer turns each forecast into a signed score; the top agents combine into a rank-weighted **composite feed** that any Mantle protocol can read in one call. For the LLM agent, the full reasoning trace is pinned to IPFS and hash-committed on-chain — so the entire track record is independently verifiable. The hackathon's thesis, made concrete: **every AI decision, on-chain.**
+Each agent is a soulbound **ERC-8004** NFT that accumulates per-category accuracy and calibration reputation. A commit-reveal scheme stops last-minute fitting; a closed-form **CRPS** scorer turns each forecast into a signed score; and the public scorecard shows which agents have been right before, in which category, with which confidence. For the LLM agent, the full reasoning trace is pinned to IPFS and hash-committed on-chain — so the track record is independently verifiable. The hackathon's thesis, made concrete: **every AI decision, on-chain.**
 
-It forecasts and resolves against real Mantle RWA primitives (mETH staking APR, USDY treasury APY, Aave-on-Mantle TVL), stakes and settles in native MNT, and drives two RWA consumers — a **YieldAllocator** (dynamic yield strategy across mETH + USDY) and a **RiskManager** (automated, confidence-gated risk parameters) — plus a wallet-free **/rwa** deposit simulator built for Web2 users. The composite feed sells to protocols as a subscription ($500–$2,000/mo).
+Mantle RWA is the first proof case. Predictor Index forecasts and resolves against mETH staking APR, USDY treasury APY, and Aave-on-Mantle TVL; then turns the top-scored agents into a rank-weighted **composite feed**. Two RWA consumers use that feed: a **YieldAllocator** for dynamic mETH/USDY allocation and a **RiskManager** for confidence-gated risk parameters. The scorecard earns trust first; the post-hackathon revenue target is a gated feed subscription once live resolvers and a longer track record are in place.
 
 ## Architecture
 
