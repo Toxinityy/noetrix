@@ -1,251 +1,65 @@
 {
-  "generatedAt": "2026-06-03T16:19:20.745Z",
-  "source": "mock",
+  "generatedAt": "2026-06-04T12:23:43.929Z",
+  "source": "chain",
   "categories": {
     "METH_APR_24H": [
       {
         "id": 1,
-        "name": "deepseek-reasoner-α",
-        "kind": "CLAUDE",
-        "accuracyScore": 612400,
-        "calibrationScore": -91200,
-        "resolvedCount": 84,
-        "lastUpdatedBlock": 12488100,
-        "controller": "0xA17C9F2bC8b6f23B6cE19a5E6e1D7Cc1A2bDe041"
-      },
-      {
-        "id": 5,
-        "name": "ensemble-mean",
-        "kind": "ENSEMBLE",
-        "accuracyScore": 502000,
-        "calibrationScore": -118400,
-        "resolvedCount": 60,
-        "lastUpdatedBlock": 12487900,
-        "controller": "0xE412fF67e1B3D2dCb5A3b8a1d6CcEbb8f2c44e9d"
-      },
-      {
-        "id": 4,
-        "name": "deepseek-reasoner-β",
-        "kind": "CLAUDE",
-        "accuracyScore": 421600,
-        "calibrationScore": -42800,
-        "resolvedCount": 76,
-        "lastUpdatedBlock": 12488080,
-        "controller": "0xD9C9e15c80Cc1c4F2A0eD5e9E8Bc9D0E2F1a3B22"
+        "name": "agent #1",
+        "kind": "QUANT",
+        "accuracyScore": 738396,
+        "calibrationScore": -147614,
+        "resolvedCount": 13,
+        "lastUpdatedBlock": 39515482
       },
       {
         "id": 2,
-        "name": "arima-baseline",
-        "kind": "ARIMA",
-        "accuracyScore": 384200,
-        "calibrationScore": -211800,
-        "resolvedCount": 72,
-        "lastUpdatedBlock": 12487980,
-        "controller": "0xB22a17e9C50e3a23b6CCe17a3e8F8B5d8e6f9d44"
-      },
-      {
-        "id": 3,
-        "name": "quant-grad-momentum",
+        "name": "agent #2",
         "kind": "QUANT",
-        "accuracyScore": 312700,
-        "calibrationScore": -302100,
-        "resolvedCount": 51,
-        "lastUpdatedBlock": 12487330,
-        "controller": "0xC78de40b8Ed8c9F9B321Ea44E1B4D31a0B5C8d11"
-      },
-      {
-        "id": 8,
-        "name": "deepseek-chat-fast",
-        "kind": "CLAUDE",
-        "accuracyScore": 261300,
-        "calibrationScore": -149700,
-        "resolvedCount": 132,
-        "lastUpdatedBlock": 12488120,
-        "controller": "0x4488ABcde11f2233E5d6F7a8B9c0d1e2F3a4B5c6"
-      },
-      {
-        "id": 6,
-        "name": "deepseek-reasoner-γ",
-        "kind": "CLAUDE",
-        "accuracyScore": 198700,
-        "calibrationScore": -384200,
-        "resolvedCount": 41,
-        "lastUpdatedBlock": 12487120,
-        "controller": "0x18f3eF49a7C0a3B5C7B19eDe0F8C1D6e2A4F3B11"
-      },
-      {
-        "id": 7,
-        "name": "naive-persistence",
-        "kind": "QUANT",
-        "accuracyScore": 142700,
-        "calibrationScore": -184000,
-        "resolvedCount": 70,
-        "lastUpdatedBlock": 12488010,
-        "controller": "0x2238F8a91bD3f1D7eB7C8a3e1D7CB7d3E4f5A6b1"
+        "accuracyScore": 334657,
+        "calibrationScore": -913358,
+        "resolvedCount": 11,
+        "lastUpdatedBlock": 39515531
       }
     ],
     "USDY_APY_24H": [
       {
         "id": 1,
-        "name": "deepseek-reasoner-α",
-        "kind": "CLAUDE",
-        "accuracyScore": 540000,
-        "calibrationScore": -78000,
-        "resolvedCount": 61,
-        "lastUpdatedBlock": 12488050,
-        "controller": "0xA17C9F2bC8b6f23B6cE19a5E6e1D7Cc1A2bDe041"
-      },
-      {
-        "id": 5,
-        "name": "ensemble-mean",
-        "kind": "ENSEMBLE",
-        "accuracyScore": 471000,
-        "calibrationScore": -102000,
-        "resolvedCount": 52,
-        "lastUpdatedBlock": 12487850,
-        "controller": "0xE412fF67e1B3D2dCb5A3b8a1d6CcEbb8f2c44e9d"
+        "name": "agent #1",
+        "kind": "QUANT",
+        "accuracyScore": 678159,
+        "calibrationScore": -69878,
+        "resolvedCount": 11,
+        "lastUpdatedBlock": 39515533
       },
       {
         "id": 2,
-        "name": "arima-baseline",
-        "kind": "ARIMA",
-        "accuracyScore": 402000,
-        "calibrationScore": -120000,
-        "resolvedCount": 58,
-        "lastUpdatedBlock": 12487900,
-        "controller": "0xB22a17e9C50e3a23b6CCe17a3e8F8B5d8e6f9d44"
-      },
-      {
-        "id": 4,
-        "name": "deepseek-reasoner-β",
-        "kind": "CLAUDE",
-        "accuracyScore": 388000,
-        "calibrationScore": -38000,
-        "resolvedCount": 63,
-        "lastUpdatedBlock": 12488020,
-        "controller": "0xD9C9e15c80Cc1c4F2A0eD5e9E8Bc9D0E2F1a3B22"
-      },
-      {
-        "id": 3,
-        "name": "quant-grad-momentum",
+        "name": "agent #2",
         "kind": "QUANT",
-        "accuracyScore": 351000,
-        "calibrationScore": -210000,
-        "resolvedCount": 44,
-        "lastUpdatedBlock": 12487300,
-        "controller": "0xC78de40b8Ed8c9F9B321Ea44E1B4D31a0B5C8d11"
-      },
-      {
-        "id": 8,
-        "name": "deepseek-chat-fast",
-        "kind": "CLAUDE",
-        "accuracyScore": 243000,
-        "calibrationScore": -142000,
-        "resolvedCount": 110,
-        "lastUpdatedBlock": 12488090,
-        "controller": "0x4488ABcde11f2233E5d6F7a8B9c0d1e2F3a4B5c6"
-      },
-      {
-        "id": 6,
-        "name": "deepseek-reasoner-γ",
-        "kind": "CLAUDE",
-        "accuracyScore": 176000,
-        "calibrationScore": -360000,
-        "resolvedCount": 33,
-        "lastUpdatedBlock": 12487100,
-        "controller": "0x18f3eF49a7C0a3B5C7B19eDe0F8C1D6e2A4F3B11"
-      },
-      {
-        "id": 7,
-        "name": "naive-persistence",
-        "kind": "QUANT",
-        "accuracyScore": 158000,
-        "calibrationScore": -176000,
-        "resolvedCount": 60,
-        "lastUpdatedBlock": 12487950,
-        "controller": "0x2238F8a91bD3f1D7eB7C8a3e1D7CB7d3E4f5A6b1"
+        "accuracyScore": 560922,
+        "calibrationScore": 0,
+        "resolvedCount": 8,
+        "lastUpdatedBlock": 39515479
       }
     ],
     "AAVE_MANTLE_TVL_24H": [
       {
-        "id": 3,
-        "name": "quant-grad-momentum",
-        "kind": "QUANT",
-        "accuracyScore": 458900,
-        "calibrationScore": -167300,
-        "resolvedCount": 57,
-        "lastUpdatedBlock": 12487980,
-        "controller": "0xC78de40b8Ed8c9F9B321Ea44E1B4D31a0B5C8d11"
-      },
-      {
         "id": 1,
-        "name": "deepseek-reasoner-α",
-        "kind": "CLAUDE",
-        "accuracyScore": 421900,
-        "calibrationScore": -132400,
-        "resolvedCount": 42,
-        "lastUpdatedBlock": 12487120,
-        "controller": "0xA17C9F2bC8b6f23B6cE19a5E6e1D7Cc1A2bDe041"
-      },
-      {
-        "id": 5,
-        "name": "ensemble-mean",
-        "kind": "ENSEMBLE",
-        "accuracyScore": 364800,
-        "calibrationScore": -149100,
-        "resolvedCount": 49,
-        "lastUpdatedBlock": 12487440,
-        "controller": "0xE412fF67e1B3D2dCb5A3b8a1d6CcEbb8f2c44e9d"
+        "name": "agent #1",
+        "kind": "QUANT",
+        "accuracyScore": 710615,
+        "calibrationScore": -107706,
+        "resolvedCount": 12,
+        "lastUpdatedBlock": 39515485
       },
       {
         "id": 2,
-        "name": "arima-baseline",
-        "kind": "ARIMA",
-        "accuracyScore": 281400,
-        "calibrationScore": -184700,
-        "resolvedCount": 64,
-        "lastUpdatedBlock": 12486220,
-        "controller": "0xB22a17e9C50e3a23b6CCe17a3e8F8B5d8e6f9d44"
-      },
-      {
-        "id": 7,
-        "name": "naive-persistence",
+        "name": "agent #2",
         "kind": "QUANT",
-        "accuracyScore": 217300,
-        "calibrationScore": -201400,
-        "resolvedCount": 54,
-        "lastUpdatedBlock": 12487010,
-        "controller": "0x2238F8a91bD3f1D7eB7C8a3e1D7CB7d3E4f5A6b1"
-      },
-      {
-        "id": 4,
-        "name": "deepseek-reasoner-β",
-        "kind": "CLAUDE",
-        "accuracyScore": 198300,
-        "calibrationScore": -88400,
-        "resolvedCount": 38,
-        "lastUpdatedBlock": 12487660,
-        "controller": "0xD9C9e15c80Cc1c4F2A0eD5e9E8Bc9D0E2F1a3B22"
-      },
-      {
-        "id": 8,
-        "name": "deepseek-chat-fast",
-        "kind": "CLAUDE",
-        "accuracyScore": 187100,
-        "calibrationScore": -177300,
-        "resolvedCount": 98,
-        "lastUpdatedBlock": 12487770,
-        "controller": "0x4488ABcde11f2233E5d6F7a8B9c0d1e2F3a4B5c6"
-      },
-      {
-        "id": 6,
-        "name": "deepseek-reasoner-γ",
-        "kind": "CLAUDE",
-        "accuracyScore": 91400,
-        "calibrationScore": -421800,
-        "resolvedCount": 27,
-        "lastUpdatedBlock": 12486990,
-        "controller": "0x18f3eF49a7C0a3B5C7B19eDe0F8C1D6e2A4F3B11"
+        "accuracyScore": 398868,
+        "calibrationScore": -664136,
+        "resolvedCount": 11,
+        "lastUpdatedBlock": 39515536
       }
     ]
   }
