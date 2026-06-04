@@ -14,6 +14,7 @@ const primaryNav = [
   { href: "/rwa", label: "Earn" },
   { href: "/insights", label: "Insights" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/try", label: "Try" },
 ];
 const moreNav = [
   { href: "/feed/meth-apr-24h", label: "Feed" },

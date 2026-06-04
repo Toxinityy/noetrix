@@ -44,7 +44,7 @@ export const LEADERBOARD_STEPS: TourStep[] = [
   },
 ];
 
-export type TourId = "leaderboard" | "earn" | "alpha" | "build";
+export type TourId = "leaderboard" | "earn" | "alpha" | "build" | "try";
 
 export const EARN_STEPS: TourStep[] = [
   {
@@ -121,11 +121,21 @@ export const BUILD_STEPS: TourStep[] = [
   },
 ];
 
+export const TRY_STEPS: TourStep[] = [
+  {
+    id: "try-refresh",
+    selector: '[data-tour="try-refresh"]',
+    title: "Write to the live protocol",
+    body: "Connect a wallet, switch to Mantle Sepolia, and refresh the on-chain AI feed yourself — one permissionless transaction. No wallet? Use the Preview.",
+  },
+];
+
 export const TOURS: Record<TourId, TourStep[]> = {
   leaderboard: LEADERBOARD_STEPS,
   earn: EARN_STEPS,
   alpha: ALPHA_STEPS,
   build: BUILD_STEPS,
+  try: TRY_STEPS,
 };
 
 export const TOUR_PAGES: Record<TourId, string> = {
@@ -133,4 +143,5 @@ export const TOUR_PAGES: Record<TourId, string> = {
   earn: "/rwa",
   alpha: "/insights",
   build: "/submit",
+  try: "/try",
 };
