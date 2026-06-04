@@ -20,6 +20,10 @@ interface TourCtx {
   prev: () => void;
   skip: () => void;
   finish: () => void;
+  /// First-run "what do you want to do?" needs-picker (OnboardingModal). Re-openable via the Guide button.
+  onboardingOpen: boolean;
+  openOnboarding: () => void;
+  closeOnboarding: () => void;
 }
 
 const Ctx = React.createContext<TourCtx | null>(null);
@@ -36,7 +40,28 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
   const [tourId, setTourId] = React.useState<TourId>("leaderboard");
   const [isOpen, setIsOpen] = React.useState(false);
   const [index, setIndex] = React.useState(0);
+  const [onboardingOpen, setOnboardingOpen] = React.useState(false);
   const steps = TOURS[tourId];
+
+  const openOnboarding = React.useCallback(() => setOnboardingOpen(true), []);
+  const closeOnboarding = React.useCallback(() => {
+    setOnboardingOpen(false);
+    try {
+      localStorage.setItem(ONBOARDED_KEY, "1");
+    } catch {}
+  }, []);
+
+  // First run: show the needs-picker once per browser. Deferred out of the effect
+  // body (React-Compiler: no synchronous setState in effects).
+  React.useEffect(() => {
+    let onboarded = false;
+    try {
+      onboarded = localStorage.getItem(ONBOARDED_KEY) === "1";
+    } catch {}
+    if (onboarded) return;
+    const t = setTimeout(() => setOnboardingOpen(true), 0);
+    return () => clearTimeout(t);
+  }, []);
 
   const start = React.useCallback(() => {
     setIndex(0);
@@ -113,6 +138,9 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     prev,
     skip,
     finish,
+    onboardingOpen,
+    openOnboarding,
+    closeOnboarding,
   };
 
   return (

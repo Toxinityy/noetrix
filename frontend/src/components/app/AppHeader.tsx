@@ -8,7 +8,6 @@ import { HelpCircle, ChevronDown, Menu } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { useTour } from "@/components/tour/TourProvider";
-import { TOUR_PAGES, type TourId } from "@/components/tour/steps";
 import { cn } from "@/lib/cn";
 
 const primaryNav = [
@@ -146,16 +145,12 @@ export function AppHeader() {
 }
 
 function GuideButton() {
-  const { requestStart } = useTour();
-  const pathname = usePathname();
-  // Start the tour for the page we're on (e.g. /try → "try"); falls back to the
-  // leaderboard tour when the current page has no tour of its own.
-  const tourId = (Object.keys(TOUR_PAGES) as TourId[]).find((id) => TOUR_PAGES[id] === pathname);
+  const { openOnboarding } = useTour();
   return (
     <button
       type="button"
-      onClick={() => requestStart(tourId)}
-      title="Replay the guided tour"
+      onClick={openOnboarding}
+      title="What do you want to do? Pick a guided path."
       className="hidden items-center gap-1.5 rounded border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] sm:inline-flex"
     >
       <HelpCircle size={13} aria-hidden />

@@ -3,50 +3,25 @@
 import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { PERSONA_PATHS } from "@/lib/personaPaths";
-import { useTour, ONBOARDED_KEY } from "@/components/tour/TourProvider";
+import { useTour } from "@/components/tour/TourProvider";
 import { cn } from "@/lib/cn";
 
-/// First-run intent modal. Shows once per browser (localStorage ONBOARDED_KEY).
-/// Picking a persona routes to its page and arms that goal's tour; "Just looking"
-/// dismisses. Owns first-run, so the leaderboard auto-tour stands down.
+/// "What do you want to do?" needs-picker. Open-state lives in TourProvider:
+/// it shows once on first run AND re-opens whenever the Guide button is clicked.
+/// Picking a persona routes to its page and arms that goal's tour; "Just looking" dismisses.
 export function OnboardingModal() {
-  const { requestStart } = useTour();
-  const [open, setOpen] = React.useState(false);
-
-  // Client-only first-run check (avoids SSR/hydration mismatch). Deferred out of
-  // the effect body (React-Compiler: no synchronous setState in effects).
-  React.useEffect(() => {
-    let onboarded = false;
-    try {
-      onboarded = localStorage.getItem(ONBOARDED_KEY) === "1";
-    } catch {}
-    if (onboarded) return;
-    const t = setTimeout(() => setOpen(true), 0);
-    return () => clearTimeout(t);
-  }, []);
-
-  const markOnboarded = React.useCallback(() => {
-    try {
-      localStorage.setItem(ONBOARDED_KEY, "1");
-    } catch {}
-  }, []);
-
-  const dismiss = React.useCallback(() => {
-    markOnboarded();
-    setOpen(false);
-  }, [markOnboarded]);
+  const { requestStart, onboardingOpen, closeOnboarding } = useTour();
 
   const pick = React.useCallback(
     (tourId: Parameters<typeof requestStart>[0]) => {
-      markOnboarded();
-      setOpen(false);
+      closeOnboarding();
       requestStart(tourId); // routes to the page + arms the tour
     },
-    [markOnboarded, requestStart],
+    [closeOnboarding, requestStart],
   );
 
   return (
-    <Dialog.Root open={open} onOpenChange={(o) => (!o ? dismiss() : setOpen(o))}>
+    <Dialog.Root open={onboardingOpen} onOpenChange={(o) => (!o ? closeOnboarding() : undefined)}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[70] bg-black/70 backdrop-blur-sm" />
         <Dialog.Content
@@ -91,7 +66,7 @@ export function OnboardingModal() {
 
           <button
             type="button"
-            onClick={dismiss}
+            onClick={closeOnboarding}
             className="mt-4 w-full text-center font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)]"
           >
             Just looking
