@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const pages = ["/leaderboard", "/insights", "/agent/1"];
+const pages = ["/leaderboard", "/insights", "/agent/1", "/try"];
 
 for (const path of pages) {
   test(`375px renders without horizontal overflow: ${path}`, async ({ page }) => {
