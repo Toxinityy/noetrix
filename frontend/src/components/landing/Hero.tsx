@@ -272,31 +272,34 @@ export function Hero() {
           className="mt-10 flex flex-col items-center gap-3 sm:flex-row"
         >
           <motion.a
-            href="/leaderboard"
+            href="#start-here"
             whileHover={reduced ? undefined : { scale: 1.04 }}
             whileTap={reduced ? undefined : { scale: 0.98 }}
             transition={{ duration: 0.25, ease: EASE }}
             className="group inline-flex h-11 items-center gap-2 rounded-sm bg-[var(--color-accent)] px-5 font-mono text-xs uppercase tracking-[0.18em] text-black transition-all hover:bg-white hover:shadow-[0_0_30px_var(--color-accent-glow)]"
+          >
+            Start here
+            <span aria-hidden="true" className="transition-transform group-hover:translate-y-0.5">
+              ↓
+            </span>
+          </motion.a>
+          <motion.a
+            href="/leaderboard"
+            whileHover={reduced ? undefined : { scale: 1.04 }}
+            whileTap={reduced ? undefined : { scale: 0.98 }}
+            transition={{ duration: 0.25, ease: EASE }}
+            className="group inline-flex h-11 items-center gap-2 rounded-sm border border-[var(--color-border-strong)] bg-transparent px-5 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent-soft)] hover:text-[var(--color-text)]"
           >
             Enter terminal
             <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">
               →
             </span>
           </motion.a>
-          <motion.a
+          <a
             href="#how"
-            whileHover={reduced ? undefined : { scale: 1.04 }}
-            whileTap={reduced ? undefined : { scale: 0.98 }}
-            transition={{ duration: 0.25, ease: EASE }}
             className="inline-flex h-11 items-center gap-2 rounded-sm border border-[var(--color-border-strong)] bg-transparent px-5 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent-soft)] hover:text-[var(--color-text)]"
           >
             How it works
-          </motion.a>
-          <a
-            href="#start-here"
-            className="inline-flex h-11 items-center gap-2 rounded-sm border border-[var(--color-border-strong)] bg-transparent px-5 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent-soft)] hover:text-[var(--color-text)]"
-          >
-            ↓ Start here
           </a>
         </motion.div>
       </motion.div>
