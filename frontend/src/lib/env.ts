@@ -18,6 +18,7 @@ export const env = {
     predictionMarket: addr(process.env.NEXT_PUBLIC_ADDR_PREDICTION_MARKET),
     yieldAllocator: addr(process.env.NEXT_PUBLIC_ADDR_YIELD_ALLOCATOR),
     riskManager: addr(process.env.NEXT_PUBLIC_ADDR_RISK_MANAGER),
+    subscriptionGate: addr(process.env.NEXT_PUBLIC_ADDR_SUBSCRIPTION_GATE),
   },
 } as const;
 
@@ -28,6 +29,8 @@ export const hasFeed = env.addresses.compositeFeed !== "";
 /// RWA consumers deployed — enables live allocation + risk reads on /rwa.
 export const hasYieldAllocator = env.addresses.yieldAllocator !== "";
 export const hasRiskManager = env.addresses.riskManager !== "";
+/// SubscriptionGate deployed — enables the on-chain paid subscribe on /pricing.
+export const hasSubscriptionGate = env.addresses.subscriptionGate !== "";
 
 export function explorerAddress(address: string): string {
   return `${env.explorerUrl}/address/${address}`;

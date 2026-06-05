@@ -140,3 +140,42 @@ export const RWA_LABELS = {
 
 /// Friendly risk-state labels — index matches the RiskManager.State enum (0 Normal, 1 Caution, 2 Frozen).
 export const RISK_STATE_UI = ["Looking healthy", "Cautious", "Paused"] as const;
+
+/// SubscriptionGate — paid subscription rail (native MNT). Tier enum: 0 None, 1 Pro, 2 Protocol.
+export const SUB_TIER = { Pro: 1, Protocol: 2 } as const;
+export type SubTier = (typeof SUB_TIER)[keyof typeof SUB_TIER];
+
+export const subscriptionGateAbi = [
+  {
+    type: "function",
+    name: "subscribe",
+    stateMutability: "payable",
+    inputs: [{ name: "tier", type: "uint8" }],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "subscriptionExpiry",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "address" }],
+    outputs: [{ type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "tierOf",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "address" }],
+    outputs: [{ type: "uint8" }],
+  },
+  { type: "function", name: "proPrice", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "function", name: "protocolPrice", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  { type: "error", name: "BadTier", inputs: [] },
+  {
+    type: "error",
+    name: "InsufficientPayment",
+    inputs: [
+      { name: "required", type: "uint256" },
+      { name: "sent", type: "uint256" },
+    ],
+  },
+] as const;

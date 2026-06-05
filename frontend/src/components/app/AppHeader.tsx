@@ -17,6 +17,7 @@ const primaryNav = [
   { href: "/try", label: "Try" },
 ];
 const moreNav = [
+  { href: "/pricing", label: "Pricing" },
   { href: "/feed/meth-apr-24h", label: "Feed" },
   { href: "/demo-consumer", label: "Consumer" },
   { href: "/submit", label: "Submit" },
