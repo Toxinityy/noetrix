@@ -123,6 +123,25 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-06-07 (P2) — Feedback fixes + competitor analysis + feed-holds-last-good + "Crowd vs proven AI" (branch `qa-board-review-fixes`)
+**Type:** Build (contract + frontend) + research. Continued from the board plan into P2, interleaved with live user feedback after running `pnpm dev`.
+
+**User feedback fixes (this session):**
+- **`/try` "works then fails"** = `CompositeFeed.refresh` per-category **100-block (~3.3min) rate-limit** (`REFRESH_RATE_LIMIT_BLOCKS`). `cast` simulate confirmed the contract + both RPCs (Alchemy + public) are healthy — the failure is the cooldown; the generic "reverted" message showed because MetaMask's gas-estimate revert doesn't carry the decoded `RateLimited` name. **Fix:** `/try` now reads the head block (`useBlockNumber`) and disables Refresh during the cooldown with a countdown, instead of firing a doomed tx.
+- **`/rwa` → `/simulation`** route rename (folder + nav + personaPaths + tour pages; `/simulation` 200, `/rwa` 404).
+- **e2e robustness:** swapped `networkidle` → `domcontentloaded` (live-polling pages never go idle → was timing out, not an overflow). Confirmed **/leaderboard has no 375px overflow**; suite 9/9 in ~8s.
+- **Explained (not bugs):** leaderboard composite 0% + "calibrating" = the empty-feed state (bots stopped) + resolvedCount<10 → needs bot restart; wallet auto-connect = wagmi localStorage persistence (`reconnectOnMount` default), not cookies (offered to disable, left on).
+
+**Competitor analysis (user-supplied DoraHacks BUIDL #44319):** "**Mantle Autonomous Yield Agent**" — *"An AI strategist that autonomously manages an on-chain RWA portfolio on Mantle… Human vs. AI, fully auditable."* (Only the OG meta was reachable — DoraHacks SPA blocks fetch.) **Read:** they EXECUTE (custody/actions) + ride the org's exact "Human vs AI" hook; we're advisory (no custody) but are a multi-agent *benchmark protocol*. **Win positioning:** this is literally an "on-chain AI agent benchmarking" hackathon — **we're the league/scoreboard, they're one contestant.** Our edges: commit-reveal *before* outcome (un-fakeable) > "records decisions"; full reasoning trace hash-committed; data-product surface; 169 forge tests. Cheap counter-moves: lean into "benchmark", "Crowd vs AI" framing, lead demo with the reasoning trace + feed-not-zero.
+
+**P2 executed (both web-only per user — NO Telegram/Discord bot):**
+- **(A) Feed holds last-good** (`CompositeFeed.sol`): empty aggregate no longer zeroes a published value — root-cause fix for the recurring live-feed-0. First-ever empty still writes a decodable zero; afterwards holds + emits `CompositeFeedStale`; `lastUpdatedBlock` unchanged on a hold so `valueFresh` still detects staleness. No struct/ABI change (no frontend ripple). +1 forge test → **169 green**. **Needs redeploy** (your keys) to take effect on-chain.
+- **(B) "Crowd vs proven AI" reframe** (`/insights` SmartMoneyCard + intro/footer + tour): relabels smart-money-vs-crowd to echo the org's Human-vs-AI hook; honest (crowd = equal weight, proven AI = accuracy-weighted to agents right on-chain). Copy + sr-only only.
+
+**Verification:** forge 169 · frontend tsc 0 · lint 0 · vitest 55 · e2e 9/9.
+
+**Still pending (your keys/machine):** redeploy CompositeFeed (for hold-last-good live) + bot restart (feed non-zero, resolvedCount≥10) + register/run naive agent (mints id 3) + contract verification (Etherscan V2). P2 item 10 (host indexer/bots off laptop) not started.
+
 ### 2026-06-06 (P1) — Reposition to AI Alpha & Data primary + add 3rd "Naive Baseline" agent (branch `qa-board-review-fixes`)
 **Type:** Build (copy/docs + new agent pkg). Continued P1 of the board-review plan after P0. User confirmed **AI Alpha & Data = primary** (over keep-RWA / dual) via AskUserQuestion.
 
