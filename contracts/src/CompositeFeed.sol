@@ -34,6 +34,12 @@ contract CompositeFeed is ICompositeFeed, Ownable {
     event CompositeFeedRefreshed(
         bytes32 indexed categoryId, uint256 value, uint16 confidence, uint256 contributorCount, uint256 blockNumber
     );
+    /// @dev Emitted when a refresh finds no active contributors but a previously published value
+    ///      exists — the last-good snapshot is held (not zeroed). Freshness stays observable via the
+    ///      held `lastUpdatedBlock` (consumers can still detect staleness).
+    event CompositeFeedStale(
+        bytes32 indexed categoryId, uint256 heldContributors, uint256 heldSinceBlock, uint256 refreshBlock
+    );
 
     IAgentRegistry public agentRegistry;
     IPredictionMarket public predictionMarket;
@@ -83,6 +89,26 @@ contract CompositeFeed is ICompositeFeed, Ownable {
         if (last != 0 && block.number - last < REFRESH_RATE_LIMIT_BLOCKS) revert RateLimited();
 
         (uint256[] memory points, uint16[] memory stated, int256[] memory cals, uint256 n) = _gather(categoryId);
+
+        // Hold-last-good: an empty aggregate must NOT wipe a previously published value to zero —
+        // that overwrite is exactly what made the live feed read 0 whenever the agents paused (the
+        // feed only counts still-Revealed predictions). Only the very first empty refresh writes an
+        // explicit zero so `value` stays abi-decodable for consumers; afterwards an empty refresh
+        // leaves the last good snapshot intact. `lastUpdatedBlock` is left unchanged on a hold, so
+        // freshness stays observable (DemoFeedConsumer.valueFresh still reports staleness).
+        if (n == 0) {
+            CompositeForecast storage existing = _feeds[categoryId];
+            if (existing.value.length == 0) {
+                existing.value = abi.encode(uint256(0));
+                existing.lastUpdatedBlock = block.number;
+                emit CompositeFeedRefreshed(categoryId, 0, 0, 0, block.number);
+            } else {
+                emit CompositeFeedStale(
+                    categoryId, existing.contributingAgents, existing.lastUpdatedBlock, block.number
+                );
+            }
+            return;
+        }
 
         (uint256 ensemble, uint16 confidence) = _aggregate(points, stated, cals, n);
 

@@ -263,12 +263,41 @@ contract CompositeFeedTest is Test {
     // ─── Empty case ───────────────────────────────────────────────────────────
 
     function test_Refresh_NoContributors_WritesZero() public {
-        // No top agents configured.
+        // No top agents configured AND no prior good value → write an explicit decodable zero.
         feed.refresh(CATEGORY);
         ICompositeFeed.CompositeForecast memory f = feed.read(CATEGORY);
         assertEq(f.contributingAgents, 0);
         assertEq(abi.decode(f.value, (uint256)), 0);
         assertEq(uint256(f.confidence), 0);
         assertEq(f.lastUpdatedBlock, block.number);
+    }
+
+    /// @dev Regression for the live "feed reads 0 when bots pause" bug: once a good value exists,
+    ///      an empty refresh must HOLD it, not zero it out.
+    function test_Refresh_NoContributors_HoldsLastGood() public {
+        uint256[] memory points = new uint256[](2);
+        points[0] = 100e6;
+        points[1] = 300e6;
+        _configure(2, points, 8000, 0);
+
+        feed.refresh(CATEGORY); // good aggregate at block 1000
+        ICompositeFeed.CompositeForecast memory good = feed.read(CATEGORY);
+        uint256 goodValue = abi.decode(good.value, (uint256));
+        assertEq(good.contributingAgents, 2);
+        assertGt(goodValue, 0);
+
+        // Agents go quiet: their latest predictions resolve out of the active set → n == 0.
+        market.setStatus(1, IPredictionMarket.PredictionStatus.Resolved);
+        market.setStatus(2, IPredictionMarket.PredictionStatus.Resolved);
+
+        vm.roll(1100); // past the rate limit
+        vm.expectEmit(true, false, false, true);
+        emit CompositeFeed.CompositeFeedStale(CATEGORY, 2, 1000, 1100);
+        feed.refresh(CATEGORY); // n == 0 → must hold, not zero
+
+        ICompositeFeed.CompositeForecast memory held = feed.read(CATEGORY);
+        assertEq(abi.decode(held.value, (uint256)), goodValue, "value held, not zeroed");
+        assertEq(held.contributingAgents, 2, "contributors held");
+        assertEq(held.lastUpdatedBlock, 1000, "lastUpdatedBlock stays at last good so staleness is observable");
     }
 }
