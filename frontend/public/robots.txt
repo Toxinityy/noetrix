@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# AI agents: a machine-readable guide + manifest live here.
+# llms.txt: /llms.txt
+# agent manifest: /.well-known/agents.json

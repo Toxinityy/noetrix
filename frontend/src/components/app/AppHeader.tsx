@@ -21,6 +21,7 @@ const moreNav = [
   { href: "/feed/meth-apr-24h", label: "Feed" },
   { href: "/demo-consumer", label: "Consumer" },
   { href: "/submit", label: "Submit" },
+  { href: "/agents", label: "For agents" },
   { href: "/about", label: "About" },
 ];
 const allNav = [...primaryNav, ...moreNav];
