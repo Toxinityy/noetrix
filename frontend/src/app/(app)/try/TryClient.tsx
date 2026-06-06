@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   useAccount,
   useBalance,
+  useBlockNumber,
   useConnect,
   useReadContract,
   useSwitchChain,
@@ -78,6 +79,18 @@ export function TryClient() {
   });
   const feed = decodeFeed(read.data);
 
+  // Per-category 100-block refresh cooldown (CompositeFeed.REFRESH_RATE_LIMIT_BLOCKS). Watch the head
+  // block so we can disable Refresh during the cooldown instead of letting a doomed RateLimited tx
+  // fire (which surfaces as a confusing generic "reverted" because the wallet's gas-estimate failure
+  // doesn't carry the decoded custom-error name).
+  const COOLDOWN_BLOCKS = 100;
+  const { data: blockNow } = useBlockNumber({ watch: true, query: { enabled: hasFeed } });
+  const blocksSinceRefresh =
+    feed?.block && blockNow ? Number(blockNow) - feed.block : null;
+  const onCooldown =
+    blocksSinceRefresh !== null && blocksSinceRefresh >= 0 && blocksSinceRefresh < COOLDOWN_BLOCKS;
+  const blocksLeft = onCooldown ? COOLDOWN_BLOCKS - (blocksSinceRefresh ?? 0) : 0;
+
   const receipt = useWaitForTransactionReceipt({ hash: txHash, query: { enabled: !!txHash } });
   React.useEffect(() => {
     if (receipt.isSuccess) read.refetch();
@@ -93,6 +106,10 @@ export function TryClient() {
   };
 
   const handleRefresh = async () => {
+    if (onCooldown) {
+      setError(`This feed was just refreshed — try again in ~${blocksLeft} blocks (~${blocksLeft * 2}s) or pick another category.`);
+      return;
+    }
     setError(null);
     setTxHash(undefined);
     setBeforeBlock(feed?.block ?? 0);
@@ -271,11 +288,23 @@ export function TryClient() {
             <button
               type="button"
               onClick={handleRefresh}
-              disabled={writing || receipt.isLoading}
+              disabled={writing || receipt.isLoading || onCooldown}
               className="mt-4 rounded border border-[var(--color-accent)] bg-[var(--color-accent)]/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)] disabled:opacity-60"
             >
-              {writing ? "Confirm in wallet…" : receipt.isLoading ? "Mining…" : "Refresh the live AI feed"}
+              {writing
+                ? "Confirm in wallet…"
+                : receipt.isLoading
+                  ? "Mining…"
+                  : onCooldown
+                    ? `Cooling down — ~${blocksLeft} blocks`
+                    : "Refresh the live AI feed"}
             </button>
+            {onCooldown && (
+              <p className="mt-2 font-mono text-[11px] text-[var(--color-text-muted)]">
+                Just refreshed — the feed rate-limits to one update per {COOLDOWN_BLOCKS} blocks (~{COOLDOWN_BLOCKS * 2}s).
+                Available again in ~{blocksLeft} blocks, or switch category.
+              </p>
+            )}
 
             {receipt.isSuccess && txHash && (
               <div className="mt-4 rounded border border-[var(--color-up)]/40 bg-[var(--color-up)]/5 p-3 text-sm">
