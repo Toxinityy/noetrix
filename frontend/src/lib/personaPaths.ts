@@ -20,7 +20,7 @@ export const PERSONA_PATHS: PersonaPath[] = [
     id: "earn",
     label: "Earn",
     blurb: "Try a no-wallet yield simulator.",
-    href: "/rwa",
+    href: "/simulation",
     tourId: "earn",
     icon: Coins,
   },

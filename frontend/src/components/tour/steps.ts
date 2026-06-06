@@ -140,7 +140,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
 
 export const TOUR_PAGES: Record<TourId, string> = {
   leaderboard: "/leaderboard",
-  earn: "/rwa",
+  earn: "/simulation",
   alpha: "/insights",
   build: "/submit",
   try: "/try",
