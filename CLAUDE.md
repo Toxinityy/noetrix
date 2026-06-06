@@ -123,6 +123,45 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-06-06 (later) — Board review (4 subagents: CEO/CTO opus, BA/QA sonnet) + P0 demo-readiness fixes (branch `qa-board-review-fixes`)
+**Type:** Review (multi-agent) + targeted build fixes. User asked for a CTO/CEO/Business-Analyst review + QA bug-hunt across all surfaces ("profitable, sustainable, hackathon-winning"), via subagents. Spawned 4 `general-purpose` agents (CEO+CTO opus, BA+QA sonnet); I chaired the synthesis (no SendMessage tool in this harness → couldn't continue agent threads; QA crashed once at 102 tool-calls, re-spawned bounded). Then executed **P0** of the agreed plan.
+
+**Consensus findings (all agents converged):**
+- **CRITICAL — live CompositeFeed reads ZERO** for all 3 categories. `cast`-verified: `read()` → value 0, confidence 0, contributors 0. Root cause: `CompositeFeed._contributor` (CompositeFeed.sol:150) only counts a top agent's latest prediction while status is `Revealed`; bots are stopped → all predictions `Resolved` → feed empties. Cascade (all on-chain verified): `DemoFeedConsumer.shouldAllowDeposits()`=false, `shouldThrottleRisk()`=true, `getCurrentMethApr()`=0, `RiskManager.riskState`=Frozen, `YieldAllocator`→50/50, and `/try`'s live `refresh()` writes 0.
+- **CRITICAL — agents mislabeled "QUANT"** in both committed snapshots judges see. `inferKind("agent #N")` matched nothing → QUANT. Both ARIMA (id1) + DeepSeek reasoner (id2) showed the wrong glyph.
+- Contracts **unverified** on explorer (Sourcify null; Mantlescan V1 dead → needs Etherscan V2 key). Hits the "verifiable" thesis.
+- **No hosted indexer** → "live" surfaces serve 2-day-stale committed snapshots (frozen block 39515577).
+- **Track mismatch (CEO):** brief/strategy says primary = AI Alpha & Data, but SUBMISSION.md/README/Hero/corner-meta all market AI×RWA. `/insights` IS the Alpha&Data-winning surface (smart-money-vs-crowd, anomaly feed, Telegram/Discord alert preview) but is buried at nav #2.
+- **Only 2 agents, resolvedCount 8–22** (<50 success criterion) — "benchmark" with 2 competitors isn't one.
+- **Revenue gates nothing in v1** (reads open) → $0 real WTP, no customer/LOI. BA: break-even = **1 protocol @ $2k/mo**, but pricing is 3–6× market for phase-0 data; the real cost killer is **mainnet gas ~$1–5k/mo** (LLM is ~$1/mo, noise). BA fix: free 6-mo trials → track record → flip gate later.
+- **Positive:** build quality genuinely high — **168 forge tests**, CRPS/calibration Python-parity, clean frontend; pipeline provably ran live end-to-end. The asset to protect.
+
+**P0 fixes executed this session (all verified green):**
+- **QUANT mislabel FIXED.** Added shared `KNOWN_AGENTS`/`agentDisplayName`/exported `inferKind` to `mockData.ts` (id1→"ARIMA Baseline"/ARIMA, id2→"DeepSeek Reasoner"/CLAUDE-enum→"DS" glyph; unknown→`agent #N`→QUANT). Wired into `snapshot.ts`, `indexer.ts`, `gen-fallback.ts` (removed 2 duplicate local `inferKind`s). TDD: new assertion in `snapshot.test.ts`. **Regenerated both snapshots from chain** (`gen:fallback` + `gen:insights`, RPC `rpc.sepolia.mantle.xyz`) → `fallback-leaderboard.json` now ARIMA/DeepSeek + fresh; `insights-snapshot.json` @ block 39597808 (allocation now honest 50/50, risk Frozen — consistent with the zero feed; feedHistory sparse due to the known public-RPC 10k `eth_getLogs` cap).
+- **e2e for `/pricing` + `/try` PASS** at 375px (QA P0.3). Also fixed a **stale tour e2e** (`tour.spec.ts`): the Guide button now re-opens the OnboardingModal needs-picker (per commits a63a2de/500b74b), not the spotlight directly — updated the assertion to the picker dialog. Suite **9/9 green**.
+- Verification: `tsc` 0 · `lint` 0/0 · `vitest` **55** (+1) · `next build` green (14 routes) · forge unchanged (168).
+
+**NOT done (needs user / deferred):**
+- **P0.2 — restart bots** (needs funded hot-wallet keys + the machine): get ≥1 fresh `Revealed` prediction/category then `refresh()` so the live feed + demo-consumer/rwa/try show non-zero. Until then those LIVE surfaces show the degraded (zero/Frozen/50-50) state. Snapshots are honest about this.
+- **P1/P2** (agreed, not started): re-skin front door to Alpha&Data (Hero/nav/SUBMISSION/README copy); verify contracts (Etherscan V2); fix remaining doc drift incl. the self-contradictory track line + internal `CLAUDE` enum rename; add a cheap 3rd agent; reframe revenue around the anomaly-alert *signal* (build the real Telegram/Discord bot — currently UI mock); feed redesign to hold last-good + keeper incentive; host indexer + move bots off laptop.
+
+### 2026-06-06 — Paid testnet-MNT subscription (`SubscriptionGate.subscribe` + `/pricing`); deployed + merged to master
+**Type:** Build (contract extend + standalone redeploy + frontend). Spec: `docs/superpowers/specs/2026-06-05-mnt-subscription-design.md` (approved). Built directly on branch `mnt-subscription` (no separate plan file); 3 commits (`0fbfcb4` spec → `d1de4a6` contracts → `e7c1af1` web). This session = resume: verified all green, then **FF-merged to `master`, branch deleted** (local-only; master ahead of origin, as prior sessions).
+
+**Why:** turn the subscription from copy into a real on-chain action — a `/pricing` page where individuals (Pro/Whale) or protocols (Protocol/API) connect a wallet and **pay testnet MNT** to subscribe; payment recorded on-chain (`Subscribed` event + stored expiry) with Mantlescan proof. Broadens the buyer beyond "Mantle protocols only" to match the retail-facing `/insights`+`/rwa` surfaces. **Feed reads stay open in v1** (`requiresSubscription` stays false) — paying is genuine but gates nothing, avoiding the audit L7 advisory-read-revert footgun.
+
+**What changed:**
+- **`SubscriptionGate.sol` extended** (kept all existing members): `enum Tier {None,Pro,Protocol}`, `SUBSCRIPTION_PERIOD = 30 days`, owner-settable `proPrice 0.5 / protocolPrice 2` (testnet MNT, kept low for faucet), `tierOf` mapping, `subscribe(Tier) payable` (renew **extends from current expiry**, reuses existing `subscriptionExpiry` field so `hasAccess` still works if ever gated), `priceOf`, `setPrices`, owner `withdraw`. Overpayment accepted+kept (no refund; UI always sends exact). Errors `BadTier`/`InsufficientPayment`/`WithdrawFailed`. **11 new tests, full suite 168 green.**
+- **Standalone redeploy only** (no full protocol redeploy): `DeploySubscriptionGate.s.sol` → **new gate `0x0b759e12Baedbb30891666193D33d689F5c23373`** on Mantle Sepolia (broadcast 5003 confirms). `deployments/mantle-sepolia.json` `SubscriptionGate` entry overwritten; `frontend/.env` `NEXT_PUBLIC_ADDR_SUBSCRIPTION_GATE` set. Old gate stays wired in `CompositeFeed` — harmless (reads open). `CompositeFeed` NOT re-wired.
+- **Frontend `/pricing`** (`page.tsx` server + `PricingClient.tsx`): two tier cards, prices read on-chain w/ spec-constant fallback, Subscribe → connect(injected)/switch-network/`writeContractAsync subscribe{value}` → receipt → "subscribed: <Tier> · expires <date>" + Mantlescan tx link; honest testnet/faucet banner; inline errors. `contracts.ts` += `subscriptionGateAbi` + `SUB_TIER` map; `env.ts` += `subscriptionGate`/`hasSubscriptionGate`; `AppHeader` `moreNav` += Pricing; `/pricing` added to responsive e2e list.
+
+**Verification (all green this session):** forge 168 (committed) · frontend `tsc` 0 · `lint` 0/0 · `vitest` 54 · `next build` green w/ `/pricing` static route.
+
+**Risks / pending:**
+- **Subscription is symbolic in v1** — reads aren't gated, so a sub grants no exclusive on-chain capability yet; it's a real payment + on-chain record proving the rail. State to judges (consistent w/ "gate open in v1").
+- **Live `cast send subscribe` DONE** — real Mantle Sepolia tx `0x5b3b084ccbdc4d3ff8db0075e5a7c722216344b0216199757c4f81a38c3d809f` (block 39529459, status 0x1) from deployer `0x23015e…` paid 0.5 MNT `subscribe(Pro=1)` → `tierOf==1`, `subscriptionExpiry==1783326663` (≈now+30d), gate balance += 0.5 MNT. Read-only confirmed prices (0.5/2 MNT) pre-tx. Proves the on-chain pay rail; frontend uses the same `subscribe(uint8)` payable call. **Browser wallet walkthrough still un-run** (headless), but the chain side is now fully verified.
+- Overpayment kept (no refund) — documented; UI sends exact `priceOf(tier)`.
+
 ### 2026-06-03 (later) — Claude→DeepSeek reasoner rebrand (display + spec + pkg rename; branch `claude-deepseek-rebrand`)
 **Type:** Refactor + docs. Spec: `docs/superpowers/specs/2026-06-03-claude-deepseek-rebrand-design.md` (approved; post-merge update `ccfd314`). Plan: `docs/superpowers/plans/2026-06-03-claude-deepseek-rebrand.md`. Executed inline via executing-plans on a fresh branch off `master` (NOT pushed; NOT yet merged).
 
