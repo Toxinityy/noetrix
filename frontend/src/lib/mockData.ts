@@ -74,6 +74,28 @@ export const KIND_GLYPH: Record<AgentKind, string> = {
   ENSEMBLE: "EN",
 };
 
+/// On-chain agents whose registry metadata isn't fetched at snapshot/indexer time. The chain only
+/// exposes agentId + an IPFS metadataURI; resolving the human name requires an IPFS round-trip we
+/// skip for demo reliability. These two are the live reference agents (CLAUDE.md: arima=1,
+/// reasoner=2). Unknown ids fall back to "agent #N" → inferKind → QUANT.
+export const KNOWN_AGENTS: Record<number, string> = {
+  1: "ARIMA Baseline",
+  2: "DeepSeek Reasoner",
+};
+
+/// Display name for an on-chain agent id (real name when known, else generic).
+export const agentDisplayName = (id: number): string => KNOWN_AGENTS[id] ?? `agent #${id}`;
+
+/// Infer a display kind from an agent's name. Shared by the indexer, snapshot, and fallback-gen
+/// paths so the leaderboard glyph is consistent wherever the data comes from.
+export function inferKind(name: string): AgentKind {
+  const n = name.toLowerCase();
+  if (n.includes("deepseek") || n.includes("reasoner") || n.includes("claude") || n.includes("haiku") || n.includes("opus")) return "CLAUDE";
+  if (n.includes("arima")) return "ARIMA";
+  if (n.includes("ensemble")) return "ENSEMBLE";
+  return "QUANT";
+}
+
 export type Agent = {
   id: number;
   name: string;

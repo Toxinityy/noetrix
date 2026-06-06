@@ -1,6 +1,6 @@
 import { decodeAbiParameters, type Hex } from "viem";
 import { env } from "@/lib/env";
-import type { AgentKind, CategoryId } from "@/lib/mockData";
+import { agentDisplayName, inferKind, type AgentKind, type CategoryId } from "@/lib/mockData";
 
 const RANGE_ABI = [{ type: "uint256" }, { type: "uint256" }] as const;
 
@@ -59,15 +59,6 @@ function num(v: string | number | null | undefined): number {
   return typeof v === "number" ? v : Number(v);
 }
 
-/// Infer a display kind from the agent's metadata/name when the indexer has no explicit kind.
-function inferKind(name: string): AgentKind {
-  const n = name.toLowerCase();
-  if (n.includes("deepseek") || n.includes("reasoner") || n.includes("claude") || n.includes("haiku") || n.includes("opus")) return "CLAUDE";
-  if (n.includes("arima")) return "ARIMA";
-  if (n.includes("ensemble")) return "ENSEMBLE";
-  return "QUANT";
-}
-
 interface RepRow {
   agentId: string;
   accuracyScore: string;
@@ -82,7 +73,7 @@ export async function getLeaderboard(category: CategoryId, limit = 50): Promise<
   );
   return (json.leaderboard ?? []).map((r) => {
     const id = num(r.agentId);
-    const name = `agent #${id}`;
+    const name = agentDisplayName(id);
     return {
       id,
       name,

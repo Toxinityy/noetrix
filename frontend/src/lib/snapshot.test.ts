@@ -24,6 +24,16 @@ describe("leaderRowsFromSnapshot", () => {
     expect(rows.map((r) => r.id)).toEqual([1, 2]);
     expect(rows[0].accuracyScore).toBe(900_000);
   });
+
+  it("resolves the known on-chain agents to their real name + kind (not QUANT)", () => {
+    const rows = leaderRowsFromSnapshot(cat);
+    const a1 = rows.find((r) => r.id === 1)!;
+    const a2 = rows.find((r) => r.id === 2)!;
+    expect(a1.name).toBe("ARIMA Baseline");
+    expect(a1.kind).toBe("ARIMA");
+    expect(a2.name).toBe("DeepSeek Reasoner");
+    expect(a2.kind).toBe("CLAUDE"); // internal enum; renders as the "DS" glyph
+  });
 });
 
 describe("bandsFromSnapshot", () => {

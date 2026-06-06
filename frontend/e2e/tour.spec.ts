@@ -12,11 +12,13 @@ test("first-visit tour auto-starts on /leaderboard and advances", async ({ page 
   await expect(page).toHaveURL(/leaderboard/);
 });
 
-test("Guide button replays the tour", async ({ page }) => {
+test("Guide button re-opens the needs-picker", async ({ page }) => {
   await page.goto("/leaderboard");
   const guide = page.getByRole("button", { name: /guide/i });
   if (await guide.count()) {
     await guide.first().click();
-    await expect(page.getByRole("dialog", { name: /guided tour/i })).toBeVisible();
+    // Guide now re-opens the first-run "what do you want to do?" needs-picker
+    // (OnboardingModal); picking a persona from there arms that goal's tour.
+    await expect(page.getByRole("dialog", { name: /what do you want to do/i })).toBeVisible();
   }
 });

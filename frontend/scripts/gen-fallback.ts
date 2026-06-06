@@ -16,7 +16,7 @@
 import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createPublicClient, http, keccak256, toBytes, defineChain, type Abi } from "viem";
-import { AGENTS, CATEGORIES, type CategoryId } from "../src/lib/mockData";
+import { AGENTS, CATEGORIES, agentDisplayName, inferKind, type CategoryId } from "../src/lib/mockData";
 
 interface LeaderRow {
   id: number;
@@ -53,10 +53,11 @@ async function fromIndexer(base: string, category: CategoryId): Promise<LeaderRo
   const json = (await res.json()) as { leaderboard: Array<Record<string, string>> };
   return (json.leaderboard ?? []).map((r) => {
     const id = Number(r.agentId);
+    const name = agentDisplayName(id);
     return {
       id,
-      name: `agent #${id}`,
-      kind: "QUANT",
+      name,
+      kind: inferKind(name),
       accuracyScore: Number(r.accuracyScore),
       calibrationScore: Number(r.calibrationScore),
       resolvedCount: Number(r.resolvedCount),
@@ -149,10 +150,11 @@ async function fromChain(rpc: string): Promise<Record<string, LeaderRow[]>> {
         lastUpdatedBlock: bigint;
       };
       if (rep.resolvedCount === BigInt(0)) continue; // never scored in this category — skip, like the indexer
+      const name = agentDisplayName(agentId);
       rows.push({
         id: agentId,
-        name: `agent #${agentId}`,
-        kind: "QUANT",
+        name,
+        kind: inferKind(name),
         accuracyScore: Number(rep.accuracyScore),
         calibrationScore: Number(rep.calibrationScore),
         resolvedCount: Number(rep.resolvedCount),

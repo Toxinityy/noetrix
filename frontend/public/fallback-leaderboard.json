@@ -1,65 +1,65 @@
 {
-  "generatedAt": "2026-06-04T12:23:43.929Z",
+  "generatedAt": "2026-06-06T10:04:26.604Z",
   "source": "chain",
   "categories": {
     "METH_APR_24H": [
       {
         "id": 1,
-        "name": "agent #1",
-        "kind": "QUANT",
-        "accuracyScore": 738396,
-        "calibrationScore": -147614,
-        "resolvedCount": 13,
-        "lastUpdatedBlock": 39515482
+        "name": "ARIMA Baseline",
+        "kind": "ARIMA",
+        "accuracyScore": 891756,
+        "calibrationScore": -480631,
+        "resolvedCount": 22,
+        "lastUpdatedBlock": 39561539
       },
       {
         "id": 2,
-        "name": "agent #2",
-        "kind": "QUANT",
-        "accuracyScore": 334657,
-        "calibrationScore": -913358,
-        "resolvedCount": 11,
-        "lastUpdatedBlock": 39515531
+        "name": "DeepSeek Reasoner",
+        "kind": "CLAUDE",
+        "accuracyScore": 613097,
+        "calibrationScore": -659767,
+        "resolvedCount": 18,
+        "lastUpdatedBlock": 39561541
       }
     ],
     "USDY_APY_24H": [
       {
         "id": 1,
-        "name": "agent #1",
-        "kind": "QUANT",
-        "accuracyScore": 678159,
-        "calibrationScore": -69878,
-        "resolvedCount": 11,
-        "lastUpdatedBlock": 39515533
+        "name": "ARIMA Baseline",
+        "kind": "ARIMA",
+        "accuracyScore": 865566,
+        "calibrationScore": -414720,
+        "resolvedCount": 20,
+        "lastUpdatedBlock": 39561597
       },
       {
         "id": 2,
-        "name": "agent #2",
-        "kind": "QUANT",
-        "accuracyScore": 560922,
-        "calibrationScore": 0,
-        "resolvedCount": 8,
-        "lastUpdatedBlock": 39515479
+        "name": "DeepSeek Reasoner",
+        "kind": "CLAUDE",
+        "accuracyScore": 759446,
+        "calibrationScore": -664282,
+        "resolvedCount": 14,
+        "lastUpdatedBlock": 39561645
       }
     ],
     "AAVE_MANTLE_TVL_24H": [
       {
         "id": 1,
-        "name": "agent #1",
-        "kind": "QUANT",
-        "accuracyScore": 710615,
-        "calibrationScore": -107706,
-        "resolvedCount": 12,
-        "lastUpdatedBlock": 39515485
+        "name": "ARIMA Baseline",
+        "kind": "ARIMA",
+        "accuracyScore": 883693,
+        "calibrationScore": -454642,
+        "resolvedCount": 21,
+        "lastUpdatedBlock": 39561592
       },
       {
         "id": 2,
-        "name": "agent #2",
-        "kind": "QUANT",
-        "accuracyScore": 398868,
-        "calibrationScore": -664136,
-        "resolvedCount": 11,
-        "lastUpdatedBlock": 39515536
+        "name": "DeepSeek Reasoner",
+        "kind": "CLAUDE",
+        "accuracyScore": 521470,
+        "calibrationScore": -341585,
+        "resolvedCount": 17,
+        "lastUpdatedBlock": 39561594
       }
     ]
   }

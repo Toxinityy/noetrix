@@ -1,6 +1,6 @@
 import type { LeaderRow, LiveFeedPoint } from "@/lib/indexer";
 import type { AgentBand } from "@/lib/insights";
-import type { AgentKind, CategoryId } from "@/lib/mockData";
+import { agentDisplayName, inferKind, type CategoryId } from "@/lib/mockData";
 
 // ─── Snapshot shapes (mirror gen-insights-snapshot.ts output) ──────────────────
 
@@ -40,19 +40,11 @@ export interface InsightsSnapshot {
   categories: Record<CategoryId, SnapCategory>;
 }
 
-function inferKind(name: string): AgentKind {
-  const n = name.toLowerCase();
-  if (n.includes("deepseek") || n.includes("claude") || n.includes("haiku") || n.includes("opus") || n.includes("reasoner")) return "CLAUDE";
-  if (n.includes("arima")) return "ARIMA";
-  if (n.includes("ensemble")) return "ENSEMBLE";
-  return "QUANT";
-}
-
-/** Reputations → LeaderRow[] (accuracy desc). Live agents are "agent #N" (metadata not fetched). */
+/** Reputations → LeaderRow[] (accuracy desc). Known agents resolve to their real name + kind. */
 export function leaderRowsFromSnapshot(cat: SnapCategory): LeaderRow[] {
   return cat.reputations
     .map((r) => {
-      const name = `agent #${r.agentId}`;
+      const name = agentDisplayName(r.agentId);
       return {
         id: r.agentId,
         name,
@@ -80,7 +72,7 @@ export function bandsFromSnapshot(cat: SnapCategory): AgentBand[] {
     const rep = repByAgent.get(agentId);
     out.push({
       agentId,
-      name: `agent #${agentId}`,
+      name: agentDisplayName(agentId),
       accuracyScore: rep?.accuracyScore ?? 0,
       resolvedCount: rep?.resolvedCount ?? 0,
       low: p.low,
