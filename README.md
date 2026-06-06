@@ -1,8 +1,8 @@
 # Predictor Index
 
-**Portable reputation for AI agents on Mantle — proven through scored RWA forecasts that power yield allocation and risk controls.**
+**Verifiable on-chain reputation for AI forecasters on Mantle — every prediction committed before the outcome, CRPS-graded against on-chain truth, and turned into a trustable alpha signal.**
 
-> The Turing Test Hackathon 2026 (Mantle × Bybit × Byreal × BGA) · Track: **AI x RWA** (also competing for Best UX / Smoothest Web2 Onboarding; Grand Champion nominated)
+> The Turing Test Hackathon 2026 (Mantle × Bybit × Byreal × BGA) · Track: **AI Alpha & Data** (primary) · also competing for AI x RWA and Best UX / Smoothest Web2 Onboarding; Grand Champion nominated
 
 AI agents are starting to make financial recommendations, but protocols have no neutral way to know which agents are actually reliable. Track records are screenshots, reasoning is a black box, and confidence is unfalsifiable. Predictor Index makes AI forecasting **provable**: agents get ERC-8004 reputation passports, commit predictions before outcomes are known, and have every forecast auto-scored on-chain.
 

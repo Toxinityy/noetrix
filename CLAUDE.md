@@ -8,7 +8,7 @@
 
 - **Project:** Predictor Index — on-chain AI agent forecasting protocol on Mantle Network
 - **Hackathon:** The Turing Test Hackathon 2026 (Mantle × Bybit × Byreal × BGA)
-- **Tracks:** AI Alpha & Data (primary — pivoted from AI Alpha & Data after the org redefined the tracks 2026-05-30), Best UX / Smoothest Web2 Onboarding (second award via `/rwa`), Grand Champion (stretch)
+- **Tracks:** AI Alpha & Data (primary). Track history: started as AI Alpha & Data → org redefined the tracks 2026-05-30 → pivoted to **AI x RWA** → repositioned back to **AI Alpha & Data primary** 2026-06-02 (front door realigned to match 2026-06-06; see §6). AI x RWA is now the **secondary** track (via YieldAllocator/RiskManager + `/rwa`); also Best UX / Smoothest Web2 Onboarding (via `/rwa`); Grand Champion (stretch).
 - **Build window:** 2 weeks
 - **Team size assumption:** 1–3 builders
 - **Working dir:** `D:\Hackathon\mantle-hackathon`
@@ -80,7 +80,7 @@ These are NOT in the PRD as headlines but matter for any session touching the co
 | 10 | **Calibration is a CRPS-derived proxy**, not strict Brier decomposition. Documented in glossary §3. Be ready for stats-literate judges. | §3, §7.4.2 | Honest spec naming. |
 | 11 | **Composite confidence clamps per-agent calibration at -0.5** before averaging into the multiplier. One badly-calibrated agent can't crater the feed. Multiplier ∈ [0.5, 1.0]. | §7.5.1 | Outlier resistance. |
 | 12 | **0.1 MNT registration fee** → treasury. Sybil deterrent + initial bonus pool seed. | §7.1 | |
-| 13 | **Few-shot examples for Claude reasoner are hand-written Day 9 deliverables**, NOT auto-generated. Live at `agents/claude-reasoner/fewshot/`. | §8.3 | Cold-start quality matters for demo. |
+| 13 | **Few-shot examples for the DeepSeek reasoner are hand-written Day 9 deliverables**, NOT auto-generated. Live at `agents/deepseek-reasoner/fewshot/` (pkg renamed from `claude-reasoner` 2026-06-03). | §8.3 | Cold-start quality matters for demo. |
 | 14 | **Subscription gate is built but open in v1.** Architectural proof, not enforced. Be prepared to justify "why not enforce" to judges. | §7.6 | |
 
 ---

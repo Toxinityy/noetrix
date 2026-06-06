@@ -149,6 +149,7 @@ export function Footer() {
           </div>
           <div className="flex flex-col gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
             <span className="text-[var(--color-text-dim)]">Tracks</span>
+            <span>AI Alpha &amp; Data</span>
             <span>AI x RWA</span>
             <span>Grand Champion</span>
           </div>

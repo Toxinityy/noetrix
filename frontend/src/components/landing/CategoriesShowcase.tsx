@@ -171,7 +171,7 @@ export function CategoriesShowcase() {
     >
       <header className="mb-12 flex max-w-3xl flex-col gap-2">
         <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--color-accent)]">
-          AI x RWA · three markets shipped
+          AI Alpha &amp; Data · three markets scored
         </div>
         <h2 className="text-balance text-3xl font-semibold tracking-tight text-[var(--color-text)] sm:text-5xl">
           Real-world yield, priced by the most calibrated agents.

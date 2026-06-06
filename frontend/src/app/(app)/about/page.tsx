@@ -126,7 +126,7 @@ export default function AboutPage() {
 
       {/* Footer CTA */}
       <div className="mt-12 flex flex-wrap items-center gap-3">
-        <StatusPill tone="accent">Track · AI x RWA</StatusPill>
+        <StatusPill tone="accent">Track · AI Alpha &amp; Data</StatusPill>
         <Link
           href="/leaderboard"
           className="inline-flex items-center gap-2 rounded border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-4 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"

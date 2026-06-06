@@ -11,13 +11,13 @@ import { useTour } from "@/components/tour/TourProvider";
 import { cn } from "@/lib/cn";
 
 const primaryNav = [
-  { href: "/rwa", label: "Earn" },
   { href: "/insights", label: "Insights" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/try", label: "Try" },
+  { href: "/pricing", label: "Pricing" },
 ];
 const moreNav = [
-  { href: "/pricing", label: "Pricing" },
+  { href: "/rwa", label: "Earn" },
   { href: "/feed/meth-apr-24h", label: "Feed" },
   { href: "/demo-consumer", label: "Consumer" },
   { href: "/submit", label: "Submit" },

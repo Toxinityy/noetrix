@@ -1,11 +1,11 @@
 # Predictor Index — DoraHacks submission
 
 **Hackathon:** The Turing Test Hackathon 2026 (Mantle × Bybit × Byreal × BGA)
-**Track:** AI x RWA (primary) · Best UX / Smoothest Web2 Onboarding · Grand Champion (nominated)
+**Track:** AI Alpha & Data (primary) · AI x RWA · Best UX / Smoothest Web2 Onboarding · Grand Champion (nominated)
 
 ## One-liner
 
-Portable reputation for AI agents on Mantle — proven through scored RWA forecasts that power yield allocation and risk controls.
+Verifiable on-chain reputation for AI forecasters on Mantle — every prediction committed before the outcome, CRPS-graded against on-chain truth, and turned into a trustable alpha signal protocols and traders can read.
 
 ## Description
 
@@ -19,9 +19,20 @@ Portable reputation for AI agents on Mantle — proven through scored RWA foreca
 
 **Revenue model.** The first product is the public scorecard: a tamper-resistant history of which agents were right. The paid product is the feed built from those reputations. Post-hackathon revenue target: RWA and DeFi protocols subscribe to the gated composite feed once live resolvers and a longer track record are in place. The subscription gate is built and architecturally proven; it's left open in v1 so hackathon judges can read freely. Secondary value: data licensing and premium analytics tiers.
 
-## Track justification — AI x RWA
+## Track justification — AI Alpha & Data (primary)
 
-The track asks for *"dynamic yield strategies and automated risk management for assets including USDY and mETH, built on Mantle's RWA infrastructure."* Predictor Index hits every clause: it forecasts **mETH** and **USDY** yield (both named in the track), the **YieldAllocator** is the dynamic yield strategy, and the **RiskManager** is the automated risk management — all driven by AI forecasts that are verifiable on-chain rather than a black box. The novel angle: the yield/risk logic is powered by a *competitive, reputation-weighted AI forecast feed*, not a single oracle.
+The track rewards **smart-money tracking, anomaly detection, and on-chain data products**. Predictor Index delivers all three, and grounds them in something most "alpha" tools can't: a *provable* track record.
+
+- **The data product** is a verifiable on-chain leaderboard of AI forecasters. Every prediction is committed before the outcome is known and CRPS-graded against on-chain truth, so "which agent is actually right, in which category, at which confidence" is a tamper-resistant fact, not a screenshot.
+- **Smart-money signals.** `/insights` turns the scored agents into accuracy-weighted *smart-money-vs-crowd* divergence, agent-disagreement spread, and a plain-English findings feed — the alpha, legible to a non-crypto trader.
+- **Anomaly detection + alerts.** An anomaly feed surfaces when the qualified-agent consensus breaks from the crowd, with a Telegram/Discord alert preview — the productized data feed a trader subscribes to.
+- **The signal.** The rank-weighted, calibration-weighted **composite feed** is the consensus alpha — valuable *because* the public scorecard proves the agents behind it have been right before.
+
+The novel angle for the track: the alpha is **competitive and reputation-weighted**, and the reputation is **earned on-chain and impossible to fake** — verifiable AI data, not a black box.
+
+## Secondary track — AI x RWA
+
+Mantle RWA is the first proof case for the feed. Predictor Index forecasts and resolves against **mETH** staking APR and **USDY** (Ondo's tokenized US-Treasury stablecoin) APY — both named in the AI x RWA track — and two reference consumers turn the composite feed into applications: a **YieldAllocator** (confidence-weighted mETH/USDY allocation — the dynamic yield strategy) and a **RiskManager** (collateral factors, deposit caps, and a Normal/Caution/Frozen state from forecast confidence + freshness — the automated risk management). Both are advisory/read-only — a real vault or lending market embeds them — a deliberate no-custody scope choice for the hackathon.
 
 ## Second award — Best UX / Smoothest Web2 Onboarding
 
