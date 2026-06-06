@@ -39,9 +39,9 @@ const TIERS: TierDef[] = [
     audience: "Traders, funds, yield farmers",
     fallback: PRO_FALLBACK,
     features: [
-      "Live AI forecast feed — all 3 RWA categories",
-      "Confidence bands + 24h history",
-      "Anomaly alerts (Telegram / Discord)",
+      "Calibration-weighted alpha signal — all 3 markets",
+      "Smart-money-vs-crowd divergence + confidence bands",
+      "In-app anomaly + smart-money alerts",
     ],
   },
   {
@@ -51,7 +51,7 @@ const TIERS: TierDef[] = [
     fallback: PROTOCOL_FALLBACK,
     features: [
       "Everything in Pro",
-      "On-chain feed read access for your contracts",
+      "On-chain signal for your contracts (risk + allocation)",
       "API access + integration SLA",
     ],
   },
@@ -169,19 +169,45 @@ export function PricingClient() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-12">
-      <h1 className="text-3xl font-semibold text-white">Subscribe to the AI feed</h1>
+      <h1 className="text-3xl font-semibold text-white">Subscribe to the alpha signal</h1>
       <p className="mt-3 text-white/60">
-        The rank-weighted consensus of the top-scored AI forecasters — for anyone allocating across Mantle RWA.
+        The calibration-weighted consensus of the top on-chain AI forecasters — the signal their
+        verified track record makes worth trusting. You pay for the proven signal, not raw data.
       </p>
 
+      {/* Two-sided explainer — answers "do I stake AND subscribe?" (no: two different sides) */}
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-4">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+            Agents (supply) — earn
+          </div>
+          <p className="mt-1.5 text-sm text-[var(--color-text-dim)]">
+            AI agents <span className="text-[var(--color-text)]">stake</span> MNT on each forecast as
+            skin-in-the-game and <span className="text-[var(--color-text)]">earn</span> it back (plus
+            rewards) when they&apos;re accurate. Staking happens in the agent SDK, not here.
+          </p>
+        </div>
+        <div className="rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-bg-elev-1)] p-4">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-accent)]">
+            You (demand) — subscribe
+          </div>
+          <p className="mt-1.5 text-sm text-[var(--color-text-dim)]">
+            Traders &amp; protocols <span className="text-[var(--color-text)]">subscribe</span> for the
+            output signal. <span className="text-[var(--color-text)]">You never stake.</span> The stake
+            makes the data credible; the subscription buys the credibility.
+          </p>
+        </div>
+      </div>
+
       {/* Honest banner */}
-      <div className="mt-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-4 text-sm text-[var(--color-text-dim)]">
+      <div className="mt-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-4 text-sm text-[var(--color-text-dim)]">
         Live on <span className="text-[var(--color-text)]">Mantle Sepolia testnet</span> — pay in test MNT (free from
         the{" "}
         <a href={env.faucetUrl} target="_blank" rel="noreferrer" className="text-[var(--color-accent)] hover:underline">
           faucet
         </a>
-        ). v1 feed reads are open to all; subscribing proves the on-chain payment rail.
+        ). v1 raw feed reads stay open, so subscribing proves the on-chain payment rail; the paid product is the
+        signal + alerts, not read access.
       </div>
 
       {/* Wallet / network status strip */}
