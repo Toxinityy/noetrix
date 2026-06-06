@@ -89,7 +89,7 @@ export const ALPHA_STEPS: TourStep[] = [
   {
     id: "alpha-findings",
     selector: '[data-tour="alpha-findings"]',
-    title: "Where smart money disagrees",
+    title: "Where the crowd and proven AI split",
     body: "The most accurate AIs vs. the crowd, the biggest bull/bear split, and live anomalies.",
   },
   {

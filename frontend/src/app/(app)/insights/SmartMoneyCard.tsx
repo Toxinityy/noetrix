@@ -22,15 +22,15 @@ export function SmartMoneyCard({
   return (
     <Panel elevation={2} className="lg:col-span-2">
       <PanelHeader
-        caption="Smart money vs the crowd"
-        title={`Where the best AIs disagree — ${friendly}`}
+        caption="Crowd vs proven AI"
+        title={`Where the proven AIs break from the crowd — ${friendly}`}
         right={<StatusPill tone="accent">{d.qualifiedCount} qualified AIs</StatusPill>}
       />
       <PanelBody>
         {!d.enoughData || d.smartMoneyValue == null || d.crowdValue == null ? (
           <EmptyState
             title="Not enough graded forecasts yet"
-            body="The smart-money view appears once enough AIs have a track record (10+ graded forecasts) in this market."
+            body="The proven-AI view appears once enough AIs have a track record (10+ graded forecasts) in this market."
           />
         ) : (
           <div className="flex flex-col gap-6">
@@ -52,6 +52,10 @@ export function SmartMoneyCard({
                 ? ` — by about ${Math.abs(d.deltaPct).toFixed(1)}%.`
                 : "."}
             </p>
+            <p className="-mt-3 text-xs leading-relaxed text-[var(--color-text-muted)]">
+              Crowd = every agent, equal weight. Proven AI = accuracy-weighted to the agents that have
+              actually been right on-chain. When they diverge, the track record says who to trust.
+            </p>
 
             {/* Bullet: crowd marker vs smart-money bar */}
             <BulletRow
@@ -63,7 +67,7 @@ export function SmartMoneyCard({
             <div className="grid grid-cols-2 gap-6 border-t border-[var(--color-border)] pt-4">
               <div>
                 <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                  smart-money view
+                  proven-AI view
                 </div>
                 <div className="mt-1 font-mono text-2xl text-[var(--color-accent)] tabular">
                   {friendlyValue(categoryId, d.smartMoneyValue)}
@@ -123,10 +127,10 @@ function BulletRow({
         crowd
       </span>
       <span className="absolute -top-1 text-[10px] font-mono text-[var(--color-accent)]" style={{ left: `${pos(smart)}%`, transform: "translateX(-50%)" }}>
-        smart money
+        proven AI
       </span>
       <span className="sr-only">
-        Smart-money view {friendlyValue(categoryId, smart)} versus crowd {friendlyValue(categoryId, crowd)}.
+        Proven-AI view {friendlyValue(categoryId, smart)} versus crowd {friendlyValue(categoryId, crowd)}.
       </span>
     </div>
   );

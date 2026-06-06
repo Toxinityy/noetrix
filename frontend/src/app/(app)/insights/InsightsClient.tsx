@@ -73,8 +73,8 @@ export function InsightsClient() {
           </p>
           <p>
             Below, the <span className="text-[var(--color-text)]">most accurate AIs</span> (the
-            &quot;smart money&quot;) are compared against the whole crowd, so you can see where the
-            best forecasters disagree with the average — and how confident they are.
+            &quot;proven AI&quot;) are compared against the whole crowd, so you can see where the
+            best forecasters break from the average — and how confident they are.
           </p>
         </div>
       </details>
@@ -150,7 +150,7 @@ export function InsightsClient() {
           <span className="text-[var(--color-text)]">AI&apos;s role:</span> independent agents (a DeepSeek
           reasoner and an ARIMA baseline) forecast each metric; their accuracy is scored on-chain via CRPS.{" "}
           <span className="text-[var(--color-text)]">Verifiable value:</span> every forecast, grade, and the
-          resulting &quot;smart-money&quot; view is recorded on Mantle and independently checkable.
+          resulting &quot;proven-AI&quot; view is recorded on Mantle and independently checkable.
         </p>
         <p className="mt-3 border-t border-[var(--color-border)] pt-3 text-[var(--color-text-muted)]">
           <span className="text-[var(--color-text-dim)]">Honesty note:</span> for this demo the outcome
