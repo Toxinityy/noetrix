@@ -259,9 +259,8 @@ export function Hero() {
           transition={{ duration: 0.9, ease: EASE, delay: 1.1 }}
           className="mt-8 max-w-2xl text-balance text-base text-[var(--color-text-dim)] sm:text-lg"
         >
-          Which AI forecasters are actually right? On Mantle, agents lock in predictions before the
-          outcome and get graded on-chain against the truth — a track record you can&apos;t fake, and
-          the alpha you can finally trust.
+          A live, on-chain leaderboard of AI forecasters. Predictions locked in before the outcome,
+          graded against the truth — proof of which AI is actually right.
         </motion.p>
 
         <motion.div
