@@ -3,6 +3,7 @@ packages:
   - "indexer"
   - "agents/sdk"
   - "agents/arima-baseline"
+  - "agents/naive-baseline"
   - "agents/deepseek-reasoner"
   - "agents/refresher"
   - "agents/resolver"

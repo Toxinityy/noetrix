@@ -123,6 +123,20 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-06-06 (P1) — Reposition to AI Alpha & Data primary + add 3rd "Naive Baseline" agent (branch `qa-board-review-fixes`)
+**Type:** Build (copy/docs + new agent pkg). Continued P1 of the board-review plan after P0. User confirmed **AI Alpha & Data = primary** (over keep-RWA / dual) via AskUserQuestion.
+
+**Reposition (front door realigned to the already-stated primary; it had drifted to RWA):**
+- Hero subtitle → "Verifiable AI alpha on Mantle…" (forecasts committed pre-outcome, CRPS-graded, smart-money signals + anomaly alerts + consensus feed); corner-meta `track · ai alpha & data`.
+- Nav: leads **Insights → Leaderboard → Try → Pricing**; **Earn (`/rwa`) demoted to More**.
+- README + SUBMISSION rewritten: new tagline/one-liner; **primary track justification = AI Alpha & Data** (data product = verifiable leaderboard; smart-money-vs-crowd; anomaly+Telegram/Discord alerts; calibration-weighted feed); **AI x RWA reframed as secondary**.
+- Footer/About/CategoriesShowcase track labels → Alpha & Data. Fixed CLAUDE.md §0 self-contradictory track line + stale `claude-reasoner/fewshot` path (now `deepseek-reasoner`) in invariant #13.
+
+**3rd agent — `agents/naive-baseline/` (new workspace pkg):** naive **persistence** forecaster (next = last value, 95% band = max(8%·|last|, 1.96·recent-vol)). The textbook control — makes the leaderboard read as a real benchmark (naive < arima < reasoner) rather than a 2-agent demo (CEO/BA recommendation). Mirrors `arima-baseline` (config/state/indexer/SEED_MODE/register identical; `naive.ts` replaces `arima.ts`). Added to `pnpm-workspace.yaml`; `KNOWN_AGENTS[3]="Naive Baseline"` in frontend (→ QUANT glyph, no llm/arima keyword). **Also exported `USDY_APY_24H` from the SDK index** (was defined in categories.ts but missing from the barrel — real gap; arima register only had METH/AAVE).
+- **NOTE on scope-cut §4:** the original cut "Third agent (specialized-quant)" was a *sophisticated* 3rd model; this is a deliberately *naive control* baseline (different intent), approved via the board plan. Not the cut item.
+
+**Verification:** SDK + naive-baseline `tsc` build clean; frontend `tsc` 0 · `lint` 0 · `vitest` 55 · `next build` 14 routes · `e2e` 9/9. **Naive agent NOT yet registered/run** — needs a funded controller hot-wallet (separate key) + the chain; bundle with the P0.2 bot restart. Once registered it should mint agentId 3 (matches `KNOWN_AGENTS[3]`); if it mints a different id, update that map entry.
+
 ### 2026-06-06 (later) — Board review (4 subagents: CEO/CTO opus, BA/QA sonnet) + P0 demo-readiness fixes (branch `qa-board-review-fixes`)
 **Type:** Review (multi-agent) + targeted build fixes. User asked for a CTO/CEO/Business-Analyst review + QA bug-hunt across all surfaces ("profitable, sustainable, hackathon-winning"), via subagents. Spawned 4 `general-purpose` agents (CEO+CTO opus, BA+QA sonnet); I chaired the synthesis (no SendMessage tool in this harness → couldn't continue agent threads; QA crashed once at 102 tool-calls, re-spawned bounded). Then executed **P0** of the agreed plan.
 

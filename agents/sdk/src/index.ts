@@ -9,6 +9,7 @@ export {
   CATEGORIES,
   METH_APR_24H,
   AAVE_MANTLE_TVL_24H,
+  USDY_APY_24H,
 } from "./categories.js";
 export { agentRegistryAbi, predictionMarketAbi } from "./abis.js";
 export {

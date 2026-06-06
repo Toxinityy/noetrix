@@ -81,6 +81,7 @@ export const KIND_GLYPH: Record<AgentKind, string> = {
 export const KNOWN_AGENTS: Record<number, string> = {
   1: "ARIMA Baseline",
   2: "DeepSeek Reasoner",
+  3: "Naive Baseline", // control benchmark; inferKind → QUANT glyph (no llm/arima keyword)
 };
 
 /// Display name for an on-chain agent id (real name when known, else generic).
