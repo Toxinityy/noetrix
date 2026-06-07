@@ -9,6 +9,9 @@ export interface CategoryDef {
   description: string;
   /// CryptoPanic currency codes to pull news for.
   newsCurrencies: string[];
+  /// Plausible center (domain units) used as the anchor of last resort when the model returns an
+  /// uninformative (near-full-domain) band and no feed/history is available (cold start).
+  seedCenter: number;
 }
 
 export interface ReasonerConfig {
@@ -53,6 +56,7 @@ export function loadConfig(): ReasonerConfig {
           "24h annualized staking APR of Mantle mETH, expressed in basis points (bps). Domain [0, 100000] bps " +
           "(0%–1000%); resolved by annualizing the mETH exchange-rate change over the prior day.",
         newsCurrencies: ["ETH", "MNT"],
+        seedCenter: 3000, // ~30% APR bps
       },
       {
         label: "AAVE_MANTLE_TVL_24H",
@@ -60,6 +64,7 @@ export function loadConfig(): ReasonerConfig {
           "Total value locked in Aave on Mantle, in USD with 8 decimals (value = USD × 1e8). Domain [0, 1e17] " +
           "(up to ~$1B); resolved by summing reserve aToken supply × oracle price across the pool.",
         newsCurrencies: ["AAVE", "MNT", "ETH"],
+        seedCenter: 1.4e16, // ~$140M, 8-dec USD
       },
       {
         label: "USDY_APY_24H",
@@ -68,6 +73,7 @@ export function loadConfig(): ReasonerConfig {
           "(bps). Domain [0, 2000] bps (0%–20%); resolved by annualizing the USDY price-per-share change " +
           "over the prior day. USDY tracks short-term US Treasury yields, so expect ~400–550 bps.",
         newsCurrencies: ["USDY", "ONDO", "MNT"],
+        seedCenter: 500, // ~5% APY bps
       },
     ],
     normalOffsetBlocks: 43_200n, // ~24h

@@ -58,6 +58,44 @@ export function parseForecastText(rawText: string): ParsedForecast {
   return validate(JSON.parse(extractJson(rawText)));
 }
 
+/// Make the model's forecast coherent before submission. Two guards, both real failure modes a
+/// cold-start LLM hits (observed: it returned [0, domainMax] with confidence 10000 — max width AND
+/// max confidence, which is incoherent, drags the ensemble midpoint to domain/2, and tanks
+/// calibration because it's "100% sure" of a no-information band):
+///   1. Re-anchor an uninformative band (≥50% of the domain) onto the best available anchor
+///      (recent feed/history value, else the per-category seed center) at a modest width, so the
+///      ensemble midpoint stays sane. A re-anchored forecast is a fallback, not high conviction →
+///      confidence capped at 5000.
+///   2. Confidence must track band width: cap at round(10000 × (1 − widthFraction)). A wide band
+///      can't be high-confidence; a tight band keeps its stated confidence.
+export function sanitizeForecast(
+  lower: number,
+  upper: number,
+  confidence: number,
+  domainMin: number,
+  domainMax: number,
+  anchor: number,
+): { lower: number; upper: number; confidence: number } {
+  const span = Math.max(1, domainMax - domainMin);
+  let lo = Math.min(lower, upper);
+  let hi = Math.max(lower, upper);
+  let conf = confidence;
+
+  let widthFrac = (hi - lo) / span;
+  const UNINFORMATIVE = 0.5;
+  if (widthFrac >= UNINFORMATIVE && Number.isFinite(anchor) && anchor > domainMin && anchor < domainMax) {
+    const half = Math.max(Math.abs(anchor) * 0.1, span * 0.02);
+    lo = Math.max(domainMin, anchor - half);
+    hi = Math.min(domainMax, anchor + half);
+    widthFrac = (hi - lo) / span;
+    conf = Math.min(conf, 5000);
+  }
+
+  const coherent = Math.round(10000 * (1 - widthFrac));
+  conf = Math.max(0, Math.min(10000, Math.min(conf, coherent)));
+  return { lower: lo, upper: hi, confidence: conf };
+}
+
 interface ChatCompletion {
   choices?: { message?: { content?: string } }[];
 }

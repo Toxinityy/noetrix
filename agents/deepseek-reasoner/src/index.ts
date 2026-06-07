@@ -7,7 +7,7 @@ import { countResolved, fetchAgentHistory, fetchFeedHistory } from "./indexer.js
 import { fetchNews } from "./news.js";
 import { buildContext } from "./context.js";
 import { loadFewShot, buildUserPrompt } from "./prompt.js";
-import { getForecast } from "./forecast.js";
+import { getForecast, sanitizeForecast } from "./forecast.js";
 
 const FLIP_RESOLVED_THRESHOLD = 50;
 const FLIP_ELAPSED_SECONDS = 48 * 3600;
@@ -79,8 +79,25 @@ async function submitForCategory(
   const userPrompt = buildUserPrompt(context, examples);
 
   const { parsed, rawText } = await getForecast(cfg.llmApiKey, cfg.llmBaseUrl, cfg.model, userPrompt);
-  const range = clampRange(parsed.predicted_value.lower, parsed.predicted_value.upper, domainMin, domainMax);
-  const confidence = Math.max(0, Math.min(10000, parsed.confidence));
+
+  // Anchor of last resort for an uninformative (near-full-domain) band: latest feed value, else this
+  // agent's last band midpoint, else the per-category seed center. Keeps the ensemble midpoint sane
+  // when the model hedges to [0, domainMax] at cold start.
+  const lastFeed = feed.length > 0 ? Number(feed[feed.length - 1].value) : NaN;
+  const lastHist =
+    history.length > 0 ? Number((history[history.length - 1].low + history[history.length - 1].high) / 2n) : NaN;
+  const anchor = Number.isFinite(lastFeed) && lastFeed > 0 ? lastFeed : Number.isFinite(lastHist) && lastHist > 0 ? lastHist : cat.seedCenter;
+
+  const sane = sanitizeForecast(
+    parsed.predicted_value.lower,
+    parsed.predicted_value.upper,
+    parsed.confidence,
+    Number(domainMin),
+    Number(domainMax),
+    anchor,
+  );
+  const range = clampRange(sane.lower, sane.upper, domainMin, domainMax);
+  const confidence = Math.max(0, Math.min(10000, sane.confidence));
 
   // The full provenance — prompt, raw response, parsed forecast — is the on-chain contentHash payload.
   const content = {
