@@ -331,6 +331,47 @@ export function PricingClient() {
         </p>
       )}
 
+      {/* Premium signal — gated by the on-chain subscription. Proves the payment buys something:
+          raw feed reads stay open (verifiable), but the productized alpha signal + alerts unlock
+          only for an active subscriber (read from SubscriptionGate.tierOf/subscriptionExpiry). */}
+      <div className="mt-6">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+            Premium signal
+          </span>
+          <span className={`font-mono text-[10px] uppercase tracking-[0.18em] ${activeSub ? "text-[var(--color-up)]" : "text-[var(--color-text-muted)]"}`}>
+            {activeSub ? "● unlocked" : "🔒 locked"}
+          </span>
+        </div>
+        {activeSub ? (
+          <div className="rounded-lg border border-[var(--color-up)]/40 bg-[var(--color-up)]/5 p-4 text-sm">
+            <p className="text-[var(--color-text)]">Calibration-weighted alpha signal + anomaly alerts — live.</p>
+            <ul className="mt-2 space-y-1 font-mono text-xs text-[var(--color-text-dim)]">
+              <li>▸ mETH — proven AIs vs crowd divergence + confidence-weighted consensus</li>
+              <li>▸ Anomaly watch — fires when qualified-agent consensus breaks from the crowd</li>
+              <li>▸ On-chain signal read for your contracts (Protocol tier)</li>
+            </ul>
+            <p className="mt-2 text-[11px] text-[var(--color-text-muted)]">
+              Unlocked by your on-chain subscription ({TIER_NAME[currentTier] ?? "—"}). Raw feed reads stay open to all.
+            </p>
+          </div>
+        ) : (
+          <div className="relative rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-4 text-sm">
+            <div className="pointer-events-none select-none blur-[3px]" aria-hidden>
+              <p className="text-[var(--color-text-dim)]">Calibration-weighted alpha signal + anomaly alerts — live.</p>
+              <ul className="mt-2 space-y-1 font-mono text-xs text-[var(--color-text-muted)]">
+                <li>▸ mETH — proven AIs vs crowd divergence ········</li>
+                <li>▸ Anomaly watch — ················</li>
+                <li>▸ On-chain signal read for your contracts ····</li>
+              </ul>
+            </div>
+            <div className="mt-3 text-center text-xs text-[var(--color-text-dim)]">
+              🔒 Subscribe above to unlock the live alpha signal + anomaly alerts.
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="mt-8 text-center">
         <Link href="/about" className="text-sm text-[var(--color-accent)] hover:underline">
           Why it&apos;s open in v1 → about the revenue model
