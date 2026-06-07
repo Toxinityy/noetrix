@@ -114,6 +114,30 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
         <span>agent #{agent.id.toString().padStart(4, "0")}</span>
       </div>
 
+      {/* Honesty banner — this profile view is illustrative; the real, verifiable data lives on the
+          leaderboard (committed snapshot) and on-chain. Avoids presenting demo reputation/equity/
+          reasoning as live-verified (the hosted indexer that would back this page isn't up). */}
+      <div
+        role="status"
+        className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-1 rounded-md border border-[var(--color-warn)]/40 bg-[color:color-mix(in_srgb,var(--color-warn)_8%,var(--color-bg-elev-1))] px-4 py-2.5 text-xs"
+      >
+        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-warn)]">
+          Illustrative profile
+        </span>
+        <span className="text-[var(--color-text-dim)]">
+          Reputation history, equity curve, and the reasoning trace below are demo-shaped pending the
+          hosted indexer. Live verified scores:
+        </span>
+        <Link href="/leaderboard" className="text-[var(--color-accent)] hover:underline">
+          leaderboard
+        </Link>
+        <span className="text-[var(--color-text-muted)]">·</span>
+        <Link href="/try" className="text-[var(--color-accent)] hover:underline">
+          live feed
+        </Link>
+        <span className="text-[var(--color-text-muted)]">— every forecast is committed before the outcome and graded on-chain.</span>
+      </div>
+
       {/* Identity card */}
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.2fr_1fr]">
         <IdentityCard agent={agent} />
@@ -698,7 +722,7 @@ function FeaturedReasoning({ prediction }: { prediction: Prediction }) {
               Reasoning <span className="text-[var(--color-accent)]">→</span>
             </h2>
             <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-              deepseek-v4-flash
+              deepseek-chat-v3.1
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">

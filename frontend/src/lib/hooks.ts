@@ -10,7 +10,7 @@ import { MIN_RESOLVED_QUALIFIED, SMART_MONEY_TOP_N, crowdConsensus } from "@/lib
 import type { InsightsSnapshot, SnapCategory } from "@/lib/snapshot";
 import { leaderRowsFromSnapshot, bandsFromSnapshot, feedFromSnapshot } from "@/lib/snapshot";
 
-export type DataSource = "live" | "cached" | "mock";
+export type DataSource = "live" | "cached" | "snapshot" | "mock";
 
 export interface QueryView<T> {
   data: T;
@@ -59,7 +59,8 @@ function useFallbackLeaderboard() {
       if (!res.ok) return null;
       return (await res.json()) as FallbackFile;
     },
-    enabled: hasIndexer, // only needed as a safety net when we're attempting live fetches
+    // Always load: it's the cached safety net when live fails AND the primary source when no indexer
+    // is configured (the committed on-chain snapshot — real data, not mock).
     staleTime: Infinity,
     retry: false,
   });
@@ -76,7 +77,15 @@ export function useLeaderboard(category: CategoryId): QueryView<LeaderRow[]> {
     refetchInterval: REFRESH_MS,
   });
 
+  // No indexer configured → serve the committed on-chain snapshot (real data), not mock.
   if (!hasIndexer) {
+    const snap = fallback.data?.categories?.[category];
+    if (snap && snap.length > 0) {
+      return { data: snap, source: "snapshot", isLoading: false, isError: false };
+    }
+    if (fallback.isLoading) {
+      return { data: [], source: "snapshot", isLoading: true, isError: false };
+    }
     return { data: mockLeaderRows(category), source: "mock", isLoading: false, isError: false };
   }
   if (q.data && q.data.length > 0) {

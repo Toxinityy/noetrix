@@ -155,8 +155,18 @@ export function LeaderboardClient() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <StatusPill tone={board.source === "live" ? "up" : "muted"} dot pulse={board.source === "live"}>
-            {board.source === "live" ? "Live" : "Demo data"}
+          <StatusPill
+            tone={board.source === "live" ? "up" : board.source === "snapshot" ? "accent" : "muted"}
+            dot
+            pulse={board.source === "live"}
+          >
+            {board.source === "live"
+              ? "Live"
+              : board.source === "snapshot"
+                ? "On-chain snapshot"
+                : board.source === "cached"
+                  ? "Cached"
+                  : "Demo data"}
           </StatusPill>
           <StatusPill tone="muted">Epoch {recentEpoch.id}</StatusPill>
         </div>
