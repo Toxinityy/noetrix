@@ -28,6 +28,8 @@ bracket_spacing = true
 mantle_sepolia = "${MANTLE_SEPOLIA_RPC}"
 mantle_mainnet = "${MANTLE_MAINNET_RPC}"
 
+# Mantlescan's standalone V1 API is dead; verify via the Etherscan V2 multichain endpoint
+# (one ETHERSCAN_API_KEY, chain selected by ?chainid=). Mantle Sepolia = 5003, Mainnet = 5000.
 [etherscan]
-mantle_sepolia = { key = "${MANTLESCAN_API_KEY}", url = "https://api-sepolia.mantlescan.xyz/api" }
-mantle_mainnet = { key = "${MANTLESCAN_API_KEY}", url = "https://api.mantlescan.xyz/api" }
+mantle_sepolia = { key = "${ETHERSCAN_API_KEY}", url = "https://api.etherscan.io/v2/api?chainid=5003", chain = 5003 }
+mantle_mainnet = { key = "${ETHERSCAN_API_KEY}", url = "https://api.etherscan.io/v2/api?chainid=5000", chain = 5000 }
