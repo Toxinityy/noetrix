@@ -31,7 +31,7 @@ function clamp(v: bigint, lo: bigint, hi: bigint): bigint {
   return v < lo ? lo : v > hi ? hi : v;
 }
 
-/// Mirror of CompositeFeed.sol._aggregate (to be implemented in Plan 3), in scaled-integer BigInt.
+/// Mirror of CompositeFeed.sol._aggregate (Plan 3 implements the Solidity side to match this), in scaled-integer BigInt.
 /// Contributors are passed in RANK ORDER (best first). lo/hi are the band; stated is bps; cal is the
 /// agent's calibrationScore in CAL_SCALE (≤ 0). All four arrays share length n.
 export function aggregateSwarm(
@@ -72,9 +72,12 @@ export function aggregateSwarm(
   }
   const D = isqrt(V);
 
-  // Raw disagreement = midpoint scatter only (band width represents individual uncertainty,
-  // not inter-agent disagreement about the predicted level)
-  const dRaw = D;
+  // Mean band width Wbar = Σ w_i * width_i / WEIGHT_SCALE
+  let Wbar = 0n;
+  for (let i = 0; i < n; i++) Wbar += (w[i] * width[i]) / WEIGHT_SCALE;
+
+  // Raw disagreement = midpoint scatter + half mean band width (anti wide-band-gaming defense)
+  const dRaw = D + Wbar / 2n;
 
   // Normalized disagreement d ∈ [0, CAL_SCALE]
   const scale = p.disagreeScale > 0n ? p.disagreeScale : 1n;

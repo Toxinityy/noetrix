@@ -16,8 +16,10 @@ export function confidenceFromWidth(
 
 /// Clamp a raw Band to the category domain and attach width-derived confidence.
 export function toForecast(band: Band, domainMin: number, domainMax: number): Forecast {
-  const lower = Math.min(Math.max(band.lower, domainMin), domainMax);
-  const upper = Math.min(Math.max(band.upper, domainMin), domainMax);
+  const clampedLower = Math.min(Math.max(band.lower, domainMin), domainMax);
+  const clampedUpper = Math.min(Math.max(band.upper, domainMin), domainMax);
+  const lower = Math.min(clampedLower, clampedUpper);
+  const upper = Math.max(clampedLower, clampedUpper);
   const mean = Math.min(Math.max(band.mean, domainMin), domainMax);
   return {
     mean,

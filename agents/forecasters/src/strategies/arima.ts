@@ -76,7 +76,7 @@ export function arima(series: number[], opts: StrategyOpts): Band {
   let cum = 0;
   let varSum = 0;
   for (let j = 0; j < horizon; j++) {
-    cum += psi[j] ?? 0;
+    cum += psi[j];
     varSum += cum * cum;
   }
   const rawSigma = Math.sqrt(Math.max(0, sigma2) * varSum);

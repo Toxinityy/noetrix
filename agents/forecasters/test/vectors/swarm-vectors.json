@@ -28,8 +28,8 @@
     },
     "expected": {
       "ensemble": "49999",
-      "confidenceBps": 9799,
-      "disagreementBps": 0,
+      "confidenceBps": 7841,
+      "disagreementBps": 1998,
       "contributors": 3
     }
   },
@@ -89,7 +89,7 @@
     "expected": {
       "ensemble": "50000",
       "confidenceBps": 5000,
-      "disagreementBps": 0,
+      "disagreementBps": 4000,
       "contributors": 1
     }
   },
@@ -122,8 +122,8 @@
     },
     "expected": {
       "ensemble": "499",
-      "confidenceBps": 8999,
-      "disagreementBps": 0,
+      "confidenceBps": 7874,
+      "disagreementBps": 1250,
       "contributors": 3
     }
   }
