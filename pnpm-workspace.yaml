@@ -4,6 +4,7 @@ packages:
   - "agents/sdk"
   - "agents/forecasters"
   - "agents/market-data"
+  - "agents/backtest"
   - "agents/arima-baseline"
   - "agents/naive-baseline"
   - "agents/deepseek-reasoner"
