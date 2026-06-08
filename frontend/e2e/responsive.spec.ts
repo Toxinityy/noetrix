@@ -1,6 +1,13 @@
 import { test, expect } from "@playwright/test";
 
-const pages = ["/leaderboard", "/insights", "/agent/1", "/try", "/pricing"];
+const pages = [
+  "/terminal/dashboard",
+  "/terminal/leaderboard",
+  "/terminal/insights",
+  "/terminal/agent/1",
+  "/terminal/try",
+  "/terminal/pricing",
+];
 
 for (const path of pages) {
   test(`375px renders without horizontal overflow: ${path}`, async ({ page }) => {
@@ -32,7 +39,7 @@ test("landing shows the Start-here strip and has no horizontal overflow at 375px
 });
 
 test("first-run onboarding modal appears once then not again", async ({ page }) => {
-  await page.goto("/leaderboard");
+  await page.goto("/terminal/leaderboard");
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   await page.getByRole("button", { name: "Just looking" }).click();

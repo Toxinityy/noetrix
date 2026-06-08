@@ -1,28 +1,10 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { CATEGORIES, type CategoryId } from "@/lib/mockData";
-import { FeedClient } from "./FeedClient";
+import { redirect } from "next/navigation";
 
-function findCategoryBySlug(slug: string): CategoryId | null {
-  const match = Object.values(CATEGORIES).find((c) => c.slug === slug);
-  return match ? match.id : null;
-}
+type Props = {
+  params: Promise<{ category: string }>;
+};
 
-export async function generateMetadata(
-  props: PageProps<"/feed/[category]">,
-): Promise<Metadata> {
+export default async function Page(props: Props) {
   const { category } = await props.params;
-  const id = findCategoryBySlug(category);
-  return {
-    title: id
-      ? `${CATEGORIES[id].label} — Noetrix`
-      : "Feed — Noetrix",
-  };
-}
-
-export default async function FeedPage(props: PageProps<"/feed/[category]">) {
-  const { category } = await props.params;
-  const id = findCategoryBySlug(category);
-  if (!id) notFound();
-  return <FeedClient categoryId={id} />;
+  redirect(`/terminal/feed/${category}`);
 }

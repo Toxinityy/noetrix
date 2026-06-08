@@ -11,20 +11,23 @@ import { useTour } from "@/components/tour/TourProvider";
 import { cn } from "@/lib/cn";
 
 const primaryNav = [
-  { href: "/insights", label: "Insights" },
-  { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/try", label: "Try" },
-  { href: "/pricing", label: "Pricing" },
+  { href: "/terminal/dashboard", label: "Dashboard" },
+  { href: "/terminal/insights", label: "Insights" },
+  { href: "/terminal/leaderboard", label: "Leaderboard" },
+  { href: "/terminal/try", label: "Try" },
+  { href: "/terminal/pricing", label: "Pricing" },
 ];
 const moreNav = [
-  { href: "/simulation", label: "Earn" },
-  { href: "/feed/meth-apr-24h", label: "Feed" },
-  { href: "/demo-consumer", label: "Consumer" },
-  { href: "/submit", label: "Submit" },
-  { href: "/agents", label: "For agents" },
-  { href: "/about", label: "About" },
+  { href: "/terminal/simulation", label: "Earn" },
+  { href: "/terminal/feed/meth-apr-24h", label: "Feed" },
+  { href: "/terminal/demo-consumer", label: "Consumer" },
+  { href: "/terminal/submit", label: "Submit" },
+  { href: "/terminal/agents", label: "For agents" },
+  { href: "/terminal/about", label: "About" },
 ];
 const allNav = [...primaryNav, ...moreNav];
+const isActiveNavItem = (pathname: string, href: string) =>
+  pathname === href || pathname.startsWith(`${href}/`);
 
 export function AppHeader() {
   const pathname = usePathname();
@@ -38,7 +41,7 @@ export function AppHeader() {
       </a>
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-6 px-5 sm:px-8">
         <div className="flex items-center gap-6">
-          <Link href="/" className="group flex items-center gap-2.5">
+          <Link href="/terminal/dashboard" className="group flex items-center gap-2.5">
             <span
               className="inline-block h-2 w-2 rounded-full bg-[var(--color-accent)]"
               style={{ boxShadow: "0 0 14px var(--color-accent-glow)" }}
@@ -49,9 +52,7 @@ export function AppHeader() {
           </Link>
           <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
             {primaryNav.map((item) => {
-              const active =
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(item.href.split("/").slice(0, 2).join("/")));
+              const active = isActiveNavItem(pathname, item.href);
               return (
                 <Link
                   key={item.href}
@@ -99,6 +100,12 @@ export function AppHeader() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="hidden rounded px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text)] lg:inline-flex"
+          >
+            Exit
+          </Link>
           <div className="md:hidden">
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
@@ -116,6 +123,14 @@ export function AppHeader() {
                   sideOffset={8}
                   className="z-50 min-w-[180px] rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-1 shadow-xl"
                 >
+                  <DropdownMenu.Item asChild>
+                    <Link
+                      href="/"
+                      className="block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
+                    >
+                      Exit
+                    </Link>
+                  </DropdownMenu.Item>
                   {allNav.map((item) => (
                     <DropdownMenu.Item key={item.href} asChild>
                       <Link

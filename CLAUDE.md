@@ -123,6 +123,14 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-06-08 — Terminal namespace + dashboard (branch `terminal-entry-nav`)
+**Type:** Build (frontend routing + terminal shell).
+- Added `/terminal` boot route with `INITIALIZING...` animation and dashboard entry.
+- Moved app surfaces under `/terminal/*`; old routes redirect.
+- Added `/terminal/dashboard` with real protocol information only.
+- Updated landing nav and terminal nav separation.
+- Verification: `pnpm --filter frontend lint` passed; `pnpm --filter frontend test` passed (58/58); `pnpm --filter frontend build` passed (27 static pages; existing workspace-root/Recharts warnings); `pnpm --filter frontend test:e2e` passed (12/12; existing DialogContent/Recharts warnings).
+
 ### 2026-06-07 (P2) — Feedback fixes + competitor analysis + feed-holds-last-good + "Crowd vs proven AI" (branch `qa-board-review-fixes`)
 **Type:** Build (contract + frontend) + research. Continued from the board plan into P2, interleaved with live user feedback after running `pnpm dev`.
 
