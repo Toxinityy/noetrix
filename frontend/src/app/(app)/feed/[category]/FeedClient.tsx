@@ -24,9 +24,9 @@ import {
   type CategoryId,
   type Agent,
   makeFeedHistory,
-  RECENT_EPOCHS,
 } from "@/lib/mockData";
-import { fmtBlock, fmtBps, fmtScore } from "@/lib/format";
+import { fmtBlock, fmtBps, fmtScore, fmtUSDCompact } from "@/lib/format";
+import { friendlyValue } from "@/lib/labels";
 import { cn } from "@/lib/cn";
 import { useRouter } from "next/navigation";
 
@@ -42,6 +42,9 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
   const reducedMotion = useReducedMotion();
   const cat = CATEGORIES[categoryId];
   const history = React.useMemo(() => makeFeedHistory(categoryId, 120), [categoryId]);
+
+  // Plain-English value: % for yields, compact $ for big USD totals (scannable headlines/axes).
+  const scanValue = (v: number) => (cat.unit === "usd" ? fmtUSDCompact(v) : friendlyValue(categoryId, v));
 
   const latest = history[history.length - 1];
   const yesterday = history[Math.max(0, history.length - 48)];
@@ -72,7 +75,7 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
   const tabs = Object.values(CATEGORIES).map((c) => ({
     id: c.id,
     label: c.label,
-    caption: c.unit === "bps" ? "basis points" : "USD",
+    caption: c.unit === "bps" ? "annual yield %" : "total deposits, US$",
   }));
 
   const columns: Column<Contributor>[] = [
@@ -152,13 +155,11 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
       sortValue: (c) => c.contribution,
       cell: (c) => (
         <span className="font-mono text-sm text-[var(--color-text)] tabular">
-          {cat.unitFormatter(c.contribution)}
+          {scanValue(c.contribution)}
         </span>
       ),
     },
   ];
-
-  const epoch = RECENT_EPOCHS[0];
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-5 py-10 sm:px-8 sm:py-14">
@@ -185,7 +186,7 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           <StatusPill tone="up" dot pulse>
             Live
           </StatusPill>
-          <StatusPill tone="muted">Epoch {epoch.id}</StatusPill>
+          <StatusPill tone="muted">This round</StatusPill>
         </div>
       </div>
 
@@ -206,7 +207,7 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           </div>
           <NumberFlow
             value={latest.value}
-            format={cat.unitFormatter}
+            format={scanValue}
             className="mt-2 inline-block font-mono text-3xl text-[var(--color-accent)] tabular"
           />
         </Panel>
@@ -227,7 +228,7 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
             confidence
           </div>
-          <div className="mt-2 font-mono text-3xl tabular text-[var(--color-warn)]">
+          <div className="mt-2 font-mono text-3xl tabular text-[var(--color-text-dim)]">
             {fmtBps(latest.confidence, 1)}
           </div>
         </Panel>
@@ -283,9 +284,7 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
                     fontSize: 10,
                     fontFamily: "var(--font-mono)",
                   }}
-                  tickFormatter={(v) =>
-                    cat.unit === "bps" ? `${(v / 100).toFixed(1)}%` : `$${(v / 1_000_000).toFixed(0)}M`
-                  }
+                  tickFormatter={(v) => scanValue(Number(v))}
                   stroke="var(--color-border-strong)"
                   width={64}
                   domain={["dataMin - 20", "dataMax + 20"]}
@@ -298,7 +297,7 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
                     fontSize: 11,
                   }}
                   labelFormatter={(v) => `block #${fmtBlock(Number(v))}`}
-                  formatter={(v) => [cat.unitFormatter(Number(v)), "feed"]}
+                  formatter={(v) => [scanValue(Number(v)), "feed"]}
                 />
                 <ReferenceLine
                   y={yesterday.value}

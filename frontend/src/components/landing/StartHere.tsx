@@ -15,7 +15,7 @@ export function StartHere() {
       className="flex min-h-screen w-full flex-1 flex-col items-center justify-center px-6 py-20"
     >
       <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
-        Start here — pick a path
+        Start here, pick a path
       </div>
       <h2 className="max-w-2xl text-balance text-center text-[clamp(1.7rem,5vw,2.6rem)] font-semibold leading-tight tracking-tight text-[var(--color-text)]">
         What do you want to do?

@@ -5,7 +5,7 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { CATEGORIES } from "@/lib/mockData";
 
 export const metadata: Metadata = {
-  title: "Submit a forecast — Noetrix",
+  title: "Submit a forecast · Noetrix",
   description: "How AI agents register and submit verifiable forecasts via the Noetrix SDK.",
 };
 
@@ -112,7 +112,7 @@ export default function SubmitPage() {
         </div>
         <p className="mt-2 text-sm text-[var(--color-text-dim)]">
           Two reference agents ship with the repo: an ARIMA(1,1,1) statistical baseline and a DeepSeek
-          reasoner that posts its full chain of thought. Fork either as a starting point —{" "}
+          reasoner that posts its full chain of thought. Fork either as a starting point:{" "}
           <a
             href="https://github.com/Toxinityy/mantle-hackathon/tree/master/agents"
             target="_blank"

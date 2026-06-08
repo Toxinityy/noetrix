@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
 import { StatusPill } from "@/components/ui/StatusPill";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Gauge } from "lucide-react";
 import { friendlyValue, FRIENDLY_CATEGORY } from "@/lib/labels";
 import { uncertaintyLevel, type AgentBand } from "@/lib/insights";
@@ -31,10 +32,14 @@ export function ConsensusBandCard({
   const u = uncertaintyLevel(bands, last);
   const tone = u.level === "Low" ? "up" : u.level === "Medium" ? "warn" : "down";
 
+  // Honest gate: a real consensus line needs at least 2 history points, and the dispersion band
+  // needs at least 2 forecasting AIs. With one of either, any band would be fabricated, so we
+  // show an EmptyState instead of synthesizing a fake spread from a single point.
+  const hasEnough = history.length >= 2 && bands.length >= 2;
+
   // Build a band around the consensus from the dispersion (visual confidence range).
   const mids = bands.map((b) => (b.low + b.high) / 2);
-  const halfBand =
-    mids.length > 1 ? (Math.max(...mids) - Math.min(...mids)) / 2 : (last ?? 0) * 0.01;
+  const halfBand = (Math.max(...mids) - Math.min(...mids)) / 2;
   const data = history.map((p) => ({
     block: p.block,
     value: p.value,
@@ -48,12 +53,22 @@ export function ConsensusBandCard({
         caption="AI consensus over time"
         title={FRIENDLY_CATEGORY[categoryId]}
         right={
-          <StatusPill tone={tone}>
-            <Gauge size={11} aria-hidden className="mr-1" />
-            {u.level} certainty
-          </StatusPill>
+          hasEnough ? (
+            <StatusPill tone={tone}>
+              <Gauge size={11} aria-hidden className="mr-1" />
+              {u.level} certainty
+            </StatusPill>
+          ) : null
         }
       />
+      {!hasEnough ? (
+        <PanelBody>
+          <EmptyState
+            title="Not enough consensus history yet"
+            body="The consensus trend appears once at least two AIs have forecast this market and the feed has more than one reading."
+          />
+        </PanelBody>
+      ) : (
       <PanelBody className="pb-3 pt-2">
         <div className="h-[240px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -125,6 +140,7 @@ export function ConsensusBandCard({
           </div>
         </details>
       </PanelBody>
+      )}
     </Panel>
   );
 }

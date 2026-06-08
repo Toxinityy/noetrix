@@ -10,24 +10,36 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { useTour } from "@/components/tour/TourProvider";
 import { cn } from "@/lib/cn";
 
+// Primary nav follows the pitch priority: Alpha & Data (Insights/Leaderboard) +
+// the Best-Web2-UX surface (Simulator) + the live write demo (Try). Pricing (open
+// in v1) and the niche/utility routes live under More.
 const primaryNav = [
   { href: "/insights", label: "Insights" },
   { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/simulation", label: "Simulator" },
   { href: "/try", label: "Try" },
-  { href: "/pricing", label: "Pricing" },
 ];
 const moreNav = [
-  { href: "/simulation", label: "Earn" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/feed/meth-apr-24h", label: "Feed" },
-  { href: "/demo-consumer", label: "Consumer" },
+  { href: "/demo-consumer", label: "For protocols" },
   { href: "/submit", label: "Submit" },
   { href: "/agents", label: "For agents" },
   { href: "/about", label: "About" },
 ];
 const allNav = [...primaryNav, ...moreNav];
 
+/** Active when the pathname is the route or sits under its top-level segment. */
+function isActiveHref(pathname: string, href: string): boolean {
+  return (
+    pathname === href ||
+    (href !== "/" && pathname.startsWith(href.split("/").slice(0, 2).join("/")))
+  );
+}
+
 export function AppHeader() {
   const pathname = usePathname();
+  const moreActive = moreNav.some((item) => isActiveHref(pathname, item.href));
 
   return (
     <header
@@ -49,9 +61,7 @@ export function AppHeader() {
           </Link>
           <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
             {primaryNav.map((item) => {
-              const active =
-                pathname === item.href ||
-                (item.href !== "/" && pathname.startsWith(item.href.split("/").slice(0, 2).join("/")));
+              const active = isActiveHref(pathname, item.href);
               return (
                 <Link
                   key={item.href}
@@ -71,7 +81,10 @@ export function AppHeader() {
               <DropdownMenu.Trigger asChild>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 rounded px-3 py-1.5 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] transition-colors hover:text-[var(--color-text)] focus-visible:text-[var(--color-text)] data-[state=open]:text-[var(--color-accent)]"
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded px-3 py-1.5 text-xs font-medium uppercase tracking-[0.12em] transition-colors hover:text-[var(--color-text)] focus-visible:text-[var(--color-text)] data-[state=open]:text-[var(--color-accent)]",
+                    moreActive ? "text-[var(--color-accent)]" : "text-[var(--color-text-dim)]",
+                  )}
                 >
                   More <ChevronDown size={13} aria-hidden />
                 </button>
@@ -86,7 +99,12 @@ export function AppHeader() {
                     <DropdownMenu.Item key={item.href} asChild>
                       <Link
                         href={item.href}
-                        className="block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] outline-none transition-colors hover:text-[var(--color-text)] focus:text-[var(--color-accent)] data-[highlighted]:text-[var(--color-accent)]"
+                        className={cn(
+                          "block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] outline-none transition-colors hover:text-[var(--color-text)] focus:text-[var(--color-accent)] data-[highlighted]:text-[var(--color-accent)]",
+                          isActiveHref(pathname, item.href)
+                            ? "text-[var(--color-accent)]"
+                            : "text-[var(--color-text-dim)]",
+                        )}
                       >
                         {item.label}
                       </Link>

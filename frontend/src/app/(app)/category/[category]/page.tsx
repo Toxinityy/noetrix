@@ -14,7 +14,7 @@ export async function generateMetadata(
   const { category } = await props.params;
   const id = findCategoryBySlug(category);
   return {
-    title: id ? `${CATEGORIES[id].label} — Noetrix` : "Category — Noetrix",
+    title: id ? `${CATEGORIES[id].label} · Noetrix` : "Category · Noetrix",
   };
 }
 

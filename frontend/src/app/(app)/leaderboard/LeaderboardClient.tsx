@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowUpRight, Crown, Activity, Layers, Coins, Users } from "lucide-react";
+import { ArrowUpRight, Crown, Activity, Layers, Coins, Users, Info, RefreshCw } from "lucide-react";
 import { Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
 import { Stat } from "@/components/ui/Stat";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -17,11 +17,33 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { RwaStrategyPanel } from "@/components/app/RwaStrategyPanel";
 import { CATEGORIES, KIND_COLOR, KIND_GLYPH, type CategoryId, type AgentKind, RECENT_EPOCHS } from "@/lib/mockData";
 import { useLeaderboard, useFeedHistory } from "@/lib/hooks";
+import { ErrorState } from "@/components/ui/ErrorState";
 import type { LeaderRow } from "@/lib/indexer";
-import { fmtScore, fmtBlock, fmtBps } from "@/lib/format";
+import { fmtScore, fmtBlock, fmtBps, fmtRelTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
 const MIN_RESOLVED_FOR_CALIBRATION = 10;
+
+// Mantle block time is ~2s; estimate a wall-clock time from a block height for relative display.
+const BLOCK_TIME_SEC = 2;
+const NOW_SEC = () => Date.now() / 1000;
+
+/** Signed accuracy score in [-1e6, +1e6] mapped to a human 0-100 scale. */
+function accuracyToHuman(score: number): number {
+  return Math.round(((score / 1_000_000 + 1) / 2) * 100);
+}
+/** Signed calibration score in [-1e6, 0] mapped to a human 0-100 "honesty" scale (100 = best). */
+function honestyToHuman(cal: number): number {
+  return Math.round((1 - Math.min(1, Math.abs(cal) / 1_000_000)) * 100);
+}
+/** Estimate "X ago" for a block, given the chain head is the most recent block we know about. */
+function blockRelTime(block: number, headBlock: number): string {
+  const ageSec = Math.max(0, (headBlock - block) * BLOCK_TIME_SEC);
+  return fmtRelTime(NOW_SEC() - ageSec);
+}
+
+const HONESTY_TOOLTIP =
+  "Honesty (calibration): whether an AI's stated confidence matches how often it is actually right. 100 = perfectly calibrated; lower means it tends to be over- or under-confident.";
 
 export function LeaderboardClient() {
   const reducedMotion = useReducedMotion();
@@ -34,6 +56,12 @@ export function LeaderboardClient() {
   const feedHistory = feed.data;
   const lastPoint = feedHistory[feedHistory.length - 1];
   const liveValue = lastPoint?.value ?? cat.current;
+  // Best proxy for the chain head: the latest feed block, else the newest agent update block.
+  const headBlock = Math.max(
+    lastPoint?.block ?? 0,
+    ...board.data.map((a) => a.lastUpdatedBlock),
+    0,
+  );
   const prevPoint = feedHistory[Math.max(0, feedHistory.length - 16)];
   const delta = liveValue - (prevPoint?.value ?? liveValue);
   const deltaPct = prevPoint?.value ? (delta / prevPoint.value) * 100 : 0;
@@ -84,7 +112,20 @@ export function LeaderboardClient() {
     },
     {
       id: "calibration",
-      header: "Calibration",
+      header: (
+        <span className="inline-flex items-center justify-end gap-1.5">
+          Honesty
+          <span
+            className="inline-flex cursor-help text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-dim)]"
+            tabIndex={0}
+            role="img"
+            aria-label={HONESTY_TOOLTIP}
+            title={HONESTY_TOOLTIP}
+          >
+            <Info size={12} aria-hidden />
+          </span>
+        </span>
+      ),
       align: "right",
       sortValue: (a) => a.calibrationScore,
       cell: (a) =>
@@ -107,12 +148,15 @@ export function LeaderboardClient() {
     },
     {
       id: "last",
-      header: "Last Update",
+      header: "Last update",
       align: "right",
       sortValue: (a) => a.lastUpdatedBlock,
       cell: (a) => (
-        <span className="font-mono text-[11px] text-[var(--color-text-muted)] tabular">
-          #{fmtBlock(a.lastUpdatedBlock)}
+        <span
+          className="font-mono text-[11px] text-[var(--color-text-muted)] tabular"
+          title={`block #${fmtBlock(a.lastUpdatedBlock)}`}
+        >
+          {blockRelTime(a.lastUpdatedBlock, headBlock)}
         </span>
       ),
     },
@@ -172,24 +216,22 @@ export function LeaderboardClient() {
         </div>
       </div>
 
-      {/* Cached-data banner — indexer unreachable, serving the static snapshot */}
+      {/* Cached-data state: indexer unreachable, serving the static snapshot, with a real retry. */}
       {board.source === "cached" ? (
-        <div
-          role="status"
-          aria-live="polite"
-          className="mt-6 flex items-center gap-2.5 rounded-md border border-[var(--color-warn)]/40 bg-[color:color-mix(in_srgb,var(--color-warn)_8%,var(--color-bg-elev-1))] px-4 py-2.5"
-        >
-          <span
-            aria-hidden
-            className="inline-block h-2 w-2 rounded-full bg-[var(--color-warn)] shadow-[0_0_8px_var(--color-warn)]"
-          />
-          <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-warn)]">
-            Showing cached data
-          </span>
-          <span className="text-xs text-[var(--color-text-dim)]">
-            Live indexer unreachable — retrying automatically.
-          </span>
-        </div>
+        <ErrorState
+          className="mt-6"
+          title="Live data is offline. Showing the latest saved snapshot."
+          detail="The on-chain indexer is unreachable right now. The board below is the most recent committed snapshot."
+          retry={
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center gap-1.5 rounded border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
+            >
+              <RefreshCw size={12} aria-hidden /> Retry
+            </button>
+          }
+        />
       ) : null}
 
       {/* Composite feed snapshot */}
@@ -254,11 +296,10 @@ export function LeaderboardClient() {
                 label="confidence"
                 value={fmtBps(lastPoint?.confidence ?? 0, 1)}
                 sub="avg per-agent, clamped"
-                tone="accent"
               />
               <Stat
                 label="block"
-                value={lastPoint ? `#${fmtBlock(lastPoint.block)}` : "—"}
+                value={lastPoint ? `#${fmtBlock(lastPoint.block)}` : "n/a"}
                 sub="last refresh"
               />
               <Stat
@@ -273,7 +314,7 @@ export function LeaderboardClient() {
 
         <div data-tour="top-agent">
         <Panel elevation={1}>
-          <PanelHeader caption="Top agent — this category" title={topAgent?.name ?? "—"} />
+          <PanelHeader caption="Top agent · this category" title={topAgent?.name ?? "n/a"} />
           <PanelBody>
             {topAgent ? (
               <div className="flex items-start gap-4">
@@ -290,18 +331,34 @@ export function LeaderboardClient() {
                       <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
                         accuracy
                       </div>
-                      <div className="mt-1 font-mono text-2xl text-[var(--color-accent)] tabular">
-                        {fmtScore(topAgent.accuracyScore, 3)}
+                      <div
+                        className="mt-1 font-mono text-2xl text-[var(--color-accent)] tabular"
+                        title={`raw score ${fmtScore(topAgent.accuracyScore, 3)}`}
+                      >
+                        {accuracyToHuman(topAgent.accuracyScore)}
+                        <span className="ml-0.5 text-sm text-[var(--color-text-muted)]">/100</span>
                       </div>
                     </div>
                     <div>
                       <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                        calibration
+                        honesty
                       </div>
-                      <div className="mt-1 font-mono text-2xl text-[var(--color-text)] tabular">
-                        {topAgent.resolvedCount >= MIN_RESOLVED_FOR_CALIBRATION
-                          ? fmtScore(topAgent.calibrationScore, 3)
-                          : "—"}
+                      <div
+                        className="mt-1 font-mono text-2xl text-[var(--color-text)] tabular"
+                        title={
+                          topAgent.resolvedCount >= MIN_RESOLVED_FOR_CALIBRATION
+                            ? `raw calibration ${fmtScore(topAgent.calibrationScore, 3)}`
+                            : undefined
+                        }
+                      >
+                        {topAgent.resolvedCount >= MIN_RESOLVED_FOR_CALIBRATION ? (
+                          <>
+                            {honestyToHuman(topAgent.calibrationScore)}
+                            <span className="ml-0.5 text-sm text-[var(--color-text-muted)]">/100</span>
+                          </>
+                        ) : (
+                          "n/a"
+                        )}
                       </div>
                     </div>
                     <div>
@@ -316,8 +373,11 @@ export function LeaderboardClient() {
                       <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
                         last update
                       </div>
-                      <div className="mt-1 font-mono text-2xl text-[var(--color-up)] tabular">
-                        #{fmtBlock(topAgent.lastUpdatedBlock)}
+                      <div
+                        className="mt-1 font-mono text-2xl text-[var(--color-up)] tabular"
+                        title={`block #${fmtBlock(topAgent.lastUpdatedBlock)}`}
+                      >
+                        {blockRelTime(topAgent.lastUpdatedBlock, headBlock)}
                       </div>
                     </div>
                   </div>
@@ -353,7 +413,7 @@ export function LeaderboardClient() {
       {/* KPIs */}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard icon={<Crown size={14} />} label="lead agent">
-          <span className="font-mono text-lg text-[var(--color-accent)]">{topAgent?.name ?? "—"}</span>
+          <span className="font-mono text-lg text-[var(--color-accent)]">{topAgent?.name ?? "n/a"}</span>
         </KpiCard>
         <KpiCard icon={<Activity size={14} />} label="resolutions">
           <span className="font-mono text-lg tabular">{totalResolved}</span>
@@ -378,7 +438,7 @@ export function LeaderboardClient() {
         <div className="mt-6">
           <EmptyState
             icon={<Layers size={16} />}
-            title="No agents yet — be the first to register"
+            title="No agents yet. Be the first to register"
             body="Register an ERC-8004 agent, submit forecasts in this category, and you'll appear here once predictions resolve."
           />
         </div>
@@ -468,7 +528,7 @@ export function LeaderboardClient() {
                 <div className="space-y-2 leading-relaxed">
                   <p>
                     Each agent identity is a non-transferable ERC-8004 token. Reputation accumulates against the
-                    token, not the controller wallet — so a controller can be rotated (24h timelock) without losing
+                    token, not the controller wallet, so a controller can be rotated (24h timelock) without losing
                     history, and an agent cannot be sold or laundered through a different address.
                   </p>
                 </div>
@@ -523,8 +583,13 @@ function ScoreBar({ value }: { value: number }) {
   const v = value / 1_000_000;
   const widthPct = Math.max(2, Math.abs(v) * 100);
   const positive = v >= 0;
+  // Human 0-100 for the primary number; raw signed score available on hover.
+  const human = accuracyToHuman(value);
   return (
-    <div className="inline-flex items-center justify-end gap-3 font-mono text-sm tabular">
+    <div
+      className="inline-flex items-center justify-end gap-3 font-mono text-sm tabular"
+      title={`raw score ${fmtScore(value, 3)} (signed, [-1, +1])`}
+    >
       <div className="relative h-1.5 w-24 overflow-hidden rounded-sm bg-[var(--color-bg)]">
         <div
           className={cn(
@@ -536,24 +601,28 @@ function ScoreBar({ value }: { value: number }) {
         <div className="absolute inset-y-0 left-1/2 w-px bg-[var(--color-border-strong)]" />
       </div>
       <span className={positive ? "text-[var(--color-up)]" : "text-[var(--color-down)]"}>
-        {fmtScore(value, 3)}
+        {human}
       </span>
     </div>
   );
 }
 
 function CalibrationBar({ value }: { value: number }) {
-  // Calibration is in [-1e6, 0]; closer to 0 is better
-  const pct = Math.min(100, (Math.abs(value) / 500_000) * 100);
+  // Calibration is in [-1e6, 0]; closer to 0 is better. Show a human 0-100 "honesty" number.
+  const human = honestyToHuman(value);
+  const pct = Math.max(2, human);
   return (
-    <div className="inline-flex items-center justify-end gap-3 font-mono text-sm tabular">
+    <div
+      className="inline-flex items-center justify-end gap-3 font-mono text-sm tabular"
+      title={`raw calibration ${fmtScore(value, 3)} (signed, [-1, 0])`}
+    >
       <div className="relative h-1.5 w-24 overflow-hidden rounded-sm bg-[var(--color-bg)]">
         <div
           className="absolute right-0 top-0 h-full bg-[var(--color-warn)]"
           style={{ width: `${pct}%`, opacity: 0.7 }}
         />
       </div>
-      <span className="text-[var(--color-warn)]">{fmtScore(value, 3)}</span>
+      <span className="text-[var(--color-warn)]">{human}</span>
     </div>
   );
 }

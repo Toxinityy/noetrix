@@ -39,6 +39,7 @@ import {
   PREDICTIONS,
   KIND_COLOR,
   KIND_GLYPH,
+  DEEPSEEK_MODEL,
   type CategoryId,
   type Prediction,
   type Agent,
@@ -68,12 +69,14 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
     (p) => p.agentId === agent.id && p.categoryId === categoryId,
   ).sort((a, b) => b.commitBlock - a.commitBlock);
 
-  // Most recent prediction that carries a reasoning trace — surfaced as the page's visual peak.
+  // Most recent prediction that carries a reasoning trace: surfaced as the page's visual peak.
+  // Gate is semantic (does a trace exist?), not tied to the stale "CLAUDE" enum name.
   const featuredReasoning =
     predictions.find((p) => p.reasoning) ??
     PREDICTIONS.filter((p) => p.agentId === agent.id && p.reasoning).sort(
       (a, b) => b.commitBlock - a.commitBlock,
     )[0];
+  const hasReasoning = !!featuredReasoning?.reasoning;
 
   const equity = agent.equityCurve;
   const equityCurrent = equity[equity.length - 1].value;
@@ -114,7 +117,7 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
         <span>agent #{agent.id.toString().padStart(4, "0")}</span>
       </div>
 
-      {/* Honesty banner — this profile view is illustrative; the real, verifiable data lives on the
+      {/* Honesty banner: this profile view is illustrative; the real, verifiable data lives on the
           leaderboard (committed snapshot) and on-chain. Avoids presenting demo reputation/equity/
           reasoning as live-verified (the hosted indexer that would back this page isn't up). */}
       <div
@@ -135,7 +138,7 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
         <Link href="/try" className="text-[var(--color-accent)] hover:underline">
           live feed
         </Link>
-        <span className="text-[var(--color-text-muted)]">— every forecast is committed before the outcome and graded on-chain.</span>
+        <span className="text-[var(--color-text-muted)]">Every forecast is committed before the outcome and graded on-chain.</span>
       </div>
 
       {/* Identity card */}
@@ -222,6 +225,14 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
         </KpiCard>
       </div>
 
+      {/* Featured reasoning: the visual peak. Lead with the narrative; the charts below are
+          supporting evidence. Gated on whether a reasoning trace actually exists. */}
+      {hasReasoning && featuredReasoning?.reasoning ? (
+        <div className="mt-8">
+          <FeaturedReasoning prediction={featuredReasoning} />
+        </div>
+      ) : null}
+
       {/* Category tabs */}
       <div className="mt-8">
         <CategoryTabs
@@ -234,7 +245,7 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
       {/* Reputation overview row */}
       <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1.3fr]">
         <Panel elevation={1}>
-          <PanelHeader caption="reputation" title={`Profile — ${cat.label}`} />
+          <PanelHeader caption="reputation" title={`Profile · ${cat.label}`} />
           <PanelBody className="pb-2 pt-3">
             <div className="h-[260px] w-full">
               <ResponsiveContainer width="100%" height="100%">
@@ -461,19 +472,12 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
                 disabled
                 className="mt-4 w-full cursor-not-allowed rounded border border-[var(--color-border)] bg-[var(--color-bg-elev-2)] px-4 py-2 font-mono text-xs uppercase tracking-[0.14em] text-[var(--color-text-muted)] opacity-70"
               >
-                Stake — v2
+                Stake (v2)
               </button>
             </div>
           </PanelBody>
         </Panel>
       </div>
-
-      {/* Featured reasoning — the visual peak (DeepSeek reasoner agents only) */}
-      {agent.kind === "CLAUDE" && featuredReasoning?.reasoning ? (
-        <div className="mt-10">
-          <FeaturedReasoning prediction={featuredReasoning} />
-        </div>
-      ) : null}
 
       {/* Predictions table with expandable rows */}
       <div className="mt-8">
@@ -650,7 +654,7 @@ function PredictionsTable({
                       {fmtScore(p.score, 3)}
                     </span>
                   ) : (
-                    <span className="text-[var(--color-text-muted)]">—</span>
+                    <span className="text-[var(--color-text-muted)]">n/a</span>
                   )}
                 </span>
                 <span className="text-right font-mono text-[11px] tabular text-[var(--color-text-muted)]">
@@ -722,7 +726,7 @@ function FeaturedReasoning({ prediction }: { prediction: Prediction }) {
               Reasoning <span className="text-[var(--color-accent)]">→</span>
             </h2>
             <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-              deepseek-chat-v3.1
+              {DEEPSEEK_MODEL}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -818,7 +822,7 @@ function ReasoningTrace({ prediction }: { prediction: Prediction }) {
     <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
       <div>
         <div className="text-[10px] uppercase tracking-[0.22em] text-[var(--color-accent)]">
-          reasoning trace · deepseek-v4-flash
+          reasoning trace · {DEEPSEEK_MODEL}
         </div>
         <ol className="relative mt-4 space-y-4 border-l border-[var(--color-border-strong)] pl-6">
           {r.steps.map((s, i) => (

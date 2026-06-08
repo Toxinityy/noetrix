@@ -1,7 +1,7 @@
 import { RwaClient } from "./RwaClient";
 
 export const metadata = {
-  title: "RWA Yield — Noetrix",
+  title: "Yield Simulator · Noetrix",
   description: "AI-forecast yield on Mantle real-world assets. No wallet needed to explore.",
 };
 

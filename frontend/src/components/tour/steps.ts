@@ -16,7 +16,7 @@ export const LEADERBOARD_STEPS: TourStep[] = [
     id: "feed-value",
     selector: '[data-tour="feed-value"]',
     title: "The consensus feed",
-    body: "A rank-weighted composite of the most calibrated agents — the value protocols subscribe to, with a live confidence band.",
+    body: "A rank-weighted composite of the most calibrated agents: the value protocols subscribe to, with a live confidence band.",
   },
   {
     id: "agent-table",
@@ -28,19 +28,19 @@ export const LEADERBOARD_STEPS: TourStep[] = [
     id: "top-agent",
     selector: '[data-tour="top-agent"]',
     title: "Category leader",
-    body: "The current top agent for this market and its live reputation — accuracy, calibration, and resolved count.",
+    body: "The current top agent for this market and its live reputation: accuracy, calibration, and resolved count.",
   },
   {
     id: "rwa-strategy",
     selector: '[data-tour="rwa-strategy"]',
     title: "Yield + risk, automated",
-    body: "Forecasts drive a dynamic allocation across mETH and USDY plus an automated risk state — the AI x RWA core.",
+    body: "Forecasts drive a dynamic allocation across mETH and USDY plus an automated risk state, the AI x RWA core.",
   },
   {
     id: "how-it-works",
     selector: '[data-tour="how-it-works"]',
     title: "Go deeper",
-    body: "Expand here to see exactly how scoring works — or try the no-wallet Earn simulator and the Consumer demo from the top nav.",
+    body: "Expand here to see exactly how scoring works, or try the no-wallet Earn simulator and the protocol demo from the top nav.",
   },
 ];
 
@@ -51,12 +51,12 @@ export const EARN_STEPS: TourStep[] = [
     id: "earn-yields",
     selector: '[data-tour="earn-yields"]',
     title: "AI-forecast yields",
-    body: "These cards show what AI agents predict you'd earn on mETH and USDY over the next day — and how confident they are.",
+    body: "These cards show what AI agents predict you'd earn on mETH and USDY over the next day, and how confident they are.",
   },
   {
     id: "earn-simulator",
     selector: '[data-tour="earn-simulator"]',
-    title: "Try it — no wallet",
+    title: "Try it, no wallet",
     body: "Drag the deposit amount. The AI splits it across mETH and USDY for the best risk-adjusted yield. No wallet, no signup.",
   },
   {
@@ -78,7 +78,7 @@ export const ALPHA_STEPS: TourStep[] = [
     id: "alpha-proof",
     selector: '[data-tour="alpha-proof"]',
     title: "Proof, not promises",
-    body: "How the best AIs beat the crowd. Every figure is graded on-chain — follow the explorer link to verify any of it.",
+    body: "How the best AIs beat the crowd. Every figure is graded on-chain. Follow the explorer link to verify any of it.",
   },
   {
     id: "alpha-replay",
@@ -117,7 +117,7 @@ export const BUILD_STEPS: TourStep[] = [
     id: "build-consumer",
     selector: '[data-tour="build-consumer"]',
     title: "Read the feed",
-    body: "Any Mantle protocol can read the composite feed in one call — see the consumer demo.",
+    body: "Any Mantle protocol can read the composite feed in one call. See the consumer demo.",
   },
 ];
 
@@ -126,7 +126,7 @@ export const TRY_STEPS: TourStep[] = [
     id: "try-refresh",
     selector: '[data-tour="try-refresh"]',
     title: "Write to the live protocol",
-    body: "Connect a wallet, switch to Mantle Sepolia, and refresh the on-chain AI feed yourself — one permissionless transaction. No wallet? Use the Preview.",
+    body: "Connect a wallet, switch to Mantle Sepolia, and refresh the on-chain AI feed yourself: one permissionless transaction. No wallet? Use the Preview.",
   },
 ];
 

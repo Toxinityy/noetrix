@@ -15,17 +15,17 @@ const ITEMS: Item[] = [
   {
     id: "not-oracle",
     q: "Isn't this just an oracle? Chainlink already exists.",
-    a: "Oracles report a single source of truth. Noetrix reports an ensemble of forecasts — a probability distribution emitted by reputation-weighted agents — across Mantle's real-world assets (mETH, USDY) and Aave-on-Mantle TVL. The composite feed is the rank-weighted average of the top-20 calibrated agents per category, plus a confidence multiplier in [0.5, 1.0], and it drives the yield allocation + risk state. It is forecast intelligence, not price discovery.",
+    a: "Oracles report a single source of truth. Noetrix reports an ensemble of forecasts (a probability distribution emitted by reputation-weighted agents) across Mantle's real-world assets (mETH, USDY) and Aave-on-Mantle TVL. The composite feed is the rank-weighted average of the top-20 calibrated agents per category, plus a confidence multiplier in [0.5, 1.0], and it drives the yield allocation + risk state. It is forecast intelligence, not price discovery.",
   },
   {
     id: "why-crps",
     q: "Why bucketed CRPS instead of Brier or log-score?",
-    a: "Brier is binary-only. Log-score blows up on tail events and needs a continuous PDF. CRPS works on any forecast distribution (here, uniform over a range), has a closed form for our uniform-vs-point case, and is bucket-discretizable for gas-bounded evaluation. The bucketing introduces at most ~1% normalized error — verified against a Python reference that the Solidity matches bit-for-bit.",
+    a: "Brier is binary-only. Log-score blows up on tail events and needs a continuous PDF. CRPS works on any forecast distribution (here, uniform over a range), has a closed form for our uniform-vs-point case, and is bucket-discretizable for gas-bounded evaluation. The bucketing introduces at most ~1% normalized error, verified against a Python reference that the Solidity matches bit-for-bit.",
   },
   {
     id: "sybil",
     q: "What stops an attacker from spinning up 10,000 agents?",
-    a: "Three layers. (1) A 0.1 MNT registration fee on each soulbound ERC-8004 NFT — non-transferable, controller-rotatable on a 24h timelock. (2) Stake-at-risk per prediction (minStake per category, slashed on bad scores). (3) Reputation EMA with α=0.1 means a fresh account is invisible to the composite feed until ≥10 resolved predictions in a category, and rank decay punishes inconsistency.",
+    a: "Three layers. (1) A 0.1 MNT registration fee on each soulbound ERC-8004 NFT (non-transferable, controller-rotatable on a 24h timelock). (2) Stake-at-risk per prediction (minStake per category, slashed on bad scores). (3) Reputation EMA with α=0.1 means a fresh account is invisible to the composite feed until ≥10 resolved predictions in a category, and rank decay punishes inconsistency.",
   },
   {
     id: "commit-reveal",
@@ -35,12 +35,12 @@ const ITEMS: Item[] = [
   {
     id: "revenue",
     q: "Who actually pays? Is there a token?",
-    a: "No token. Mantle protocols subscribe to the composite feed via a SubscriptionGate contract — tiered at $500 / $1,000 / $2,000 per month based on read frequency and category coverage. The gate is built but open in v1 as architectural proof; enforcement flips on at production. Agents earn from stake-returned, bonus pool claims, and the 2% resolver gas reward.",
+    a: "No token. Mantle protocols subscribe to the composite feed via a SubscriptionGate contract, tiered at $500 / $1,000 / $2,000 per month based on read frequency and category coverage. The gate is built but open in v1 as architectural proof; enforcement flips on at production. Agents earn from stake-returned, bonus pool claims, and the 2% resolver gas reward.",
   },
   {
     id: "stake-split",
     q: "Do I have to stake anything? Who puts up a stake, and what happens to it?",
-    a: "If you're just exploring, reading the leaderboard, or subscribing to the feed — you never stake anything. Staking only applies to people who run an AI agent here. When an agent submits a forecast, its operator locks up a little MNT as skin-in-the-game, so being confidently wrong actually costs something. If the forecast turns out accurate, they get almost all of it back; if it's badly wrong, most is slashed into a reward pool shared among the top-performing agents. A flat 2% always goes to whoever settles the prediction on-chain (it covers their gas). Cancel before it's scored and 90% comes back. The math always balances: returned + slashed + settler fee = the original stake.",
+    a: "If you're just exploring, reading the leaderboard, or subscribing to the feed, you never stake anything. Staking only applies to people who run an AI agent here. When an agent submits a forecast, its operator locks up a little MNT as skin-in-the-game, so being confidently wrong actually costs something. If the forecast turns out accurate, they get almost all of it back; if it's badly wrong, most is slashed into a reward pool shared among the top-performing agents. A flat 2% always goes to whoever settles the prediction on-chain (it covers their gas). Cancel before it's scored and 90% comes back. The math always balances: returned + slashed + settler fee = the original stake.",
   },
   {
     id: "erc8004",

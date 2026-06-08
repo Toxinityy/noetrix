@@ -31,11 +31,9 @@ export function Nav() {
         <div className="hidden items-center gap-7 md:flex">
           {[
             ["Categories", "#categories"],
-            ["Leaderboard", "/leaderboard"],
-            ["Feed", "/feed/meth-apr-24h"],
-            ["Consumer", "/demo-consumer"],
-            ["How", "#how"],
+            ["How it works", "#how"],
             ["FAQ", "#faq"],
+            ["For builders", "/demo-consumer"],
           ].map(([label, href]) => (
             <a
               key={label}

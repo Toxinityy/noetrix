@@ -16,6 +16,9 @@ import { decodeAbiParameters } from "viem";
 import { compositeFeedAbi, categoryHash } from "@/lib/contracts";
 import { env, hasFeed, explorerTx } from "@/lib/env";
 import { derivePanelState } from "@/lib/tryState";
+import { friendlyValue } from "@/lib/labels";
+import { fmtUSDCompact } from "@/lib/format";
+import type { CategoryId } from "@/lib/mockData";
 
 const CATEGORY_OPTIONS = [
   { id: "METH_APR_24H", name: "mETH staking APR" },
@@ -23,6 +26,15 @@ const CATEGORY_OPTIONS = [
   { id: "AAVE_MANTLE_TVL_24H", name: "Aave-Mantle TVL" },
 ] as const;
 type CatId = (typeof CATEGORY_OPTIONS)[number]["id"];
+
+/// Translate a raw on-chain feed integer into a Web2-friendly value for its category.
+/// APR/APY categories store basis points (382 -> "3.82%"); TVL stores USD 8-decimal
+/// (14200000000000000 -> "$142.3M"). Never show the bare integer as the headline.
+function friendlyFeedValue(cat: CatId, raw: bigint): string {
+  const n = Number(raw);
+  if (cat === "AAVE_MANTLE_TVL_24H") return fmtUSDCompact(n / 1e8);
+  return friendlyValue(cat as CategoryId, n);
+}
 
 interface FeedRead {
   value: bigint;
@@ -107,7 +119,7 @@ export function TryClient() {
 
   const handleRefresh = async () => {
     if (onCooldown) {
-      setError(`This feed was just refreshed — try again in ~${blocksLeft} blocks (~${blocksLeft * 2}s) or pick another category.`);
+      setError(`This feed was just refreshed. Try again in ~${blocksLeft} blocks (~${blocksLeft * 2}s) or pick another category.`);
       return;
     }
     setError(null);
@@ -125,7 +137,7 @@ export function TryClient() {
       const msg = (e as Error).message ?? "";
       setError(
         msg.includes("RateLimited")
-          ? "This feed was just refreshed — wait ~100 blocks or pick another category."
+          ? "This feed was just refreshed. Wait ~100 blocks or pick another category."
           : "Transaction rejected or reverted.",
       );
     }
@@ -135,9 +147,9 @@ export function TryClient() {
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-12" data-tour="try-refresh">
-      <h1 className="text-3xl font-semibold text-white">Try it live</h1>
-      <p className="mt-3 text-white/60">
-        Connect a wallet and write to the live on-chain AI feed on Mantle Sepolia — one transaction, fully
+      <h1 className="text-3xl font-semibold text-[var(--color-text)]">Try it live</h1>
+      <p className="mt-3 text-[var(--color-text-dim)]">
+        Connect a wallet and write to the live on-chain AI feed on Mantle Sepolia in one transaction, fully
         permissionless. No subscription, no signup.
       </p>
 
@@ -167,7 +179,8 @@ export function TryClient() {
         ))}
       </div>
 
-      {/* Live read-only snapshot — renders in every state */}
+      {/* Live read-only snapshot. Renders in every state. Plain-English headline; the raw
+          on-chain integers live behind a "Show on-chain values" toggle. */}
       <div className="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-5">
         <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
           live on-chain feed · {catName}
@@ -177,24 +190,60 @@ export function TryClient() {
             Feed address not configured in this build (set NEXT_PUBLIC_ADDR_COMPOSITE_FEED).
           </p>
         ) : feed ? (
-          <div className="mt-3 grid grid-cols-3 gap-3 font-mono text-sm">
-            <div>
-              <div className="text-[10px] uppercase text-[var(--color-text-muted)]">value</div>
-              <div className="text-white">{feed.value.toString()}</div>
+          <>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                  {catName}
+                </div>
+                <div className="num mt-0.5 text-2xl font-semibold text-[var(--color-text)]">
+                  {friendlyFeedValue(selected, feed.value)}
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                  AI confidence
+                </div>
+                <div className="num mt-0.5 text-2xl font-semibold text-[var(--color-text)]">
+                  {Math.round(feed.confidence / 100)}%
+                </div>
+              </div>
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                  Contributors
+                </div>
+                <div className="num mt-0.5 text-2xl font-semibold text-[var(--color-text)]">
+                  {feed.contributors} {feed.contributors === 1 ? "AI agent" : "AI agents"}
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="text-[10px] uppercase text-[var(--color-text-muted)]">confidence</div>
-              <div className="text-white">{feed.confidence}</div>
+            <div className="mt-2 font-mono text-[11px] text-[var(--color-text-muted)]">
+              last updated at block {feed.block}
             </div>
-            <div>
-              <div className="text-[10px] uppercase text-[var(--color-text-muted)]">contributors</div>
-              <div className="text-white">{feed.contributors}</div>
-            </div>
-            <div className="col-span-3">
-              <div className="text-[10px] uppercase text-[var(--color-text-muted)]">last updated block</div>
-              <div className="text-white">{feed.block}</div>
-            </div>
-          </div>
+            <details className="mt-3">
+              <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)] hover:text-[var(--color-text-dim)]">
+                Show on-chain values
+              </summary>
+              <div className="mt-2 grid grid-cols-2 gap-2 font-mono text-xs text-[var(--color-text-dim)] sm:grid-cols-4">
+                <div>
+                  <div className="text-[var(--color-text-muted)]">value</div>
+                  <div>{feed.value.toString()}</div>
+                </div>
+                <div>
+                  <div className="text-[var(--color-text-muted)]">confidence (bps)</div>
+                  <div>{feed.confidence}</div>
+                </div>
+                <div>
+                  <div className="text-[var(--color-text-muted)]">contributors</div>
+                  <div>{feed.contributors}</div>
+                </div>
+                <div>
+                  <div className="text-[var(--color-text-muted)]">lastUpdatedBlock</div>
+                  <div>{feed.block}</div>
+                </div>
+              </div>
+            </details>
+          </>
         ) : (
           <p className="mt-2 text-sm text-[var(--color-text-dim)]">Reading feed…</p>
         )}
@@ -207,12 +256,12 @@ export function TryClient() {
         ) : preview || (!hasInjectedWallet && state === "disconnected") ? (
           <div>
             <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-warn)]">
-              Preview — not an on-chain transaction
+              Preview, not an on-chain transaction
             </div>
             <p className="mt-2 text-sm text-[var(--color-text-dim)]">
               A real refresh re-aggregates the top-20 agents&apos; latest forecasts into a fresh consensus value and
               updates the block above.{" "}
-              {hasInjectedWallet ? "" : "No wallet detected — install MetaMask to do it for real."}
+              {hasInjectedWallet ? "" : "No wallet detected. Install MetaMask to do it for real."}
             </p>
             {hasInjectedWallet && (
               <button
@@ -226,7 +275,7 @@ export function TryClient() {
           </div>
         ) : state === "disconnected" ? (
           <div>
-            <p className="text-sm text-[var(--color-text-dim)]">Step 1 — connect your wallet to interact on-chain.</p>
+            <p className="text-sm text-[var(--color-text-dim)]">Step 1: connect your wallet to interact on-chain.</p>
             <div className="mt-4 flex gap-3">
               <button
                 type="button"
@@ -247,7 +296,7 @@ export function TryClient() {
           </div>
         ) : state === "wrong-network" ? (
           <div>
-            <p className="text-sm text-[var(--color-text-dim)]">Step 2 — switch your wallet to Mantle Sepolia.</p>
+            <p className="text-sm text-[var(--color-text-dim)]">Step 2: switch your wallet to Mantle Sepolia.</p>
             <button
               type="button"
               onClick={() => switchChain({ chainId: env.chainId })}
@@ -260,7 +309,7 @@ export function TryClient() {
         ) : state === "no-gas" ? (
           <div>
             <p className="text-sm text-[var(--color-text-dim)]">
-              Step 3 — you need a little testnet MNT for gas. Grab some, then re-check.
+              Step 3: you need a little testnet MNT for gas. Grab some, then re-check.
             </p>
             <div className="mt-4 flex gap-3">
               <a
@@ -276,14 +325,14 @@ export function TryClient() {
                 onClick={() => read.refetch()}
                 className="rounded border border-[var(--color-border)] px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] hover:text-[var(--color-text)]"
               >
-                I&apos;ve funded it — re-check
+                I&apos;ve funded it, re-check
               </button>
             </div>
           </div>
         ) : (
           <div>
             <p className="text-sm text-[var(--color-text-dim)]">
-              Step 4 — refresh the {catName} feed. One signature writes a fresh consensus on-chain.
+              Step 4: refresh the {catName} feed. One signature writes a fresh consensus on-chain.
             </p>
             <button
               type="button"
@@ -294,14 +343,14 @@ export function TryClient() {
               {writing
                 ? "Confirm in wallet…"
                 : receipt.isLoading
-                  ? "Mining…"
+                  ? "Confirming…"
                   : onCooldown
-                    ? `Cooling down — ~${blocksLeft} blocks`
+                    ? `Cooling down, ~${blocksLeft} blocks`
                     : "Refresh the live AI feed"}
             </button>
             {onCooldown && (
               <p className="mt-2 font-mono text-[11px] text-[var(--color-text-muted)]">
-                Just refreshed — the feed rate-limits to one update per {COOLDOWN_BLOCKS} blocks (~{COOLDOWN_BLOCKS * 2}s).
+                Just refreshed. The feed rate-limits to one update per {COOLDOWN_BLOCKS} blocks (~{COOLDOWN_BLOCKS * 2}s).
                 Available again in ~{blocksLeft} blocks, or switch category.
               </p>
             )}

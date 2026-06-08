@@ -30,6 +30,21 @@ export function fmtUSD(value: number, dp = 0): string {
   })}`;
 }
 
+/**
+ * Compact USD for scannable surfaces (KPIs, tables, charts): $142.3M, $1.4B.
+ * Falls back to exact fmtUSD below $1M so small values stay precise.
+ * Use fmtUSD on spec pages where the exact figure matters.
+ */
+export function fmtUSDCompact(value: number, dp = 1): string {
+  if (Math.abs(value) >= 1_000_000) {
+    return `$${new Intl.NumberFormat("en-US", {
+      notation: "compact",
+      maximumFractionDigits: dp,
+    }).format(value)}`;
+  }
+  return fmtUSD(value);
+}
+
 /** Block height with thin spaces. */
 export function fmtBlock(n: number): string {
   return n.toLocaleString("en-US");
