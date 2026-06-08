@@ -13,9 +13,10 @@ export function deriveMethRateSeries(
   const out: bigint[] = [];
   let rate = base;
   for (const apy of apyPct) {
-    // daily growth in parts-per-billion of the rate
-    const dailyPpb = BigInt(Math.round((apy / 100 / 365) * 1_000_000_000));
-    rate = rate + (rate * dailyPpb) / 1_000_000_000n;
+    // daily growth in parts-per-trillion of the rate (1e12 scale keeps the round-trip slope-recovery
+    // error sub-bps; parts-per-billion lost up to ~1.8 bps annualized to integer rounding).
+    const dailyPpt = BigInt(Math.round((apy / 100 / 365) * 1_000_000_000_000));
+    rate = rate + (rate * dailyPpt) / 1_000_000_000_000n;
     out.push(rate);
   }
   return out;

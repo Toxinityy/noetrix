@@ -40,7 +40,9 @@ export function parseProtocolChainTvl(raw: unknown, chain = "Mantle"): DailyPoin
 
 /// DefiLlama /v2/historicalChainTvl/{chain} → [{date, tvl}] (NOTE: field is `tvl`, not totalLiquidityUSD).
 export function parseChainTvl(raw: unknown): DailyPoint[] {
-  const arr = (raw as Array<{ date: number; tvl: number }>) ?? [];
+  // Guard with Array.isArray: `?? []` only catches null/undefined, so an error-envelope object would
+  // throw on .map. The chain-level endpoint returns a bare array on success.
+  const arr = Array.isArray(raw) ? (raw as Array<{ date: number; tvl: number }>) : [];
   return sortByTs(arr.map((d) => ({ ts: d.date, value: d.tvl })));
 }
 

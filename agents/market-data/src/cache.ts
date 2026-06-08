@@ -3,10 +3,16 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import type { MetricKey, MetricSeries } from "./types.js";
 
-/// Cache lives at agents/market-data/data (sibling of src), committed for reproducible backtests.
+/// Cache lives at agents/market-data/data (package root, committed for reproducible backtests).
+/// Resolves correctly whether this module runs from source (`.../src`, via tsx/vitest) OR from the
+/// compiled output (`.../dist/src`, when another package imports the built `loadSeries`). A naive
+/// `../data` from `dist/src` would wrongly point at `dist/data`. An explicit `MARKET_DATA_DIR`
+/// override wins when set.
 export function dataDir(): string {
-  const here = dirname(fileURLToPath(import.meta.url)); // .../src (or dist)
-  return join(here, "..", "data");
+  if (process.env.MARKET_DATA_DIR) return process.env.MARKET_DATA_DIR;
+  const here = dirname(fileURLToPath(import.meta.url));
+  const root = here.replace(/[/\\](?:dist[/\\]src|src)$/, "");
+  return join(root, "data");
 }
 
 export function saveSeries(series: MetricSeries): void {
