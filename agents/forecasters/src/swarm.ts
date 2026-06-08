@@ -31,6 +31,34 @@ function clamp(v: bigint, lo: bigint, hi: bigint): bigint {
   return v < lo ? lo : v > hi ? hi : v;
 }
 
+/// Raw swarm disagreement = midpoint scatter (isqrt of rank-weighted variance) + half the rank-weighted
+/// mean band width. Pre-normalization (no disagreeScale). Exported so the backtest can tune the
+/// per-category disagreeScale from the observed distribution. Bands are clamped to domain first.
+export function rawDisagreement(lo: bigint[], hi: bigint[], domainMin: bigint, domainMax: bigint): bigint {
+  const n = lo.length;
+  if (n === 0) return 0n;
+  const mid: bigint[] = [];
+  const width: bigint[] = [];
+  for (let i = 0; i < n; i++) {
+    const a = clamp(lo[i], domainMin, domainMax);
+    const b = clamp(hi[i], domainMin, domainMax);
+    mid.push((a + b) / 2n);
+    width.push(b - a);
+  }
+  const w = rankWeights(n);
+  let ensemble = 0n;
+  for (let i = 0; i < n; i++) ensemble += (w[i] * mid[i]) / WEIGHT_SCALE;
+  let V = 0n;
+  for (let i = 0; i < n; i++) {
+    const dev = mid[i] - ensemble;
+    V += (w[i] * (dev * dev)) / WEIGHT_SCALE;
+  }
+  const D = isqrt(V);
+  let Wbar = 0n;
+  for (let i = 0; i < n; i++) Wbar += (w[i] * width[i]) / WEIGHT_SCALE;
+  return D + Wbar / 2n;
+}
+
 /// Mirror of CompositeFeed.sol._aggregate (Plan 3 implements the Solidity side to match this), in scaled-integer BigInt.
 /// Contributors are passed in RANK ORDER (best first). lo/hi are the band; stated is bps; cal is the
 /// agent's calibrationScore in CAL_SCALE (≤ 0). All four arrays share length n.
@@ -48,14 +76,12 @@ export function aggregateSwarm(
   const ceiling = p.singleSourceCeilingBps ?? SINGLE_SOURCE_CEILING_BPS;
   const agreeFloor = p.agreeFloor ?? AGREE_FLOOR;
 
-  // Clamp bands to domain; midpoints + widths.
+  // Clamp bands to domain; midpoints (needed for ensemble value).
   const mid: bigint[] = [];
-  const width: bigint[] = [];
   for (let i = 0; i < n; i++) {
     const a = clamp(lo[i], p.domainMin, p.domainMax);
     const b = clamp(hi[i], p.domainMin, p.domainMax);
     mid.push((a + b) / 2n);
-    width.push(b - a);
   }
 
   const w = rankWeights(n); // BigInt, WEIGHT_SCALE-scaled, sum ≈ WEIGHT_SCALE
@@ -64,20 +90,8 @@ export function aggregateSwarm(
   let ensemble = 0n;
   for (let i = 0; i < n; i++) ensemble += (w[i] * mid[i]) / WEIGHT_SCALE;
 
-  // Weighted variance V = Σ w_i * (mid_i - M)^2 / WEIGHT_SCALE ; D = isqrt(V)
-  let V = 0n;
-  for (let i = 0; i < n; i++) {
-    const dev = mid[i] - ensemble;
-    V += (w[i] * (dev * dev)) / WEIGHT_SCALE;
-  }
-  const D = isqrt(V);
-
-  // Mean band width Wbar = Σ w_i * width_i / WEIGHT_SCALE
-  let Wbar = 0n;
-  for (let i = 0; i < n; i++) Wbar += (w[i] * width[i]) / WEIGHT_SCALE;
-
-  // Raw disagreement = midpoint scatter + half mean band width (anti wide-band-gaming defense)
-  const dRaw = D + Wbar / 2n;
+  // Raw disagreement = midpoint scatter + half mean band width (delegates to rawDisagreement).
+  const dRaw = rawDisagreement(lo, hi, p.domainMin, p.domainMax);
 
   // Normalized disagreement d ∈ [0, CAL_SCALE]
   const scale = p.disagreeScale > 0n ? p.disagreeScale : 1n;
