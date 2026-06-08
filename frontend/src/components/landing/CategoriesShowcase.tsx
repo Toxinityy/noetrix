@@ -27,7 +27,7 @@ type CategoryCard = {
 const CATEGORIES: CategoryCard[] = [
   {
     id: "meth-apr-24h",
-    href: "/feed/meth-apr-24h",
+    href: "/terminal/feed/meth-apr-24h",
     slug: "METH_APR_24H",
     title: "mETH staking APR",
     subtitle: "Rolling 24-hour annualized yield on mETH",
@@ -46,7 +46,7 @@ const CATEGORIES: CategoryCard[] = [
   },
   {
     id: "usdy-apy-24h",
-    href: "/feed/usdy-apy-24h",
+    href: "/terminal/feed/usdy-apy-24h",
     slug: "USDY_APY_24H",
     title: "USDY treasury yield",
     subtitle: "Rolling 24-hour APY on Ondo USDY (tokenized US Treasuries)",
@@ -65,7 +65,7 @@ const CATEGORIES: CategoryCard[] = [
   },
   {
     id: "aave-mantle-tvl-24h",
-    href: "/feed/aave-mantle-tvl-24h",
+    href: "/terminal/feed/aave-mantle-tvl-24h",
     slug: "AAVE_MANTLE_TVL_24H",
     title: "Aave-on-Mantle TVL",
     subtitle: "24h TVL across aTokens × oracle USD",

@@ -53,7 +53,7 @@ export function InsightTeaser() {
         {headline}
       </p>
       <Link
-        href="/insights"
+        href="/terminal/insights"
         className="mt-8 inline-flex items-center gap-2 rounded border border-[var(--color-accent)]/40 bg-[color:var(--color-accent)]/8 px-5 py-2.5 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-accent)] backdrop-blur-sm transition-colors hover:bg-[color:var(--color-accent)]/15"
       >
         See all AI insights <ArrowUpRight size={14} aria-hidden />

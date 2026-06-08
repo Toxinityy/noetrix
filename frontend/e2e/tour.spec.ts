@@ -2,18 +2,25 @@ import { test, expect } from "@playwright/test";
 
 test("first-visit tour auto-starts on /leaderboard and advances", async ({ page }) => {
   await page.addInitScript(() => window.localStorage.clear());
-  await page.goto("/leaderboard");
+  await page.goto("/terminal/leaderboard");
   // The leaderboard renders the data-tour anchors the spotlight targets.
   await expect(page.locator("[data-tour]").first()).toBeVisible();
   // Advancing/closing with the keyboard must not throw.
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(/leaderboard/);
+  await expect(page).toHaveURL(/terminal\/leaderboard/);
 });
 
 test("Guide button re-opens the needs-picker", async ({ page }) => {
-  await page.goto("/leaderboard");
+  await page.goto("/terminal/leaderboard");
+
+  // First-run modal opens automatically, close it
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await page.getByRole("button", { name: "Just looking" }).click();
+  await expect(dialog).toBeHidden();
+
   const guide = page.getByRole("button", { name: /guide/i });
   if (await guide.count()) {
     await guide.first().click();
