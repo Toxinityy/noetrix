@@ -22,6 +22,26 @@ export function InsightsClient() {
   const [categoryId, setCategoryId] = React.useState<CategoryId>("METH_APR_24H");
   const data = useInsightsData(categoryId);
   const source = data.source;
+
+  // Snapshot age — computed in an effect (Date.now() stays out of render for React-Compiler purity +
+  // no SSR hydration drift; setState deferred via setTimeout per the codebase's effect-setState rule).
+  const [ageLabel, setAgeLabel] = React.useState<string | null>(null);
+  const [stale, setStale] = React.useState(false);
+  React.useEffect(() => {
+    const genAt = data.generatedAt;
+    const t = setTimeout(() => {
+      if (!genAt) {
+        setAgeLabel(null);
+        setStale(false);
+        return;
+      }
+      const h = (Date.now() - new Date(genAt).getTime()) / 3_600_000;
+      setStale(h > 24);
+      setAgeLabel(h < 1 ? "just now" : h < 24 ? `${Math.floor(h)}h ago` : `${Math.floor(h / 24)}d ago`);
+    }, 0);
+    return () => clearTimeout(t);
+  }, [data.generatedAt]);
+
   const tabs = Object.values(CATEGORIES).map((c) => ({
     id: c.id,
     label: FRIENDLY_CATEGORY[c.id],
@@ -47,13 +67,16 @@ export function InsightsClient() {
           </p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <StatusPill tone={source === "live" ? "up" : "muted"} dot pulse={source === "live"}>
-            {source === "live" ? "Live on-chain data" : "Demo data"}
+          <StatusPill tone={source === "mock" ? "muted" : "up"} dot pulse={false}>
+            {source === "mock" ? "Demo data" : "On-chain snapshot"}
           </StatusPill>
-          {source === "live" && data.block ? (
+          {source !== "mock" && data.block ? (
             <span className="font-mono text-[10px] text-[var(--color-text-muted)]">
               snapshot @ block #{data.block.toLocaleString("en-US")}
               {data.generatedAt ? ` · ${new Date(data.generatedAt).toLocaleDateString("en-US")}` : ""}
+              {ageLabel ? (
+                <span className={stale ? "text-[var(--color-warn)]" : undefined}> · captured {ageLabel}</span>
+              ) : null}
             </span>
           ) : null}
         </div>
@@ -158,7 +181,7 @@ export function InsightsClient() {
           on-chain grading are fully real, but the &quot;reality&quot; they are graded against is
           demo-seeded until v2 reads the live Ondo / mETH contracts. Track-record sample sizes are small
           and growing. All figures are computed from Mantle Sepolia
-          {source === "live" && data.block ? ` at block #${data.block.toLocaleString("en-US")}` : ""}.
+          {source !== "mock" && data.block ? ` at block #${data.block.toLocaleString("en-US")}` : ""}.
         </p>
       </div>
     </div>

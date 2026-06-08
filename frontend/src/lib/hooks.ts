@@ -231,13 +231,15 @@ export function useInsightsData(category: CategoryId): InsightsData {
   const hasSnap = !!cat && cat.predictions.length > 0;
 
   if (snap.isLoading) {
-    return { source: "live", board: [], feed: [], bands: [], crowdValue: null, category: null, allocation: null, generatedAt: null, block: null, isLoading: true };
+    return { source: "snapshot", board: [], feed: [], bands: [], crowdValue: null, category: null, allocation: null, generatedAt: null, block: null, isLoading: true };
   }
   if (hasSnap && cat) {
     const feed = feedFromSnapshot(cat);
     const bands = bandsFromSnapshot(cat);
     return {
-      source: "live",
+      // A committed build-time chain snapshot — real on-chain data, but NOT real-time. Labelled
+      // "snapshot" (not "live") so the UI can show its age instead of implying a live feed.
+      source: "snapshot",
       board: leaderRowsFromSnapshot(cat),
       feed,
       bands,
