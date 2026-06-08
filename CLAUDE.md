@@ -123,6 +123,32 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-06-08 — Ground-truth status audit (5-agent workflow) + doc-truth pass + deploy runway (branch `master`)
+**Type:** Audit (multi-agent workflow) + targeted docs/test/script build. User ran `/superpowers:brainstorming` "review what's yet to be implemented vs done" under **ultracode**. I ran a 5-agent verification **Workflow** (contracts+chain / agents+SDK / frontend / indexer+ops+git / submission-readiness), each running the REAL builds/tests + on-chain `cast` reads rather than trusting this masterdoc. Then, on user pick (AskUserQuestion → "cheap polish + doc-truth pass" + "prep the deploy runway"), executed both inline. **NOTE: this masterdoc §6 was STALE — it stopped at the 2026-06-07 P2 entry and omitted 5 later commits** (`7c0d760` honest /agent + on-chain snapshot, `c042284` reasoner cold-start sanitization, `c4267b8` credit-bureau/two-sided-revenue reframe, `39f3eaf` real /pricing premium gate + GTM/LOI kit, `13ea8a0` foundry.toml→Etherscan V2). Master is now **0/0 with origin** (no longer "local-only ahead by N" — it got pushed).
+
+**Audit — corrected facts (masterdoc was wrong in BOTH directions):**
+- **Feed is NON-ZERO right now** (mETH ~2500 / AAVE 3033 / USDY 2999 bps), not zero as P2 claimed — because bots last ran ~4.5h ago. DemoFeedConsumer healthy (`shouldAllowDeposits=true`), YieldAllocator a real 83/17 split.
+- **BUT the hold-last-good fix is NOT deployed** (P2 implied redeploy was the only step; the redeploy never happened). Proven 3 ways: deployed CompositeFeed bytecode lacks the `CompositeFeedStale` event topic; runtime length 11032≠11540 (post-fix artifact); git shows no commit touched `deployments.json` after fix commit `6d000e0`. So the feed still zeroes if bots stop. **HIGH confidence.**
+- **Naive agent (id 3) IS registered** on-chain (`nextAgentId=4`, tokenURI decodes to "Naive Baseline") — masterdoc said "NOT yet registered." Only has mETH history (3 resolved); AAVE/USDY still (0,0,0,0).
+- **169 forge tests pass** (not 147/157/159 — various stale doc counts); frontend tsc/lint/vitest(55) green; **e2e was 8/9** (flaky tour test), not 9/9.
+- **3 submission BLOCKERS, all owner-only operational:** frontend NOT deployed (no Vercel/URL), no demo video, **GitHub repo is PRIVATE** (`gh repo view`→PRIVATE → every doc link dead + "open-source" criterion fails). Contract verification UNCONFIRMED (no API key/artifacts; commit msg claims it but unprovable). Indexer never hosted.
+- **Consumers bind the feed as `immutable` with NO setter** (`DemoFeedConsumer:28`, `YieldAllocator:14`, `RiskManager:29`) → redeploying CompositeFeed alone leaves all 3 reading the old broken feed; redeploy MUST include them.
+
+**Track A — cheap polish + doc-truth (done, committed-ready):**
+- **README:** `147`→`169` tests; `9 production + 2 mocks`→`14 production + 3 mocks (17 deployed)` (×2); **SubscriptionGate addr fixed** `0x0AbEC5f6…`→`0x0b759e12…` (matched authoritative deployments JSON); Submission track block reframed **AI x RWA → AI Alpha & Data primary** (+ `/rwa`→`/simulation`, "2 agents"→"3 agents"); repo-layout agents line += naive-baseline + resolver; added `docs/DEPLOY.md` pointer.
+- **SUBMISSION.md:** `157/157`→`169/169`; `11 production`→`14 production` + `2`→`3` reference agents; added the naive control baseline to the agents bullet; `/rwa`→`/simulation`.
+- **Flaky e2e tour test FIXED at root cause** (`frontend/e2e/tour.spec.ts`): the first-run OnboardingModal auto-opens a `fixed inset-0` backdrop that intercepted the Guide click under parallel workers. Fix: `addInitScript` sets `localStorage["noetrix.onboarded.v1"]="1"` so the modal doesn't auto-open → Guide button is the sole deterministic trigger. **Full e2e suite now 9/9 green under parallel workers** (verified).
+
+**Track B — deploy runway (new artifacts):**
+- **`contracts/script/RedeployFeed.s.sol`** — standalone: redeploys the fixed CompositeFeed + all 3 immutable consumers, re-wires the feed (setAgentRegistry/PredictionMarket/SubscriptionGate), re-registers RiskManager's 2 assets (mETH 80%/USDY 90% CF, $1B caps), then patches ONLY the 4 changed addresses into `deployments/<net>.json` (reads back + preserves the other 13) and logs the exact frontend/refresher env lines. **`forge build` clean.**
+- **`contracts/verify.sh`** — idempotent Etherscan-V2 verification of all 16 deployed contracts; reads addresses + constructor args from the deployments JSON (needs `ETHERSCAN_API_KEY` + `DEPLOYER`). `bash -n` clean, executable.
+- **`frontend/.env.example`** — added the missing `NEXT_PUBLIC_ADDR_{YIELD_ALLOCATOR,RISK_MANAGER,SUBSCRIPTION_GATE}` + `FAUCET_URL`, with deploy gotchas (blank the indexer URL; rebuild after any NEXT_PUBLIC change).
+- **`docs/DEPLOY.md`** — full operator runbook (7 steps): redeploy feed+consumers → why-feed-looks-ok-but-fragile → verify → restart bots → regen snapshots → Vercel → make-repo-public/video/TBDs. Encodes the recurring gotchas (0x-prefix keys, build-before-run, delete resolver.state.json on redeploy, reasoner .env location).
+
+**SURFACED — NOT done (needs user decision, safety):** the audit flagged the stale `agents/claude-reasoner/` dir as "[POLISH] just delete it." **I did NOT delete it** — its `.env` holds the **live reasoner controller key** (`AGENT_ID=2` + `CONTROLLER_PRIVATE_KEY` + `OPENROUTER_API_KEY` + `PINATA_JWT`) plus `agent.state.json`, and `agents/deepseek-reasoner/.env` does NOT exist. Deleting it would destroy the reasoner's only key. **Recommend:** move that `.env` (and naive's) into the real package dirs from `.env.example`, THEN remove the stale dir — a key-handling step the user should drive.
+
+**Verification:** forge build (RedeployFeed) clean · `bash -n verify.sh` clean · frontend lint 0 · e2e **9/9** (full parallel suite). No source/runtime behavior changed except the e2e test determinism. All edits on `master` (uncommitted at session end — offer commit).
+
 ### 2026-06-07 (P2) — Feedback fixes + competitor analysis + feed-holds-last-good + "Crowd vs proven AI" (branch `qa-board-review-fixes`)
 **Type:** Build (contract + frontend) + research. Continued from the board plan into P2, interleaved with live user feedback after running `pnpm dev`.
 
