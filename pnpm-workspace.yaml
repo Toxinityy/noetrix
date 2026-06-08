@@ -2,6 +2,7 @@ packages:
   - "frontend"
   - "indexer"
   - "agents/sdk"
+  - "agents/forecasters"
   - "agents/arima-baseline"
   - "agents/naive-baseline"
   - "agents/deepseek-reasoner"
