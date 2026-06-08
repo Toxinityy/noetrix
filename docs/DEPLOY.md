@@ -38,7 +38,7 @@ bots pause). Verified by bytecode: the deployed code lacks the `CompositeFeedSta
 as `ICompositeFeed public immutable feed` with **no setter** — so redeploying CompositeFeed alone leaves all three
 reading the old broken feed. `RedeployFeed.s.sol` therefore redeploys the feed **and** all three consumers, re-wires
 the feed, re-registers RiskManager's two assets (mETH 80% CF / USDY 90% CF, $1B caps), and patches only the 4 changed
-addresses into the deployments JSON (the other 13 are preserved).
+addresses into the deployments JSON (the other 13 contract addresses + chainId are preserved).
 
 ```bash
 cd contracts
@@ -47,10 +47,13 @@ forge script script/RedeployFeed.s.sol:RedeployFeed \
   --broadcast --verify          # --verify auto-verifies the 4 NEW contracts if ETHERSCAN_API_KEY is set
 ```
 
-The script prints the 4 new addresses and the exact `NEXT_PUBLIC_ADDR_*` + refresher `ADDR_COMPOSITE_FEED` lines to
-update. Copy those into Steps 4 and 6.
+The script writes the new addresses as ready-to-paste env lines to
+`contracts/deployments/mantle-sepolia-redeploy-env.txt` (and also logs them). Copy those into Steps 4 and 6.
 
-> The indexer reads addresses straight from the deployments JSON, so it needs no manual address edit — just a restart.
+> ⚠️ **Indexer is NOT "just a restart" after a feed-address change.** The indexer reads addresses from the deployments
+> JSON (no manual edit), but Ponder caches by contract config: start it with a **fresh `--schema liveN` name AND clear
+> `indexer/.ponder/`**, or a same-schema restart can keep indexing the OLD feed's events. Also raise `PONDER_START_BLOCK`
+> toward the new deploy block so it doesn't re-scan from the old start.
 
 ---
 
@@ -77,7 +80,9 @@ export DEPLOYER=0x...               # the address that deployed the contracts
 ```
 
 `verify.sh` is idempotent (re-verifying an already-verified contract is a no-op) and reads addresses + constructor
-args from the deployments JSON. It covers all 16 deployed contracts, including the 4 from Step 1.
+args from the deployments JSON. It covers all 16 deployed contracts, including the 4 from Step 1 — and it is the
+**authoritative** pass: Step 1's `--verify` only covers the 4 new contracts and can fail silently mid-broadcast, so
+run `verify.sh` regardless.
 
 ---
 
@@ -122,6 +127,10 @@ cd frontend
 CHAIN_RPC=$MANTLE_SEPOLIA_RPC pnpm gen:fallback   # -> public/fallback-leaderboard.json
 CHAIN_RPC=$MANTLE_SEPOLIA_RPC pnpm gen:insights   # -> public/insights-snapshot.json
 ```
+
+> ⚠️ **Run this BEFORE the Step 6 build.** `/api/leaderboard` statically imports the snapshot JSON at build time and
+> `public/*.json` is baked per Vercel deployment, so regenerating the snapshots *after* the build has no effect until you
+> redeploy. Regenerate → then build/deploy.
 
 ---
 

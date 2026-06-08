@@ -28,8 +28,8 @@ import {ISubscriptionGate} from "../src/interfaces/ISubscriptionGate.sol";
 ///     --broadcast --verify
 ///
 /// After broadcast it rewrites the 4 changed addresses into deployments/<network>.json (the other 13
-/// entries are read back and preserved) and prints the exact frontend + refresher env lines to update.
-/// Full runbook: docs/DEPLOY.md.
+/// contract addresses + chainId are read back and preserved), writes the exact env lines to
+/// deployments/<network>-redeploy-env.txt, and logs them. Full runbook: docs/DEPLOY.md.
 contract RedeployFeed is Script {
     bytes32 internal constant METH_APR_24H = keccak256("METH_APR_24H");
     bytes32 internal constant USDY_APY_24H = keccak256("USDY_APY_24H");
@@ -72,6 +72,7 @@ contract RedeployFeed is Script {
         vm.stopBroadcast();
 
         _patchJson(cur, path);
+        _writeEnvFile();
         _log(agentRegistry, predictionMarket, subscriptionGate);
     }
 
@@ -80,8 +81,8 @@ contract RedeployFeed is Script {
         return string.concat("deployments/", net, ".json");
     }
 
-    /// @dev Rewrites the file with the 4 changed addresses; the other 13 entries are read back from the
-    ///      existing JSON so nothing else drifts.
+    /// @dev Rewrites the file with the 4 changed addresses; the other 13 contract addresses + chainId
+    ///      are read back from the existing JSON so nothing else drifts.
     function _patchJson(string memory cur, string memory path) internal {
         string memory key = "redeploy";
         vm.serializeUint(key, "chainId", block.chainid);
@@ -107,6 +108,26 @@ contract RedeployFeed is Script {
 
         vm.writeJson(json, path);
         console2.log("Patched 4 addresses in", path);
+    }
+
+    /// @dev Writes the env lines to a file (within the ./deployments fs-write sandbox) so the operator
+    ///      can copy them instead of scraping console output mixed with broadcast logs.
+    function _writeEnvFile() internal {
+        string memory net = vm.envOr("DEPLOY_NETWORK", string("mantle-sepolia"));
+        string memory feed = vm.toString(address(compositeFeed));
+        string memory body = string.concat(
+            "# RedeployFeed output - copy into your env, then REBUILD the frontend + restart the refresher.\n",
+            "# frontend/.env (or Vercel env): NEXT_PUBLIC_* are baked at build, so rebuild after editing.\n",
+            "NEXT_PUBLIC_ADDR_COMPOSITE_FEED=", feed, "\n",
+            "NEXT_PUBLIC_ADDR_DEMO_CONSUMER=", vm.toString(address(demoConsumer)), "\n",
+            "NEXT_PUBLIC_ADDR_YIELD_ALLOCATOR=", vm.toString(address(yieldAllocator)), "\n",
+            "NEXT_PUBLIC_ADDR_RISK_MANAGER=", vm.toString(address(riskManager)), "\n",
+            "# agents/refresher/.env:\n",
+            "ADDR_COMPOSITE_FEED=", feed, "\n"
+        );
+        string memory path = string.concat("deployments/", net, "-redeploy-env.txt");
+        vm.writeFile(path, body);
+        console2.log("Wrote env patch to", path);
     }
 
     function _log(address agentRegistry, address predictionMarket, address subscriptionGate) internal view {
