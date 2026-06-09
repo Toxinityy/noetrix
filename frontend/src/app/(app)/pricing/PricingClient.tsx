@@ -310,7 +310,7 @@ export function PricingClient() {
                   <button
                     type="button"
                     onClick={() => handleSubscribe(t)}
-                    disabled={state !== "ready" || busy}
+                    disabled={state !== "ready" || busy || !hasSubscriptionGate}
                     className="mt-5 rounded border border-[var(--color-accent)] bg-[var(--color-accent)]/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)] disabled:opacity-50"
                   >
                     {label}
