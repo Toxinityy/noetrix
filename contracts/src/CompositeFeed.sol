@@ -2,6 +2,7 @@
 pragma solidity 0.8.24;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {IAgentRegistry} from "./interfaces/IAgentRegistry.sol";
 import {IPredictionMarket} from "./interfaces/IPredictionMarket.sol";
 import {ISubscriptionGate} from "./interfaces/ISubscriptionGate.sol";
@@ -22,6 +23,10 @@ contract CompositeFeed is ICompositeFeed, Ownable {
     uint256 private constant CAL_SCALE = 1_000_000; // calibration fixed-point (1.0)
     int256 private constant CAL_FLOOR = -500_000; // -0.5 in CAL_SCALE
     uint16 private constant MAX_CONFIDENCE_BPS = 10_000;
+    uint256 internal constant AGREE_FLOOR = 400_000; // 0.4 in CAL_SCALE — agreement multiplier floor
+    uint256 internal constant MIN_SWARM = 3; // quorum: below this, confidence is capped (single-source)
+    uint256 internal constant SINGLE_SOURCE_CEILING_BPS = 5_000;
+    uint16 internal constant MIN_CONTRIB_CONF_BPS = 500; // a contributor must stake >= this stated confidence
 
     error ZeroAddress();
     error NotConfigured();
@@ -47,9 +52,30 @@ contract CompositeFeed is ICompositeFeed, Ownable {
 
     mapping(bytes32 => CompositeForecast) internal _feeds;
 
+    struct CategoryBounds {
+        uint256 domainMin;
+        uint256 domainMax;
+        uint256 disagreeScale; // 0 = legacy (agreement+quorum disabled, fully backward-compatible)
+    }
+
+    mapping(bytes32 => CategoryBounds) public categoryBounds;
+
+    event CategoryBoundsSet(bytes32 indexed categoryId, uint256 domainMin, uint256 domainMax, uint256 disagreeScale);
+
     constructor(address initialOwner) Ownable(initialOwner) {}
 
     // ─── Admin ───────────────────────────────────────────────────────────────────
+
+    /// @notice Owner sets the per-category domain + disagreement scale. While disagreeScale==0 the feed
+    ///         behaves exactly as before (legacy confidence). Deploy sets these from the backtest.
+    function setCategoryBounds(bytes32 categoryId, uint256 domainMin, uint256 domainMax, uint256 disagreeScale)
+        external
+        onlyOwner
+    {
+        require(domainMax > domainMin, "bad domain");
+        categoryBounds[categoryId] = CategoryBounds(domainMin, domainMax, disagreeScale);
+        emit CategoryBoundsSet(categoryId, domainMin, domainMax, disagreeScale);
+    }
 
     function setAgentRegistry(IAgentRegistry registry) external onlyOwner {
         if (address(registry) == address(0)) revert ZeroAddress();
