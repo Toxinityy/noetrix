@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { PERSONA_PATHS } from "@/lib/personaPaths";
+import { REQUEST_KEY } from "@/components/tour/TourProvider";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -34,6 +35,13 @@ export function StartHere() {
             >
               <Link
                 href={p.href}
+                onClick={() => {
+                  // Arm this persona's spotlight tour; the terminal boot gate picks it
+                  // up and auto-starts it after the boot animation finishes.
+                  try {
+                    sessionStorage.setItem(REQUEST_KEY, p.tourId);
+                  } catch {}
+                }}
                 className="group flex h-full flex-col gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6 transition-colors hover:border-[var(--color-accent)] focus-visible:border-[var(--color-accent)]"
               >
                 <Icon size={26} className="text-[var(--color-accent)]" aria-hidden />

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { useTour, ONBOARDED_KEY, REQUEST_KEY } from "@/components/tour/TourProvider";
+import type { TourId } from "@/components/tour/steps";
 
 /**
  * Plays the "INITIALIZING" boot animation whenever the user ENTERS the /terminal
@@ -30,19 +31,29 @@ export function TerminalBootGate({ children }: { children: React.ReactNode }) {
   const requestStartRef = React.useRef(requestStart);
 
   React.useEffect(() => {
+    // Consume any pending persona tour (armed by the StartHere landing picker)
+    // synchronously. This child effect runs before TourProvider's parent nav effect,
+    // so the spotlight does NOT open mid-boot; we start the right tour after the boot.
+    let pendingTour: string | null = null;
+    try {
+      pendingTour = sessionStorage.getItem(REQUEST_KEY);
+      if (pendingTour) sessionStorage.removeItem(REQUEST_KEY);
+    } catch {}
+
     const reduced = reduceMotionRef.current;
     const boomDelay = reduced ? 120 : 950;
     const doneDelay = reduced ? 220 : 1350;
     const boomTimer = window.setTimeout(() => setPhase("boom"), boomDelay);
     const doneTimer = window.setTimeout(() => {
       setPhase("done");
-      // First-ever visit: auto-start the guided tour. Skip if the user has already
-      // been onboarded or a persona tour is already queued (so we never override it).
       try {
         const onboarded = localStorage.getItem(ONBOARDED_KEY) === "1";
-        const pending = sessionStorage.getItem(REQUEST_KEY);
-        if (!onboarded && !pending) {
-          localStorage.setItem(ONBOARDED_KEY, "1");
+        localStorage.setItem(ONBOARDED_KEY, "1");
+        if (pendingTour) {
+          // Entered via a persona pick (StartHere): auto-start that path's tour.
+          requestStartRef.current(pendingTour as TourId);
+        } else if (!onboarded) {
+          // Default first-run entry: auto-start the leaderboard walkthrough.
           requestStartRef.current("leaderboard");
         }
       } catch {}

@@ -5,10 +5,8 @@ import { motion, useScroll, useTransform } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { HelpCircle, ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { StatusPill } from "@/components/ui/StatusPill";
-import { useTour } from "@/components/tour/TourProvider";
 import { cn } from "@/lib/cn";
 
 // Primary nav follows the pitch priority: Alpha & Data (Insights/Leaderboard) +
@@ -166,34 +164,10 @@ export function AppHeader() {
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
           </div>
-          <div className="hidden items-center gap-2 sm:flex">
-            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-              network
-            </span>
-            <StatusPill tone="accent" dot pulse>
-              Mantle Sepolia
-            </StatusPill>
-          </div>
-          <GuideButton />
           <ConnectButton />
         </div>
       </div>
     </motion.header>
-  );
-}
-
-function GuideButton() {
-  const { openOnboarding } = useTour();
-  return (
-    <button
-      type="button"
-      onClick={openOnboarding}
-      title="What do you want to do? Pick a guided path."
-      className="hidden items-center gap-1.5 rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent-soft)] hover:text-[var(--color-accent)] sm:inline-flex"
-    >
-      <HelpCircle size={13} aria-hidden />
-      Guide
-    </button>
   );
 }
 
