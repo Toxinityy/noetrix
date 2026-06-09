@@ -129,7 +129,7 @@ export function InsightsClient() {
             />
             <ConsensusBandCard categoryId={categoryId} history={data.feed} bands={data.bands} />
             <NotableMoveCard categoryId={categoryId} history={data.feed} />
-            <AnomalyFeed categoryId={categoryId} history={data.feed} />
+            <AnomalyFeed categoryId={categoryId} history={data.feed} category={data.category} />
             <TopPerformersCard rows={data.board} />
           </>
         )}
