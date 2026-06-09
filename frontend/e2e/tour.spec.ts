@@ -16,7 +16,7 @@ test("entering with a pending persona tour auto-starts it after boot", async ({ 
   // Simulate clicking a persona card on the StartHere landing picker, which arms the
   // tour via sessionStorage. onboarded=1 isolates this from the default leaderboard tour.
   await page.addInitScript(() => {
-    window.localStorage.setItem("noetrix.onboarded.v1", "1");
+    window.localStorage.setItem("noetrix.tour.v1", "1");
     window.sessionStorage.setItem("noetrix.tour.request", "alpha");
   });
   await page.goto("/terminal/insights", { waitUntil: "domcontentloaded" });

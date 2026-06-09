@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { useTour, ONBOARDED_KEY, REQUEST_KEY } from "@/components/tour/TourProvider";
+import { useTour, SEEN_KEY, REQUEST_KEY } from "@/components/tour/TourProvider";
 import type { TourId } from "@/components/tour/steps";
 
 /**
@@ -47,13 +47,12 @@ export function TerminalBootGate({ children }: { children: React.ReactNode }) {
     const doneTimer = window.setTimeout(() => {
       setPhase("done");
       try {
-        const onboarded = localStorage.getItem(ONBOARDED_KEY) === "1";
-        localStorage.setItem(ONBOARDED_KEY, "1");
         if (pendingTour) {
           // Entered via a persona pick (StartHere): auto-start that path's tour.
           requestStartRef.current(pendingTour as TourId);
-        } else if (!onboarded) {
-          // Default first-run entry: auto-start the leaderboard walkthrough.
+        } else if (localStorage.getItem(SEEN_KEY) !== "1") {
+          // Default entry: auto-start the leaderboard walkthrough until the user
+          // completes or dismisses it once (TourProvider sets SEEN_KEY on close).
           requestStartRef.current("leaderboard");
         }
       } catch {}

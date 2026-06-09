@@ -282,7 +282,7 @@ export function Hero() {
             </span>
           </motion.a>
           <a
-            href="/terminal/leaderboard"
+            href="/terminal/dashboard"
             className="group inline-flex h-11 items-center gap-1.5 px-2 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)] underline-offset-4 transition-colors hover:text-[var(--color-text)] hover:underline"
           >
             Enter terminal

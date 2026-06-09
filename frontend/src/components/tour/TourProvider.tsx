@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { TOURS, TOUR_PAGES, type TourId, type TourStep } from "./steps";
 import { Spotlight } from "./Spotlight";
 
-const SEEN_KEY = "noetrix.tour.v1";
+export const SEEN_KEY = "noetrix.tour.v1"; // localStorage: set when a tour is finished/dismissed
 export const REQUEST_KEY = "noetrix.tour.request"; // sessionStorage: holds the pending TourId
 export const ONBOARDED_KEY = "noetrix.onboarded.v1"; // first-run flag (boot gate + OnboardingModal)
 
