@@ -176,7 +176,7 @@ export function DashboardClient() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div data-tour="dash-overview" className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard icon={<Activity size={16} />} label="Resolved forecasts" value={metrics.resolvedForecasts.toString()} detail={sourceLabel(metrics.source)} />
         <MetricCard icon={<Users size={16} />} label="Qualified / listed agents" value={`${metrics.qualifiedAgents} / ${metrics.listedAgents}`} detail={`qualified threshold ${QUALIFIED_RESOLVED} resolved`} />
         <MetricCard icon={<Layers size={16} />} label="Active categories" value={metrics.activeCategories.toString()} detail={ACTIVE_CATEGORY_IDS.join(" · ")} />

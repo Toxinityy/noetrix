@@ -39,13 +39,13 @@ test("landing shows the Start-here strip and has no horizontal overflow at 375px
 });
 
 test("first-run guided tour auto-starts once then not again", async ({ page }) => {
-  await page.goto("/terminal/leaderboard");
-  // After the boot animation, the guided spotlight tour auto-starts on the first visit.
+  await page.goto("/terminal/dashboard");
+  // After the boot animation, the full essentials tour auto-starts on the dashboard.
   const tour = page.getByRole("dialog", { name: /guided tour/i });
   await expect(tour).toBeVisible({ timeout: 10000 });
   await page.keyboard.press("Escape"); // dismiss the tour
   await expect(tour).toBeHidden();
-  // Reload: the onboarded flag persists in this context, so the tour must not auto-start again.
+  // Reload: the seen flag persists in this context, so the tour must not auto-start again.
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForTimeout(2500); // let the boot animation finish on reload
   await expect(page.getByRole("dialog", { name: /guided tour/i })).toBeHidden();

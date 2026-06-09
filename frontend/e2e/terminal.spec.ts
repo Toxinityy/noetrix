@@ -32,12 +32,12 @@ test("boot does NOT replay when navigating between terminal pages", async ({ pag
 });
 
 test("default tour auto-starts after entering on the dashboard (navbar flow)", async ({ page }) => {
-  // Clean slate: entering the terminal home (dashboard) auto-starts the default tour,
-  // which navigates to the leaderboard walkthrough once the boot finishes.
+  // Clean slate: entering the terminal home (dashboard) auto-starts the full essentials
+  // tour. Its first step lives on the dashboard, so the spotlight opens here (no redirect).
   await page.addInitScript(() => window.localStorage.clear());
   await page.goto("/terminal/dashboard", { waitUntil: "domcontentloaded" });
-  await page.waitForURL("**/terminal/leaderboard", { timeout: 9000 });
-  await expect(page.getByRole("dialog", { name: /guided tour/i })).toBeVisible({ timeout: 8000 });
+  await expect(page.getByRole("dialog", { name: /guided tour/i })).toBeVisible({ timeout: 10000 });
+  await expect(page).toHaveURL(/terminal\/dashboard/);
 });
 
 test("old leaderboard route redirects to terminal namespace", async ({ page }) => {

@@ -1,5 +1,9 @@
 export interface TourStep {
   id: string;
+  /** Optional terminal route this step lives on. When set and different from the
+   *  current page, the Spotlight navigates there before highlighting the anchor.
+   *  Single-page tours omit it. */
+  page?: string;
   selector: string;
   title: string;
   body: string;
@@ -44,7 +48,7 @@ export const LEADERBOARD_STEPS: TourStep[] = [
   },
 ];
 
-export type TourId = "leaderboard" | "earn" | "alpha" | "build" | "try";
+export type TourId = "full" | "leaderboard" | "earn" | "alpha" | "build" | "try";
 
 export const EARN_STEPS: TourStep[] = [
   {
@@ -130,7 +134,70 @@ export const TRY_STEPS: TourStep[] = [
   },
 ];
 
+/// The full "essentials" walkthrough: a cross-page tour through every core surface.
+/// Used as the default auto-start when entering the terminal. Each step names the
+/// page it lives on, so the Spotlight navigates between surfaces as it advances.
+export const FULL_STEPS: TourStep[] = [
+  {
+    id: "full-dashboard",
+    page: "/terminal/dashboard",
+    selector: '[data-tour="dash-overview"]',
+    title: "Welcome to Noetrix",
+    body: "Your protocol terminal: live, verifiable AI forecasting on Mantle. These tiles are the at-a-glance status. Let's walk the essentials.",
+  },
+  {
+    id: "full-feed",
+    page: "/terminal/leaderboard",
+    selector: '[data-tour="feed-value"]',
+    title: "The AI consensus feed",
+    body: "A rank-weighted forecast from the most calibrated AIs, with a confidence band. Any protocol can read it on-chain in one call.",
+  },
+  {
+    id: "full-agents",
+    page: "/terminal/leaderboard",
+    selector: '[data-tour="agent-table"]',
+    title: "Ranked AI forecasters",
+    body: "Every forecaster is an ERC-8004 soulbound identity, ranked by on-chain accuracy and honesty. This leaderboard is the benchmark.",
+  },
+  {
+    id: "full-reasoning",
+    page: "/terminal/agent/1",
+    selector: '[data-tour="agent-reasoning"]',
+    title: "Verifiable reasoning",
+    body: "Open any agent to read its full reasoning trace, committed on-chain before the outcome was known. No hindsight, no faking it.",
+  },
+  {
+    id: "full-insights",
+    page: "/terminal/insights",
+    selector: '[data-tour="alpha-proof"]',
+    title: "Proof, not promises",
+    body: "Insights shows where the proven AIs break from the crowd, in plain English. Every figure is graded on-chain and checkable.",
+  },
+  {
+    id: "full-simulator",
+    page: "/terminal/simulation",
+    selector: '[data-tour="earn-simulator"]',
+    title: "Try it, no wallet",
+    body: "Drag the market conditions and watch the AI reallocate yield across mETH and USDY in real time. No wallet, no signup.",
+  },
+  {
+    id: "full-try",
+    page: "/terminal/try",
+    selector: '[data-tour="try-refresh"]',
+    title: "Write to the live feed",
+    body: "Connect a wallet and refresh the on-chain AI feed yourself, one permissionless transaction. Or stay in Preview, no wallet needed.",
+  },
+  {
+    id: "full-build",
+    page: "/terminal/submit",
+    selector: '[data-tour="build-steps"]',
+    title: "Build your own agent",
+    body: "Register an agent, commit and reveal forecasts, and climb the leaderboard. The SDK handles the plumbing. That's the tour!",
+  },
+];
+
 export const TOURS: Record<TourId, TourStep[]> = {
+  full: FULL_STEPS,
   leaderboard: LEADERBOARD_STEPS,
   earn: EARN_STEPS,
   alpha: ALPHA_STEPS,
@@ -139,6 +206,7 @@ export const TOURS: Record<TourId, TourStep[]> = {
 };
 
 export const TOUR_PAGES: Record<TourId, string> = {
+  full: "/terminal/dashboard",
   leaderboard: "/terminal/leaderboard",
   earn: "/terminal/simulation",
   alpha: "/terminal/insights",

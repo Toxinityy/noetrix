@@ -228,7 +228,7 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
       {/* Featured reasoning: the visual peak. Lead with the narrative; the charts below are
           supporting evidence. Gated on whether a reasoning trace actually exists. */}
       {hasReasoning && featuredReasoning?.reasoning ? (
-        <div className="mt-8">
+        <div className="mt-8" data-tour="agent-reasoning">
           <FeaturedReasoning prediction={featuredReasoning} />
         </div>
       ) : null}

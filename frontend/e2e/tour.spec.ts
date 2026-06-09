@@ -1,20 +1,25 @@
 import { test, expect } from "@playwright/test";
 
-test("first-visit tour auto-starts on /leaderboard and advances", async ({ page }) => {
+test("the full essentials tour auto-starts on the dashboard and advances across pages", async ({
+  page,
+}) => {
   await page.addInitScript(() => window.localStorage.clear());
-  await page.goto("/terminal/leaderboard");
-  // The leaderboard renders the data-tour anchors the spotlight targets.
-  await expect(page.locator("[data-tour]").first()).toBeVisible();
-  // Advancing/closing with the keyboard must not throw.
+  await page.goto("/terminal/dashboard", { waitUntil: "domcontentloaded" });
+  // After the boot animation, the full walkthrough auto-starts on the dashboard (step 1).
+  const tour = page.getByRole("dialog", { name: /guided tour/i });
+  await expect(tour).toBeVisible({ timeout: 10000 });
+  await expect(page).toHaveURL(/terminal\/dashboard/);
+  // Advancing past the dashboard step navigates to the leaderboard (cross-page step 2),
+  // with the tour staying open the whole way.
   await page.keyboard.press("ArrowRight");
-  await page.keyboard.press("ArrowRight");
+  await page.waitForURL("**/terminal/leaderboard", { timeout: 8000 });
+  await expect(tour).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(/terminal\/leaderboard/);
 });
 
 test("entering with a pending persona tour auto-starts it after boot", async ({ page }) => {
   // Simulate clicking a persona card on the StartHere landing picker, which arms the
-  // tour via sessionStorage. onboarded=1 isolates this from the default leaderboard tour.
+  // tour via sessionStorage. tour.v1=1 isolates this from the default full essentials tour.
   await page.addInitScript(() => {
     window.localStorage.setItem("noetrix.tour.v1", "1");
     window.sessionStorage.setItem("noetrix.tour.request", "alpha");

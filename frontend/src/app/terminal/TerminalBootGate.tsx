@@ -51,9 +51,9 @@ export function TerminalBootGate({ children }: { children: React.ReactNode }) {
           // Entered via a persona pick (StartHere): auto-start that path's tour.
           requestStartRef.current(pendingTour as TourId);
         } else if (localStorage.getItem(SEEN_KEY) !== "1") {
-          // Default entry: auto-start the leaderboard walkthrough until the user
-          // completes or dismisses it once (TourProvider sets SEEN_KEY on close).
-          requestStartRef.current("leaderboard");
+          // Default entry: auto-start the full essentials walkthrough (cross-page),
+          // until the user completes or dismisses it once (TourProvider sets SEEN_KEY).
+          requestStartRef.current("full");
         }
       } catch {}
     }, doneDelay);
