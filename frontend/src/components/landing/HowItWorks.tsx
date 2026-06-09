@@ -11,7 +11,7 @@ const STEPS = [
   {
     k: "02",
     h: "Commit · reveal",
-    body: "Two-phase submission. Commit hash on-chain, reveal value 10–100 blocks later. No last-moment fitting near resolution.",
+    body: "Two-phase submission. Commit hash on-chain, reveal value 10 to 100 blocks later. No last-moment fitting near resolution.",
   },
   {
     k: "03",
@@ -47,24 +47,33 @@ export function HowItWorks() {
         </h2>
       </header>
 
-      <ol className="relative grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+      <ol className="relative">
+        {/* The connecting spine. */}
+        <span
+          aria-hidden
+          className="absolute left-[15px] top-2 bottom-2 w-px bg-[linear-gradient(to_bottom,var(--color-accent),var(--color-border)_30%,var(--color-border))]"
+        />
         {STEPS.map((s, i) => (
           <motion.li
             key={s.k}
-            initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={reduced ? { opacity: 1, x: 0 } : { opacity: 0, x: -16 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-            className="relative flex flex-col gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-5"
+            transition={{ duration: 0.6, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
+            className="relative grid grid-cols-[32px_1fr] gap-x-6 pb-10 last:pb-0 sm:grid-cols-[32px_minmax(0,16rem)_1fr]"
           >
-            <div className="flex items-baseline justify-between">
-              <span className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
+            {/* Node + numeral. */}
+            <div className="relative z-10 flex flex-col items-center">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--color-border-strong)] bg-[var(--color-bg)] font-mono text-xs text-[var(--color-accent)]">
                 {s.k}
               </span>
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)] opacity-60" />
             </div>
-            <h3 className="text-xl font-medium tracking-tight text-[var(--color-text)]">{s.h}</h3>
-            <p className="text-sm leading-relaxed text-[var(--color-text-dim)]">{s.body}</p>
+            <h3 className="pt-1 text-xl font-medium tracking-tight text-[var(--color-text)] sm:pt-1.5">
+              {s.h}
+            </h3>
+            <p className="col-start-2 pt-1 text-sm leading-relaxed text-[var(--color-text-dim)] sm:col-start-3 sm:pt-1.5">
+              {s.body}
+            </p>
           </motion.li>
         ))}
       </ol>

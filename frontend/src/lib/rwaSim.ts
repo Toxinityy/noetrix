@@ -133,7 +133,7 @@ export function riskReason(r: MarketResult): string {
   if (r.riskState === 0) return "";
   const driver = r.methConfBps <= r.usdyConfBps ? "mETH staking" : "USDY treasury";
   if (r.riskState === 2) {
-    return `AI confidence in ${driver} fell below 40% — the protocol pauses new deposits until conditions settle.`;
+    return `AI confidence in ${driver} fell below 40%, so the protocol pauses new deposits until conditions settle.`;
   }
-  return `Lower AI confidence in ${driver} — the protocol shifts toward the safer asset and tightens limits.`;
+  return `Lower AI confidence in ${driver}, so the protocol shifts toward the safer asset and tightens limits.`;
 }

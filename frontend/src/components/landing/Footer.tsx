@@ -79,7 +79,7 @@ export function Footer() {
               className="flex flex-col gap-3 sm:flex-row"
             >
               <motion.a
-                href="/leaderboard"
+                href="/terminal/leaderboard"
                 whileHover={reduced ? undefined : { scale: 1.04 }}
                 whileTap={reduced ? undefined : { scale: 0.98 }}
                 transition={{ duration: 0.25, ease: EASE }}
@@ -164,8 +164,8 @@ export function Footer() {
       {/* Bottom strip */}
       <div className="border-t border-[var(--color-border)]">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-          <span>v0.1 · scaffold</span>
-          <span>spec · v2.2</span>
+          <span>Noetrix · live on Mantle Sepolia</span>
+          <span>The Turing Test Hackathon 2026</span>
         </div>
       </div>
     </footer>

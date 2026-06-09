@@ -40,7 +40,7 @@ export default function NotFound() {
           <span aria-hidden className="h-2 w-2 rounded-full bg-[var(--color-border-strong)]" />
           <span aria-hidden className="h-2 w-2 rounded-full bg-[var(--color-border-strong)]" />
           <span className="ml-2 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-            noetrix — terminal
+            noetrix · terminal
           </span>
         </div>
         <pre className="overflow-x-auto px-4 py-3 font-mono text-[12px] leading-relaxed text-[var(--color-text-dim)]">
@@ -54,7 +54,7 @@ export default function NotFound() {
       {/* Message */}
       <p className="mt-8 max-w-md text-sm leading-relaxed text-[var(--color-text-dim)]">
         This page was never committed. The forecast you&apos;re looking for doesn&apos;t exist on
-        the chain — it may have moved, or never been registered.
+        the chain. It may have moved, or never been registered.
       </p>
 
       {/* CTAs */}

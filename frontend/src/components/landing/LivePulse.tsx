@@ -4,9 +4,9 @@ import { motion, useAnimationFrame, useMotionValue, useReducedMotion, useTransfo
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Composite-feed pulse. Two synthetic feeds animate over a fake time window with
- * a confidence band — gives the page a living "data heart" without needing a wire-up yet.
- * Real data lands in Prompt 11.
+ * Composite-feed pulse. Two synthetic feeds animate over a time window with a
+ * confidence band, giving the page a living "data heart". The live composite is
+ * read from CompositeFeed on Mantle Sepolia in the app surfaces.
  */
 
 const W = 720;
@@ -118,7 +118,7 @@ export function LivePulse() {
               viewBox={`0 0 ${W} ${H}`}
               preserveAspectRatio="none"
               className="block h-[260px] w-full"
-              aria-label="Composite feed chart, synthetic preview"
+              aria-label="Composite feed chart, illustrative preview"
             >
               {/* gridlines */}
               {[0, 1, 2, 3, 4].map((i) => (
@@ -209,7 +209,7 @@ export function LivePulse() {
       </div>
 
       <p className="mt-5 max-w-3xl font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-        Preview animation. Wire-up to deployed contracts at Prompt 11.
+        Illustrative preview. Live composite reads from CompositeFeed on Mantle Sepolia.
       </p>
     </section>
   );

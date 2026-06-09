@@ -124,6 +124,18 @@ async function tick(
   ]);
 
   const last = Number(nextId) - 1;
+
+  // Redeploy guard: if nextPredictionId reset below our cursor (a fresh PredictionMarket), the stale
+  // cursor would early-return forever. Clamp it back so the scan resumes — removes the manual
+  // "delete resolver.state.json on redeploy" trap.
+  if (state.cursor > Number(nextId)) {
+    console.warn(
+      `[resolver] cursor ${state.cursor} > nextPredictionId ${Number(nextId)} — market redeployed? resetting cursor to 1`,
+    );
+    state.cursor = 1;
+    saveState({ cursor: 1 });
+  }
+
   if (last < state.cursor) {
     console.log(`[resolver] tick — no predictions yet (cursor=${state.cursor})`);
     return;

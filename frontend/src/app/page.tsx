@@ -69,11 +69,11 @@ export default function Home() {
         <StoryFrame label="Composite feed">
           <LivePulse />
         </StoryFrame>
-        <StoryFrame label="Categories shipped">
-          <CategoriesShowcase />
-        </StoryFrame>
         <StoryFrame label="DeepSeek reasoning">
           <ReasoningReveal />
+        </StoryFrame>
+        <StoryFrame label="Categories shipped">
+          <CategoriesShowcase />
         </StoryFrame>
         <StoryFrame label="Leaderboard preview">
           <LeaderboardPreview />

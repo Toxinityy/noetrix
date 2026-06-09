@@ -6,20 +6,20 @@ export function AllocationBar({ methBps, usdyBps }: { methBps: number; usdyBps: 
   return (
     <div className="space-y-2">
       <div
-        className="flex h-4 w-full overflow-hidden rounded-full ring-1 ring-white/10"
+        className="flex h-4 w-full overflow-hidden rounded-full border border-[var(--color-border)]"
         role="img"
         aria-label={`Allocation: ${mPct}% mETH staking, ${uPct}% USDY treasury`}
       >
         <div
-          className="bg-teal-400/80 transition-[width] duration-300 motion-reduce:transition-none"
+          className="bg-[var(--color-accent)] transition-[width] duration-300 motion-reduce:transition-none"
           style={{ width: `${mPct}%` }}
         />
         <div
-          className="bg-sky-400/70 transition-[width] duration-300 motion-reduce:transition-none"
+          className="bg-[var(--color-series-usdy)] transition-[width] duration-300 motion-reduce:transition-none"
           style={{ width: `${uPct}%` }}
         />
       </div>
-      <div className="flex justify-between text-sm text-white/70">
+      <div className="flex justify-between text-sm text-[var(--color-text-dim)]">
         <span>{mPct}% mETH staking</span>
         <span>{uPct}% USDY treasury</span>
       </div>

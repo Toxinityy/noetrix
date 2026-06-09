@@ -67,14 +67,14 @@ export function RwaStrategyPanel() {
         </div>
         <div className="mt-2 flex h-3 w-full overflow-hidden rounded-sm border border-[var(--color-border)]">
           <div className="h-full bg-[var(--color-accent)]" style={{ width: `${methPct}%` }} />
-          <div className="h-full bg-[#9DC8FF]" style={{ width: `${100 - methPct}%` }} />
+          <div className="h-full bg-[var(--color-series-usdy)]" style={{ width: `${100 - methPct}%` }} />
         </div>
         <div className="mt-2 flex items-center justify-between font-mono text-[11px] tabular text-[var(--color-text-dim)]">
           <span>
             <span className="text-[var(--color-accent)]">mETH</span> {methBps} bps
           </span>
           <span>
-            <span className="text-[#9DC8FF]">USDY</span> {usdyBps} bps
+            <span className="text-[var(--color-series-usdy)]">USDY</span> {usdyBps} bps
           </span>
         </div>
 

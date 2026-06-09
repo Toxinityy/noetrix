@@ -81,7 +81,7 @@ export function LeaderboardPreview() {
         </div>
         </div>
         <div className="border-t border-[var(--color-border)] px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-          synthetic preview · live data wired
+          sample shown · live leaderboard at /leaderboard
         </div>
       </div>
     </section>

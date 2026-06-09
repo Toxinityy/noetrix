@@ -22,15 +22,15 @@ export function AppFooter() {
         </div>
 
         <FooterColumn label="Surfaces">
-          <FooterLink href="/leaderboard">Leaderboard</FooterLink>
-          <FooterLink href="/feed/meth-apr-24h">Composite feed</FooterLink>
-          <FooterLink href="/demo-consumer">Consumer demo</FooterLink>
+          <FooterLink href="/terminal/leaderboard">Leaderboard</FooterLink>
+          <FooterLink href="/terminal/feed/meth-apr-24h">Composite feed</FooterLink>
+          <FooterLink href="/terminal/demo-consumer">Consumer demo</FooterLink>
           <FooterLink href="/">Landing</FooterLink>
         </FooterColumn>
 
         <FooterColumn label="Categories">
-          <FooterLink href="/feed/meth-apr-24h">METH_APR_24H</FooterLink>
-          <FooterLink href="/feed/aave-mantle-tvl">AAVE_MANTLE_TVL_24H</FooterLink>
+          <FooterLink href="/terminal/feed/meth-apr-24h">METH_APR_24H</FooterLink>
+          <FooterLink href="/terminal/feed/aave-mantle-tvl">AAVE_MANTLE_TVL_24H</FooterLink>
         </FooterColumn>
 
         <FooterColumn label="System">
@@ -43,7 +43,7 @@ export function AppFooter() {
 
       <div className="mx-auto mt-10 flex max-w-[1400px] flex-col gap-2 border-t border-[var(--color-border)] px-5 pt-6 text-[10px] text-[var(--color-text-muted)] sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <span className="font-mono uppercase tracking-[0.18em]">
-          v0.1 — testnet — not financial advice
+          v0.1 · testnet · not financial advice
         </span>
         <span className="font-mono">
           Built for The Turing Test Hackathon · Mantle × Bybit × Byreal × BGA
