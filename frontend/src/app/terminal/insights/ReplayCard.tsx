@@ -62,7 +62,7 @@ export function ReplayCard({ categoryId, predictions }: { categoryId: CategoryId
     <Panel elevation={1} className="mt-4">
       <PanelHeader
         caption="Forecast vs reality"
-        title={`How AI forecasts actually landed — ${FRIENDLY_CATEGORY[categoryId]}`}
+        title={`How AI forecasts actually landed: ${FRIENDLY_CATEGORY[categoryId]}`}
         right={<StatusPill tone="accent">graded on-chain</StatusPill>}
       />
       <PanelBody className="pt-2">

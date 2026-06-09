@@ -40,7 +40,7 @@ export function TopPerformersCard({ rows }: { rows: LeaderRow[] }) {
           </ol>
         )}
         <p className="mt-4 text-xs leading-relaxed text-[var(--color-text-dim)]">
-          Ranked by on-chain accuracy — how close their graded forecasts landed to the real outcome.
+          Ranked by on-chain accuracy: how close their graded forecasts landed to the real outcome.
         </p>
       </PanelBody>
     </Panel>

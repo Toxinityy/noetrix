@@ -19,8 +19,8 @@ export async function generateMetadata(
   const id = findCategoryBySlug(category);
   return {
     title: id
-      ? `${CATEGORIES[id].label} — Noetrix`
-      : "Feed — Noetrix",
+      ? `${CATEGORIES[id].label} · Noetrix`
+      : "Feed · Noetrix",
   };
 }
 

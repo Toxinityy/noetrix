@@ -9,7 +9,7 @@ import { anomalyTimeline } from "@/lib/insights";
 import type { LiveFeedPoint } from "@/lib/indexer";
 import type { CategoryId } from "@/lib/mockData";
 
-/** Telegram/Discord-style alert mock — concretizes the productized anomaly bot for integrators. */
+/** Telegram/Discord-style alert mock: concretizes the productized anomaly bot for integrators. */
 function AlertPreview({ categoryId, text }: { categoryId: CategoryId; text: string }) {
   return (
     <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] p-3">
@@ -22,7 +22,7 @@ function AlertPreview({ categoryId, text }: { categoryId: CategoryId; text: stri
         <StatusPill tone="muted" className="ml-auto">product preview</StatusPill>
       </div>
       <p className="text-[13px] leading-relaxed text-[var(--color-text-dim)]">
-        🔔 <span className="text-[var(--color-text)]">{FRIENDLY_CATEGORY[categoryId]}</span> — {text}
+        <span className="text-[var(--color-text)]">{FRIENDLY_CATEGORY[categoryId]}</span>: {text}
       </p>
     </div>
   );
@@ -32,14 +32,14 @@ export function AnomalyFeed({ categoryId, history }: { categoryId: CategoryId; h
   const anomalies = anomalyTimeline(history, 16, 2).slice().reverse().slice(0, 5);
   const latest = anomalies[0];
   const alertText = latest
-    ? `unusual ${latest.direction === "up" ? "jump" : "drop"} of ${Math.abs(latest.deltaPct).toFixed(1)}% detected — now ${friendlyValue(categoryId, latest.to)}.`
-    : "no unusual moves right now — all quiet.";
+    ? `unusual ${latest.direction === "up" ? "jump" : "drop"} of ${Math.abs(latest.deltaPct).toFixed(1)}% detected, now ${friendlyValue(categoryId, latest.to)}.`
+    : "no unusual moves right now, all quiet.";
 
   return (
     <Panel elevation={1} className="lg:col-span-2">
       <PanelHeader
         caption="What's unusual"
-        title={`Anomaly watch — ${FRIENDLY_CATEGORY[categoryId]}`}
+        title={`Anomaly watch: ${FRIENDLY_CATEGORY[categoryId]}`}
         right={<StatusPill tone={anomalies.length ? "warn" : "up"}>{anomalies.length} flagged</StatusPill>}
       />
       <PanelBody className="pt-2">
@@ -69,7 +69,7 @@ export function AnomalyFeed({ categoryId, history }: { categoryId: CategoryId; h
             <AlertPreview categoryId={categoryId} text={alertText} />
             <p className="text-xs leading-relaxed text-[var(--color-text-muted)]">
               Each anomaly is derived from the on-chain AI consensus. In production these stream to
-              Telegram / Discord — the card above is a preview of that alert.
+              Telegram / Discord; the card above is a preview of that alert.
             </p>
           </div>
         </div>

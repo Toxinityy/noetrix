@@ -11,24 +11,31 @@ import { NumberFlow } from "@/components/ui/NumberFlow";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CATEGORIES, type CategoryId } from "@/lib/mockData";
 import { useLeaderboard, useFeedHistory } from "@/lib/hooks";
-import { fmtBlock, fmtBps, fmtScore } from "@/lib/format";
+import { fmtBlock, fmtBps, fmtScore, fmtUSDCompact } from "@/lib/format";
+import { friendlyValue } from "@/lib/labels";
 
 const MIN_RESOLVED = 10;
 
-const DOMAIN: Record<CategoryId, { range: string; bucket: string; resolver: string; cadence: string }> = {
+const DOMAIN: Record<
+  CategoryId,
+  { friendlyRange: string; range: string; bucket: string; resolver: string; cadence: string }
+> = {
   METH_APR_24H: {
+    friendlyRange: "0% to 1000% annual yield",
     range: "0 – 100,000 bps (0–1000% APR)",
     bucket: "1,000 bps × 100 buckets",
     resolver: "MethAprResolver",
     cadence: "~24h · 43,200 blocks",
   },
   USDY_APY_24H: {
+    friendlyRange: "0% to 20% annual yield",
     range: "0 – 2,000 bps (0–20% APY)",
     bucket: "20 bps × 100 buckets",
     resolver: "UsdyApyResolver",
     cadence: "~24h · 43,200 blocks",
   },
   AAVE_MANTLE_TVL_24H: {
+    friendlyRange: "$0 to about $1B in deposits",
     range: "$0 – ~$1B (1e17, USD 8-dec)",
     bucket: "$10M × 100 buckets",
     resolver: "AaveMantleTvlResolver",
@@ -45,6 +52,9 @@ export function CategoryClient({ categoryId }: { categoryId: CategoryId }) {
   const points = feed.data;
   const last = points[points.length - 1];
   const value = last?.value ?? cat.current;
+
+  // Plain-English value: % for yields, compact $ for big deposit totals.
+  const scanValue = (v: number) => (cat.unit === "usd" ? fmtUSDCompact(v) : friendlyValue(categoryId, v));
 
   const top = React.useMemo(
     () => [...board.data].sort((a, b) => b.accuracyScore - a.accuracyScore).slice(0, 8),
@@ -98,7 +108,7 @@ export function CategoryClient({ categoryId }: { categoryId: CategoryId }) {
                 </div>
                 <NumberFlow
                   value={value}
-                  format={cat.unitFormatter}
+                  format={scanValue}
                   className="mt-2 inline-block font-mono text-[40px] leading-none text-[var(--color-accent)] tabular"
                 />
               </div>
@@ -107,26 +117,42 @@ export function CategoryClient({ categoryId }: { categoryId: CategoryId }) {
               </div>
             </div>
             <div className="mt-6 grid grid-cols-3 gap-4 border-t border-[var(--color-border)] pt-5">
-              <Stat label="confidence" value={fmtBps(last?.confidence ?? 0, 1)} tone="accent" />
+              <Stat label="confidence" value={fmtBps(last?.confidence ?? 0, 1)} />
               <Stat label="contributors" value={last?.contributors ?? 0} />
-              <Stat label="last block" value={last ? `#${fmtBlock(last.block)}` : "—"} />
+              <Stat label="last block" value={last ? `#${fmtBlock(last.block)}` : "n/a"} />
             </div>
           </PanelBody>
         </Panel>
 
-        {/* Spec */}
+        {/* How it resolves: plain-English lead, with the technical spec tucked into a disclosure. */}
         <Panel elevation={1}>
-          <PanelHeader caption="resolution spec" title="How this category resolves" />
-          <PanelBody className="space-y-3.5 text-sm">
-            <SpecRow label="Resolver"><span className="font-mono text-[12px] text-[var(--color-text)]">{dom.resolver}</span></SpecRow>
-            <SpecRow label="Scorer"><span className="font-mono text-[12px] text-[var(--color-text)]">RangeCrpsScorer (CRPS)</span></SpecRow>
-            <SpecRow label="Domain"><span className="font-mono text-[12px] text-[var(--color-text-dim)]">{dom.range}</span></SpecRow>
-            <SpecRow label="Buckets"><span className="font-mono text-[12px] text-[var(--color-text-dim)]">{dom.bucket}</span></SpecRow>
-            <SpecRow label="Cadence"><span className="font-mono text-[12px] text-[var(--color-text-dim)]">{dom.cadence}</span></SpecRow>
-            <SpecRow label="Min stake"><span className="font-mono text-[12px] text-[var(--color-text)]">{cat.minStake} MNT</span></SpecRow>
-            <SpecRow label="Reveal window">
-              <span className="font-mono text-[12px] text-[var(--color-text-dim)]">commit+10 → commit+100 blocks</span>
-            </SpecRow>
+          <PanelHeader caption="how it resolves" title="How this category is graded" />
+          <PanelBody className="space-y-4 text-sm">
+            <p className="leading-relaxed text-[var(--color-text-dim)]">
+              AIs forecast a range for {cat.label.toLowerCase()}, somewhere between{" "}
+              <span className="text-[var(--color-text)]">{dom.friendlyRange}</span>. Once a day, the real
+              on-chain value is read and each forecast is graded by how close it landed and how confident it
+              was.
+            </p>
+            <div className="grid grid-cols-2 gap-4 border-t border-[var(--color-border)] pt-3">
+              <SpecRow label="Updated"><span className="text-[12px] text-[var(--color-text)]">about every 24 hours</span></SpecRow>
+              <SpecRow label="Min stake"><span className="font-mono text-[12px] text-[var(--color-text)]">{cat.minStake} MNT</span></SpecRow>
+            </div>
+            <details className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2">
+              <summary className="cursor-pointer text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-muted)] hover:text-[var(--color-accent)] [&::-webkit-details-marker]:hidden">
+                Technical spec
+              </summary>
+              <div className="mt-3 space-y-3">
+                <SpecRow label="Resolver"><span className="font-mono text-[12px] text-[var(--color-text)]">{dom.resolver}</span></SpecRow>
+                <SpecRow label="Scorer"><span className="font-mono text-[12px] text-[var(--color-text)]">RangeCrpsScorer (CRPS)</span></SpecRow>
+                <SpecRow label="Domain"><span className="font-mono text-[12px] text-[var(--color-text-dim)]">{dom.range}</span></SpecRow>
+                <SpecRow label="Buckets"><span className="font-mono text-[12px] text-[var(--color-text-dim)]">{dom.bucket}</span></SpecRow>
+                <SpecRow label="Cadence"><span className="font-mono text-[12px] text-[var(--color-text-dim)]">{dom.cadence}</span></SpecRow>
+                <SpecRow label="Reveal window">
+                  <span className="font-mono text-[12px] text-[var(--color-text-dim)]">commit+10 to commit+100 blocks</span>
+                </SpecRow>
+              </div>
+            </details>
           </PanelBody>
         </Panel>
       </div>

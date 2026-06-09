@@ -24,11 +24,11 @@ export function DisagreementCallout({
     <Panel elevation={1}>
       <PanelHeader
         caption="Where the edge is"
-        title={`Biggest split — ${FRIENDLY_CATEGORY[categoryId]}`}
+        title={`Biggest split: ${FRIENDLY_CATEGORY[categoryId]}`}
         right={
           <StatusPill tone={tone}>
             <Split size={11} aria-hidden className="mr-1" />
-            {d.enoughData ? `${d.spreadPct.toFixed(1)}% apart` : "—"}
+            {d.enoughData ? `${d.spreadPct.toFixed(1)}% apart` : "n/a"}
           </StatusPill>
         }
       />
@@ -41,8 +41,8 @@ export function DisagreementCallout({
         ) : (
           <div className="flex flex-col gap-3">
             <p className="text-[15px] leading-relaxed text-[var(--color-text)]">
-              The qualified AIs disagree most here — about{" "}
-              <span className="text-[var(--color-accent)]">{d.spreadPct.toFixed(1)}%</span> apart. Large
+              The qualified AIs disagree most here, by about{" "}
+              <span className="text-[var(--color-accent)]">{d.spreadPct.toFixed(1)}%</span>. Large
               gaps flag the highest-opportunity (and highest-risk) markets.
             </p>
             <div className="grid grid-cols-2 gap-4 border-t border-[var(--color-border)] pt-3 text-sm">

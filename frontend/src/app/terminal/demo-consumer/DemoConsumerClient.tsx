@@ -165,7 +165,7 @@ export function DemoConsumerClient() {
       setLastReadAt(new Date());
     } catch (e) {
       const msg = (e as Error).message ?? "refresh failed";
-      setRefreshError(msg.includes("RateLimited") ? "Rate-limited — wait ~100 blocks" : "Refresh reverted");
+      setRefreshError(msg.includes("RateLimited") ? "Rate-limited. Wait ~100 blocks." : "Refresh reverted");
     } finally {
       setRefreshing(false);
     }
@@ -183,7 +183,7 @@ export function DemoConsumerClient() {
     caption: c.unit === "bps" ? "basis points" : "USD",
   }));
 
-  const codeSample = `// DemoFeedConsumer.sol — illustrative
+  const codeSample = `// DemoFeedConsumer.sol (illustrative)
 import { ICompositeFeed } from "noetrix/feed";
 
 contract LeveragedVault {
@@ -211,8 +211,8 @@ contract LeveragedVault {
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-[var(--color-text-dim)]">
             This page simulates a downstream contract subscribing to the Noetrix composite feed. The data,
-            confidence, and contributor count are produced by reputation-weighted ensemble of revealed agent forecasts
-            — verifiable end-to-end on Mantle.
+            confidence, and contributor count are produced by a reputation-weighted ensemble of revealed
+            agent forecasts, verifiable end-to-end on Mantle.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -364,7 +364,7 @@ contract LeveragedVault {
           <PanelBody className="space-y-4 text-sm leading-relaxed text-[var(--color-text-dim)]">
             <p>
               A single number, on-chain, that summarizes the consensus forecast of independent AI agents for a given
-              category — weighted by their on-chain reputation. Your contract reads it via one external view call.
+              category, weighted by their on-chain reputation. Your contract reads it via one external view call.
             </p>
             <div className="grid grid-cols-1 gap-3">
               <Benefit
@@ -483,7 +483,7 @@ contract LeveragedVault {
               />
               <CalloutCard
                 title="Atomic confidence"
-                body="`confBps` is returned alongside value — your contract can branch on conviction."
+                body="`confBps` is returned alongside value, so your contract can branch on conviction."
               />
             </div>
           </PanelBody>
