@@ -1,11 +1,15 @@
 import { describe, it, expect } from "vitest";
 import {
   simulateMarket,
+  simulateStress,
+  sliderToDisagreementBps,
+  sliderToFearGreed,
   riskFromConfBps,
   riskReason,
   CONF_FLOOR_BPS,
   CONF_CAUTION_BPS,
   type MarketBase,
+  type StressLevel,
 } from "./rwaSim";
 
 const BASE: MarketBase = { methApyPct: 3.8, usdyApyPct: 5.0, baseConfBps: 9_000 };
@@ -91,5 +95,57 @@ describe("riskReason — plain-English caption", () => {
   it("is empty at Normal, present otherwise", () => {
     expect(riskReason(simulateMarket(0, BASE))).toBe("");
     expect(riskReason(simulateMarket(100, BASE)).length).toBeGreaterThan(0);
+  });
+});
+
+describe("simulateStress — mirrors the on-chain 3-source classification", () => {
+  it("slider at 0 → Calm (neutral F&G=60, disagreementBps=0 — no threshold crossed)", () => {
+    // slider=0: disagreementBps=0 (< D_MED=2000), fg=60 (> FEAR_MED=45, < GREED_EXTREME=75)
+    expect(simulateStress(0)).toBe<StressLevel>("Calm");
+  });
+
+  it("slider at 50 → Stressed (disagreementBps=5000 ≥ dHigh=4000)", () => {
+    // At stress=50: disagreementBps=5000 ≥ dHigh=4000 → Stressed
+    expect(simulateStress(50)).toBe<StressLevel>("Stressed");
+  });
+
+  it("slider at 100 → Stressed", () => {
+    expect(simulateStress(100)).toBe<StressLevel>("Stressed");
+  });
+
+  it("monotone non-decreasing: level never decreases as slider rises", () => {
+    const LEVELS: StressLevel[] = ["Calm", "Elevated", "Stressed"];
+    let prevOrdinal = 0;
+    for (let s = 0; s <= 100; s++) {
+      const level = simulateStress(s);
+      const ordinal = LEVELS.indexOf(level);
+      expect(ordinal).toBeGreaterThanOrEqual(prevOrdinal);
+      prevOrdinal = ordinal;
+    }
+  });
+
+  it("sliderToDisagreementBps is linear 0→10000", () => {
+    expect(sliderToDisagreementBps(0)).toBe(0);
+    expect(sliderToDisagreementBps(100)).toBe(10_000);
+    expect(sliderToDisagreementBps(50)).toBe(5_000);
+  });
+
+  it("sliderToFearGreed falls from neutral (60) to extreme fear as slider rises", () => {
+    const calm = sliderToFearGreed(0);
+    const stressed = sliderToFearGreed(100);
+    expect(calm).toBeGreaterThan(stressed);
+    // Calm end should be neutral (60)
+    expect(calm).toBe(60);
+    // Stressed end should be in extreme fear territory (≤ 15)
+    expect(stressed).toBeLessThanOrEqual(15);
+  });
+
+  it("out-of-range inputs are clamped without crashing", () => {
+    expect(() => simulateStress(-10)).not.toThrow();
+    expect(() => simulateStress(999)).not.toThrow();
+    // Clamped results must be valid levels
+    const levels: StressLevel[] = ["Calm", "Elevated", "Stressed"];
+    expect(levels).toContain(simulateStress(-10));
+    expect(levels).toContain(simulateStress(999));
   });
 });

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { AllocationBar } from "./AllocationBar";
 import { SafetyBadge } from "./SafetyBadge";
-import { simulateMarket, riskReason, type MarketBase } from "@/lib/rwaSim";
+import { simulateMarket, simulateStress, riskReason, type MarketBase, type StressLevel } from "@/lib/rwaSim";
 
 export interface SimInputs {
   methApyPct: number; // forecast mETH yield, %
@@ -33,8 +33,16 @@ export function DepositSimulator({ sim }: { sim: SimInputs }) {
     baseConfBps: BASE_CONF_BPS,
   };
   const market = simulateMarket(stress, base);
+  const stressLevel: StressLevel = simulateStress(stress);
   const projectedYear = (amount * market.blendedApyPct) / 100;
   const reason = riskReason(market);
+
+  const stressPillColor =
+    stressLevel === "Stressed"
+      ? "bg-red-500/20 text-red-300 ring-red-500/30"
+      : stressLevel === "Elevated"
+        ? "bg-amber-500/20 text-amber-300 ring-amber-500/30"
+        : "bg-teal-500/20 text-teal-300 ring-teal-500/30";
 
   return (
     <div className="rounded-3xl bg-gradient-to-b from-teal-400/[0.07] to-transparent p-6 ring-1 ring-white/10">
@@ -102,7 +110,17 @@ export function DepositSimulator({ sim }: { sim: SimInputs }) {
       {/* 4. Safety — flips Normal→Caution→Frozen, with a plain-English reason when it leaves Normal */}
       <div className="mt-6 flex items-center justify-between">
         <span className="text-sm text-white/60">Safety check</span>
-        <SafetyBadge state={market.riskState} />
+        <div className="flex items-center gap-2">
+          {/* Swarm stress level pill — mirrors the on-chain MarketStressMonitor Calm/Elevated/Stressed */}
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${stressPillColor}`}
+            aria-label={`Market stress level: ${stressLevel}`}
+          >
+            <span aria-hidden="true">●</span>
+            <span className="ml-1">{stressLevel}</span>
+          </span>
+          <SafetyBadge state={market.riskState} />
+        </div>
       </div>
       <p className="mt-2 min-h-[1rem] text-xs text-amber-300/80" role="status" aria-live="polite">
         {reason}

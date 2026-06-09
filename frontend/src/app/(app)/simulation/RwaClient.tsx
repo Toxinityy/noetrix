@@ -30,6 +30,9 @@ const METH_ID = categoryHash("METH_APR_24H");
 const USDY_ID = categoryHash("USDY_APY_24H");
 
 /// Decode a CompositeFeed.read() result into { aprBps, confidenceBps }.
+/// Note: the Calm→Elevated→Stressed stress level is shown by the DepositSimulator slider.
+/// Its classification is driven by simulateStress() (rwaSim.ts), which mirrors the
+/// 3-source on-chain MarketStressMonitor (disagreementBps + Fear&Greed thresholds).
 function decodeFeed(data: unknown): { bps: number; confBps: number } | null {
   if (!data) return null;
   const f = data as { value: `0x${string}`; confidence: number };
