@@ -90,8 +90,21 @@ const compositeFeedReadAbi = [{
     type: "tuple", components: [
       { name: "value", type: "bytes" }, { name: "confidence", type: "uint16" },
       { name: "contributingAgents", type: "uint256" }, { name: "lastUpdatedBlock", type: "uint256" },
+      { name: "disagreementBps", type: "uint32" },
     ],
   }],
+}] as const;
+
+const marketStressMonitorAbi = [{
+  type: "function", name: "stressLevel", stateMutability: "view",
+  inputs: [{ name: "categoryId", type: "bytes32" }],
+  outputs: [{ name: "level", type: "uint8" }, { name: "reasons", type: "uint256" }],
+}] as const;
+
+const sentimentOracleAbi = [{
+  type: "function", name: "latest", stateMutability: "view",
+  inputs: [],
+  outputs: [{ name: "value", type: "uint8" }, { name: "updatedBlock", type: "uint256" }],
 }] as const;
 
 const compositeFeedRefreshedEvent = {
@@ -134,6 +147,18 @@ async function main() {
   const pm = deployments.PredictionMarket as Hex;
   const registry = deployments.AgentRegistry as Hex;
   const block = Number(await client.getBlockNumber());
+
+  // Read global Fear & Greed once (not per-category)
+  let globalFearGreed: number | null = null;
+  const sentimentOracleAddr = deployments.SentimentOracle as Hex | undefined;
+  if (sentimentOracleAddr) {
+    try {
+      const sg = (await client.readContract({ address: sentimentOracleAddr, abi: sentimentOracleAbi, functionName: "latest" })) as readonly [number, bigint];
+      globalFearGreed = Number(sg[0]);
+    } catch (e) {
+      console.warn("[snapshot] sentimentOracle.latest failed:", (e as Error).message);
+    }
+  }
 
   const next = Number(await client.readContract({ address: pm, abi: predictionMarketAbi, functionName: "nextPredictionId" }));
   type Raw = { id: number; agentId: number; categoryId: string; value: Hex; confidence: number; status: number; score: bigint; commitBlock: number; resolutionBlock: number };
@@ -239,10 +264,12 @@ async function main() {
       console.warn(`[snapshot] feed logs failed ${cat}:`, (e as Error).message);
     }
 
+    let disagreementBps: number | null = null;
+    let swarmAgreementPct: number | null = null;
     if (feedHistory.length === 0) {
       try {
         const f = (await client.readContract({ address: deployments.CompositeFeed as Hex, abi: compositeFeedReadAbi, functionName: "read", args: [catHash(cat)] })) as {
-          value: Hex; confidence: number; contributingAgents: bigint; lastUpdatedBlock: bigint;
+          value: Hex; confidence: number; contributingAgents: bigint; lastUpdatedBlock: bigint; disagreementBps: number;
         };
         if (f.value && f.value !== "0x") {
           const [v] = decodeAbiParameters([{ type: "uint256" }], f.value) as [bigint];
@@ -251,8 +278,25 @@ async function main() {
             feedHistory = [{ block: fb, value: Number(v) / scale, confidence: Number(f.confidence), contributors: Number(f.contributingAgents) }];
           }
         }
+        if (f.disagreementBps != null) {
+          disagreementBps = Number(f.disagreementBps);
+          swarmAgreementPct = Math.round(100 - disagreementBps / 100);
+        }
       } catch (e) {
         console.warn(`[snapshot] feed read fallback failed ${cat}:`, (e as Error).message);
+      }
+    } else {
+      // Attempt to read disagreementBps even when we have feed history from logs
+      try {
+        const f = (await client.readContract({ address: deployments.CompositeFeed as Hex, abi: compositeFeedReadAbi, functionName: "read", args: [catHash(cat)] })) as {
+          value: Hex; confidence: number; contributingAgents: bigint; lastUpdatedBlock: bigint; disagreementBps: number;
+        };
+        if (f.disagreementBps != null) {
+          disagreementBps = Number(f.disagreementBps);
+          swarmAgreementPct = Math.round(100 - disagreementBps / 100);
+        }
+      } catch {
+        // non-fatal; swarm data just won't be in the snapshot
       }
     }
 
@@ -264,7 +308,19 @@ async function main() {
       console.warn(`[snapshot] risk read failed ${cat}:`, (e as Error).message);
     }
 
-    out.categories[cat] = { reputations, predictions, feedHistory, risk };
+    let stress: SnapCategory["stress"] = null;
+    const stressMonitorAddr = deployments.MarketStressMonitor as Hex | undefined;
+    if (stressMonitorAddr) {
+      try {
+        const sm = (await client.readContract({ address: stressMonitorAddr, abi: marketStressMonitorAbi, functionName: "stressLevel", args: [catHash(cat)] })) as readonly [number, bigint];
+        const stressMap = ["Calm", "Elevated", "Stressed"] as const;
+        stress = stressMap[sm[0]] ?? null;
+      } catch (e) {
+        console.warn(`[snapshot] stressMonitor.stressLevel failed ${cat}:`, (e as Error).message);
+      }
+    }
+
+    out.categories[cat] = { reputations, predictions, feedHistory, risk, swarmAgreementPct, disagreementBps, stress, fearGreed: globalFearGreed };
   }
 
   const dir = resolve(process.cwd(), "public");

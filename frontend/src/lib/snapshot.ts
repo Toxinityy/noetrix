@@ -29,6 +29,12 @@ export interface SnapCategory {
   predictions: SnapPrediction[];
   feedHistory: LiveFeedPoint[];
   risk: "Normal" | "Caution" | "Frozen" | null;
+  /// Swarm-agreement % (100 − disagreement%); null when the feed has no swarm data.
+  swarmAgreementPct?: number | null;
+  disagreementBps?: number | null;
+  /// On-chain market-stress level + the latest Fear & Greed index (0–100).
+  stress?: "Calm" | "Elevated" | "Stressed" | null;
+  fearGreed?: number | null;
 }
 
 export interface InsightsSnapshot {
