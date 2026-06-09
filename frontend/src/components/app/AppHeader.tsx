@@ -104,7 +104,7 @@ export function AppHeader() {
                       <Link
                         href={item.href}
                         className={cn(
-                          "block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] outline-none transition-colors hover:text-[var(--color-text)] focus:text-[var(--color-accent)] data-[highlighted]:text-[var(--color-accent)]",
+                          "block cursor-pointer rounded px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] outline-none transition-colors hover:text-[var(--color-text)] focus:text-[var(--color-accent)] data-[highlighted]:text-[var(--color-accent)]",
                           isActiveNavItem(pathname, item.href)
                             ? "text-[var(--color-accent)]"
                             : "text-[var(--color-text-dim)]",
@@ -147,7 +147,7 @@ export function AppHeader() {
                   <DropdownMenu.Item asChild>
                     <Link
                       href="/"
-                      className="block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
+                      className="block cursor-pointer rounded px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
                     >
                       Exit
                     </Link>
@@ -156,7 +156,7 @@ export function AppHeader() {
                     <DropdownMenu.Item key={item.href} asChild>
                       <Link
                         href={item.href}
-                        className="block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
+                        className="block cursor-pointer rounded px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
                       >
                         {item.label}
                       </Link>
