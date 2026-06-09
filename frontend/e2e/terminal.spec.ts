@@ -17,6 +17,20 @@ test("boot animation plays when entering a deep terminal route too", async ({ pa
   await expect(page.getByText("INITIALIZING...")).toBeVisible();
 });
 
+test("boot does NOT replay when navigating between terminal pages", async ({ page }) => {
+  await page.addInitScript(() => window.localStorage.setItem("noetrix.onboarded.v1", "1"));
+  await page.goto("/terminal/leaderboard", { waitUntil: "domcontentloaded" });
+  // First entry: boot plays, then finishes.
+  await expect(page.getByText("INITIALIZING...")).toBeVisible();
+  await expect(page.getByText("INITIALIZING...")).toBeHidden({ timeout: 4000 });
+  // Navigate within the terminal via the header nav (client-side; layout persists).
+  await page.getByRole("link", { name: "Insights", exact: true }).first().click();
+  await page.waitForURL("**/terminal/insights");
+  // The boot (and its green flash) must NOT replay on internal navigation.
+  await page.waitForTimeout(1300); // past where a stray boom would have fired
+  await expect(page.getByText("INITIALIZING...")).toBeHidden();
+});
+
 test("old leaderboard route redirects to terminal namespace", async ({ page }) => {
   await page.goto("/leaderboard", { waitUntil: "domcontentloaded" });
   await page.waitForURL("**/terminal/leaderboard", { timeout: 5000 });

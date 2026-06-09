@@ -20,9 +20,19 @@ export function TerminalBootGate({ children }: { children: React.ReactNode }) {
   const { requestStart } = useTour();
   const [phase, setPhase] = React.useState<"boot" | "boom" | "done">("boot");
 
+  // Capture mount-time values in refs so the boot effect runs EXACTLY ONCE on mount
+  // without depending on them. `requestStart` is a useCallback keyed on pathname, so
+  // it changes identity on every navigation; if the effect depended on it, the
+  // boot/boom (green flash) would replay on each in-terminal page change. The layout
+  // (and this gate) persists across internal nav, so a one-shot mount effect = boot
+  // only on entry. Mount-time values are correct here (boot fires within ~1.35s).
+  const reduceMotionRef = React.useRef(reduceMotion);
+  const requestStartRef = React.useRef(requestStart);
+
   React.useEffect(() => {
-    const boomDelay = reduceMotion ? 120 : 950;
-    const doneDelay = reduceMotion ? 220 : 1350;
+    const reduced = reduceMotionRef.current;
+    const boomDelay = reduced ? 120 : 950;
+    const doneDelay = reduced ? 220 : 1350;
     const boomTimer = window.setTimeout(() => setPhase("boom"), boomDelay);
     const doneTimer = window.setTimeout(() => {
       setPhase("done");
@@ -33,7 +43,7 @@ export function TerminalBootGate({ children }: { children: React.ReactNode }) {
         const pending = sessionStorage.getItem(REQUEST_KEY);
         if (!onboarded && !pending) {
           localStorage.setItem(ONBOARDED_KEY, "1");
-          requestStart("leaderboard");
+          requestStartRef.current("leaderboard");
         }
       } catch {}
     }, doneDelay);
@@ -41,7 +51,7 @@ export function TerminalBootGate({ children }: { children: React.ReactNode }) {
       window.clearTimeout(boomTimer);
       window.clearTimeout(doneTimer);
     };
-  }, [reduceMotion, requestStart]);
+  }, []); // run once on terminal entry; refs hold the latest reduceMotion/requestStart
 
   return (
     <>
