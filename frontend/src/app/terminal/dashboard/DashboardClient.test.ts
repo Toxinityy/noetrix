@@ -19,7 +19,7 @@ function data(overrides: Partial<InsightsData> = {}): InsightsData {
       ],
       reputations: [],
       feedHistory: [],
-      risk: null,
+      risk: "Normal",
     },
     allocation: null,
     generatedAt: "2026-06-08T00:00:00.000Z",
