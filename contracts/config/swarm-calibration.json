@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-06-09T04:26:00.077Z",
+  "fearExtreme": 25,
+  "fearMed": 45,
+  "greedExtreme": 75,
+  "categories": {
+    "METH_APR": {
+      "domainMin": "0",
+      "domainMax": "2000",
+      "disagreeScale": "490",
+      "dMed": 5673,
+      "dHigh": 9265,
+      "surpriseMed": 425,
+      "surpriseHigh": 945
+    },
+    "AAVE_TVL": {
+      "domainMin": "0",
+      "domainMax": "100000000000000000",
+      "disagreeScale": "18605122371597231",
+      "dMed": 5531,
+      "dHigh": 8893,
+      "surpriseMed": 168,
+      "surpriseHigh": 444
+    },
+    "USDY_APY": {
+      "domainMin": "0",
+      "domainMax": "2000",
+      "disagreeScale": "26",
+      "dMed": 7692,
+      "dHigh": 8846,
+      "surpriseMed": 25,
+      "surpriseHigh": 25
+    }
+  }
+}

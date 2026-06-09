@@ -64,4 +64,9 @@ export interface CategoryResult {
   testSteps: number;
   steps: StepResult[];
   agents: AgentSummary[];
+  /// Tuned stress thresholds (train split) — the on-chain MarketStressMonitor defaults.
+  stress: { dMed: number; dHigh: number; surpriseMed: number; surpriseHigh: number };
+  /// On-chain domain bounds for this category (for the Monitor's surprise normalization).
+  domainMin: string;
+  domainMax: string;
 }

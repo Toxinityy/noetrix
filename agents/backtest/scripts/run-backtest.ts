@@ -9,6 +9,7 @@ import { alignByDay } from "../src/align.js";
 import { runOneCategory } from "../src/run.js";
 import { renderReport } from "../src/report.js";
 import { buildSnapshot } from "../src/snapshot.js";
+import { buildCalibration } from "../src/calibration.js";
 import type { DeepSeekCache } from "../src/roster.js";
 import type { CategoryResult } from "../src/types.js";
 
@@ -46,6 +47,12 @@ function main(stamp: string) {
   }
   const md = renderReport(results);
   const snap = buildSnapshot(results, stamp);
+
+  const calib = buildCalibration(results, stamp);
+  const calibDir = join(here, "..", "..", "..", "contracts", "config");
+  if (!existsSync(calibDir)) mkdirSync(calibDir, { recursive: true });
+  writeFileSync(join(calibDir, "swarm-calibration.json"), JSON.stringify(calib, null, 2) + "\n");
+  console.log("[ok] wrote contracts/config/swarm-calibration.json");
 
   const reportDir = join(here, "..", "reports");
   if (!existsSync(reportDir)) mkdirSync(reportDir, { recursive: true });

@@ -1,4 +1,5 @@
 import type { MetricKey } from "@predictor-index/market-data";
+import { METRICS } from "@predictor-index/market-data";
 import { buildRoster, type DeepSeekCache } from "./roster.js";
 import { replayCategory } from "./replay.js";
 import { tuneDisagreeScale, splitIndex } from "./tune.js";
@@ -59,5 +60,13 @@ export function runOneCategory(
     testSteps: testSteps.length,
     steps: replay.steps,
     agents,
+    stress: {
+      dMed: thresholds.dMed,
+      dHigh: thresholds.dHigh,
+      surpriseMed: thresholds.surpriseMed,
+      surpriseHigh: thresholds.surpriseHigh,
+    },
+    domainMin: METRICS[metric].domainMin.toString(),
+    domainMax: METRICS[metric].domainMax.toString(),
   };
 }
