@@ -43,7 +43,9 @@ export function rawDisagreement(lo: bigint[], hi: bigint[], domainMin: bigint, d
     const a = clamp(lo[i], domainMin, domainMax);
     const b = clamp(hi[i], domainMin, domainMax);
     mid.push((a + b) / 2n);
-    width.push(b - a);
+    // Floor width at 0 for inverted bands (b < a) so dRaw can't go negative — matches the Solidity
+    // uint256 path (CompositeFeed._clampAndWeigh), where an inverted band yields width 0.
+    width.push(b >= a ? b - a : 0n);
   }
   const w = rankWeights(n);
   let ensemble = 0n;
@@ -75,8 +77,9 @@ export function aggregateSwarm(
   const minSwarm = p.minSwarm ?? MIN_SWARM;
   const ceiling = p.singleSourceCeilingBps ?? SINGLE_SOURCE_CEILING_BPS;
   const agreeFloor = p.agreeFloor ?? AGREE_FLOOR;
+  const MAX = BigInt(MAX_CONFIDENCE_BPS);
 
-  // Clamp bands to domain; midpoints (needed for ensemble value).
+  // Clamp bands to domain; midpoints (needed for the ensemble value).
   const mid: bigint[] = [];
   for (let i = 0; i < n; i++) {
     const a = clamp(lo[i], p.domainMin, p.domainMax);
@@ -86,46 +89,49 @@ export function aggregateSwarm(
 
   const w = rankWeights(n); // BigInt, WEIGHT_SCALE-scaled, sum ≈ WEIGHT_SCALE
 
-  // Ensemble value = Σ w_i * mid_i / WEIGHT_SCALE
+  // Ensemble value + rank-weighted stated confidence in one pass.
   let ensemble = 0n;
-  for (let i = 0; i < n; i++) ensemble += (w[i] * mid[i]) / WEIGHT_SCALE;
+  let weightedStated = 0n;
+  for (let i = 0; i < n; i++) {
+    ensemble += (w[i] * mid[i]) / WEIGHT_SCALE;
+    weightedStated += w[i] * BigInt(stated[i]);
+  }
 
-  // Raw disagreement = midpoint scatter + half mean band width (delegates to rawDisagreement).
-  const dRaw = rawDisagreement(lo, hi, p.domainMin, p.domainMax);
-
-  // Normalized disagreement d ∈ [0, CAL_SCALE]
-  const scale = p.disagreeScale > 0n ? p.disagreeScale : 1n;
-  let d = (dRaw * CAL_SCALE) / scale;
-  if (d > CAL_SCALE) d = CAL_SCALE;
-
-  // Agreement multiplier g = max(AGREE_FLOOR, CAL_SCALE - d)
-  let g = CAL_SCALE - d;
-  if (g < agreeFloor) g = agreeFloor;
-
-  // Calibration multiplier (existing CompositeFeed derivation): mean of clipped calibrations + 1
+  // Calibration multiplier (existing CompositeFeed derivation): mean of clipped calibrations + 1.
   let sumClipped = 0n;
   for (let i = 0; i < n; i++) {
     let c = cal[i] < CAL_FLOOR ? CAL_FLOOR : cal[i];
     if (c > 0n) c = 0n;
     sumClipped += c;
   }
-  const meanClipped = sumClipped / BigInt(n);
-  const calMult = CAL_SCALE + meanClipped; // ∈ [CAL_SCALE/2, CAL_SCALE]
+  const calMult = CAL_SCALE + sumClipped / BigInt(n); // ∈ [CAL_SCALE/2, CAL_SCALE]
 
-  // Combine penalties with MIN (not product)
+  // Legacy path (disagreeScale == 0): agreement + quorum disabled, fully backward-compatible.
+  // MUST match CompositeFeed.aggregatePreview's disagreeScale==0 branch exactly (no agreement
+  // haircut, no quorum cap, disagreement 0). Production always sets a positive per-category scale.
+  if (p.disagreeScale === 0n) {
+    let legacy = (weightedStated * calMult) / (WEIGHT_SCALE * CAL_SCALE);
+    if (legacy > MAX) legacy = MAX;
+    return { ensemble, confidenceBps: Number(legacy), disagreementBps: 0, contributors: n };
+  }
+
+  // Dispersion (midpoint scatter + half mean band width) → normalized disagreement d ∈ [0, CAL_SCALE].
+  const dRaw = rawDisagreement(lo, hi, p.domainMin, p.domainMax);
+  let d = (dRaw * CAL_SCALE) / p.disagreeScale;
+  if (d > CAL_SCALE) d = CAL_SCALE;
+
+  // Agreement multiplier g = max(AGREE_FLOOR, CAL_SCALE - d); combine with calibration via MIN.
+  let g = CAL_SCALE - d;
+  if (g < agreeFloor) g = agreeFloor;
   const mult = calMult < g ? calMult : g;
 
-  // weightedStated = Σ w_i * stated_i  (bps × WEIGHT_SCALE), folded out with mult
-  let weightedStated = 0n;
-  for (let i = 0; i < n; i++) weightedStated += w[i] * BigInt(stated[i]);
   let finalConf = (weightedStated * mult) / (WEIGHT_SCALE * CAL_SCALE);
-  if (finalConf > BigInt(MAX_CONFIDENCE_BPS)) finalConf = BigInt(MAX_CONFIDENCE_BPS);
+  if (finalConf > MAX) finalConf = MAX;
 
   // Quorum cap: a sub-MIN_SWARM swarm cannot claim full consensus confidence.
   let confidenceBps = Number(finalConf);
   if (n < minSwarm && confidenceBps > ceiling) confidenceBps = ceiling;
 
-  const disagreementBps = Number((d * BigInt(MAX_CONFIDENCE_BPS)) / CAL_SCALE);
-
+  const disagreementBps = Number((d * MAX) / CAL_SCALE);
   return { ensemble, confidenceBps, disagreementBps, contributors: n };
 }

@@ -94,3 +94,22 @@ describe("aggregateSwarm golden vectors (exact-match regression + Plan 3 parity 
     });
   }
 });
+
+describe("aggregateSwarm parity edge cases (must match CompositeFeed.aggregatePreview)", () => {
+  it("disagreeScale=0 → legacy: no agreement, no quorum cap, disagreement 0", () => {
+    // single agent that would be quorum-capped under the new math; legacy keeps full calMult confidence.
+    const r = aggregateSwarm([49_000n], [51_000n], [9_000], [0n], { ...P, disagreeScale: 0n });
+    expect(r.disagreementBps).toBe(0);
+    expect(r.confidenceBps).toBeGreaterThan(SINGLE_SOURCE_CEILING_BPS); // NOT quorum-capped in legacy mode
+    // legacy value == weightedStated*calMult/(WEIGHT_SCALE*CAL_SCALE) == stated (cal=0) == 9000
+    expect(r.confidenceBps).toBe(9_000);
+  });
+
+  it("inverted band (lo>hi) floors width at 0 → finite, never inflates confidence above the cap", () => {
+    const r = aggregateSwarm(
+      [51_000n, 51_000n, 51_000n], [49_000n, 49_000n, 49_000n], [9_000, 9_000, 9_000], [0n, 0n, 0n], P);
+    expect(Number.isFinite(r.confidenceBps)).toBe(true);
+    expect(r.confidenceBps).toBeLessThanOrEqual(10_000);
+    expect(r.disagreementBps).toBeGreaterThanOrEqual(0);
+  });
+});

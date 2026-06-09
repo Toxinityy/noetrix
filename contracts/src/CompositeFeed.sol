@@ -32,6 +32,7 @@ contract CompositeFeed is ICompositeFeed, Ownable {
     error NotConfigured();
     error RateLimited();
     error NoAccess();
+    error BadDomain();
 
     event AgentRegistrySet(address indexed agentRegistry);
     event PredictionMarketSet(address indexed predictionMarket);
@@ -72,7 +73,7 @@ contract CompositeFeed is ICompositeFeed, Ownable {
         external
         onlyOwner
     {
-        require(domainMax > domainMin, "bad domain");
+        if (domainMax <= domainMin) revert BadDomain();
         categoryBounds[categoryId] = CategoryBounds(domainMin, domainMax, disagreeScale);
         emit CategoryBoundsSet(categoryId, domainMin, domainMax, disagreeScale);
     }
@@ -131,6 +132,9 @@ contract CompositeFeed is ICompositeFeed, Ownable {
                 existing.disagreementBps = 0;
                 emit CompositeFeedRefreshed(categoryId, 0, 0, 0, block.number);
             } else {
+                // Hold-last-good: intentionally leave value/confidence/contributingAgents AND
+                // disagreementBps at their last-good values; lastUpdatedBlock stays so staleness is
+                // still observable. Only emit the stale signal.
                 emit CompositeFeedStale(
                     categoryId, existing.contributingAgents, existing.lastUpdatedBlock, block.number
                 );

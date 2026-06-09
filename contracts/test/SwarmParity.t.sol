@@ -143,4 +143,17 @@ contract SwarmParityTest is Test {
             0, 100_000_000_000_000_000, 2_000_000_000_000_000);
         assertGt(conf, 0);
     }
+
+    // Inverted band (lo>hi): width floors at 0 (uint256 can't go negative) → no revert, confidence
+    // stays within the cap. Matches the TS rawDisagreement width floor.
+    function test_InvertedBand_WidthFloorsAtZero() public view {
+        (, uint16 conf, uint32 dis) = feed.aggregatePreview(
+            _u([uint256(51000), 51000, 51000]),
+            _u([uint256(49000), 49000, 49000]),
+            _u16([uint16(9000), 9000, 9000]), _i([int256(0), 0, 0]),
+            0, 100000, 5000
+        );
+        assertLe(conf, 10000);
+        assertGe(dis, 0);
+    }
 }
