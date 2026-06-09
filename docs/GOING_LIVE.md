@@ -147,56 +147,49 @@ Each agent is a standalone Node process using a dedicated hot wallet. The swarm 
 # arima-baseline
 cd agents/arima-baseline
 cp .env.example .env
-# Set: PRIVATE_KEY=$ARIMA_KEY, AGENT_ID= (blank until registered)
-pnpm run register   # mints agentId, writes AGENT_ID to .env
-pnpm run start      # starts the prediction loop
+# Set: CONTROLLER_PRIVATE_KEY=$ARIMA_KEY, AGENT_ID= (blank until registered)
+pnpm run register                  # mints agentId, writes AGENT_ID to .env
+pnpm run build && pnpm run start   # build, then start the prediction loop
 
 # naive-baseline
 cd agents/naive-baseline
 cp .env.example .env
-# Set: PRIVATE_KEY=$NAIVE_KEY
+# Set: CONTROLLER_PRIVATE_KEY=$NAIVE_KEY
 pnpm run register
-pnpm run start
+pnpm run build && pnpm run start
 
 # deepseek-reasoner
 cd agents/deepseek-reasoner
 cp .env.example .env
-# Set: PRIVATE_KEY=$DEEPSEEK_KEY, OPENROUTER_API_KEY=<your key>
+# Set: CONTROLLER_PRIVATE_KEY=$DEEPSEEK_KEY, OPENROUTER_API_KEY=<your key>
 pnpm run register
-pnpm run start
+pnpm run build && pnpm run start
 ```
 
-### 4 new thin-runner agents (one per strategy in `forecasters`)
+### 4 new agents — the generic `swarm-runner` package
 
-These agents don't exist as packages yet — create each one as a thin wrapper over the matching `forecasters` strategy. All strategies are exported from the **barrel** `@predictor-index/forecasters` (there are no subpath exports); the export names are the plain strategy names (no `Forecast` suffix). Each follows the same pattern as `arima-baseline`:
-
-1. **`agents/mean-reversion-agent/`** — imports `meanReversion` from `@predictor-index/forecasters`
-2. **`agents/momentum-agent/`** — imports `momentum` from `@predictor-index/forecasters`
-3. **`agents/ewma-vol-agent/`** — imports `ewmaVol` from `@predictor-index/forecasters`
-4. **`agents/sentiment-agent/`** — imports `sentiment` from `@predictor-index/forecasters` (pass live F&G from `SentimentOracle.latest()` as the `fg` arg)
-
-**Template for each new agent** (mirror `agents/arima-baseline/src/index.ts`, replace the forecast call):
-
-```ts
-// all from the barrel — e.g. meanReversion | momentum | ewmaVol | sentiment
-import { confidenceFromWidth, meanReversion } from "@predictor-index/forecasters";
-// ... same register + submitFullCycle pattern as arima-baseline
-const band = meanReversion(series, { domainMin, domainMax }); // strategies return { mean, lower, upper, fitted }
-const confidence = confidenceFromWidth(band.lower, band.upper, domainMin, domainMax);
-await agent.submitFullCycle(agentId, categoryId, { low: band.lower, high: band.upper }, confidence, ...);
-```
-
-Register + run each:
+The four new strategies all run from **one shared package, `agents/swarm-runner`**, which dispatches to the matching `@predictor-index/forecasters` strategy (the same code the backtest scores) via the `STRATEGY` env var. Run it **once per strategy**, each with its own hot wallet + agentId. The sentiment runner fetches live Fear & Greed from alternative.me automatically. State is namespaced per strategy (`agent.state.<STRATEGY>.json`), so all four can run from the same dir.
 
 ```bash
-cd agents/<strategy>-agent
-cp .env.example .env
-# Set: PRIVATE_KEY=$<STRATEGY>_KEY
-pnpm run register
-pnpm run start
+pnpm --filter @predictor-index/swarm-runner build   # build once
+
+# Register each strategy (mints a distinct agentId per strategy). Export the key + STRATEGY per run:
+cd agents/swarm-runner
+STRATEGY=mean-reversion CONTROLLER_PRIVATE_KEY=$MEAN_REV_KEY pnpm run register   # prints minted agentId
+STRATEGY=momentum       CONTROLLER_PRIVATE_KEY=$MOMENTUM_KEY pnpm run register
+STRATEGY=ewma-vol       CONTROLLER_PRIVATE_KEY=$EWMA_KEY     pnpm run register
+STRATEGY=sentiment      CONTROLLER_PRIVATE_KEY=$SENTIMENT_KEY pnpm run register
+
+# Run each as its own process (use the agentId minted above for each strategy):
+STRATEGY=mean-reversion CONTROLLER_PRIVATE_KEY=$MEAN_REV_KEY AGENT_ID=<id> node dist/src/index.js &
+STRATEGY=momentum       CONTROLLER_PRIVATE_KEY=$MOMENTUM_KEY AGENT_ID=<id> node dist/src/index.js &
+STRATEGY=ewma-vol       CONTROLLER_PRIVATE_KEY=$EWMA_KEY     AGENT_ID=<id> node dist/src/index.js &
+STRATEGY=sentiment      CONTROLLER_PRIVATE_KEY=$SENTIMENT_KEY AGENT_ID=<id> node dist/src/index.js &
 ```
 
-> **Tip:** run agents in background with `nohup node dist/index.js > logs/<name>.log 2>&1 &` and monitor with `tail -f logs/<name>.log`.
+> `register` writes `AGENT_ID` into `.env`, so for the multi-strategy case prefer **exporting `AGENT_ID` per process** (as above) rather than relying on the shared `.env`. The minted id is printed by `register`.
+> **Frontend display:** after registering, map each new `agentId → name` in `frontend/src/lib/mockData.ts` `KNOWN_AGENTS` (otherwise the new agents render as `agent #N` with a generic glyph).
+> **Tip:** background each with `> logs/<strategy>.log 2>&1 &` and `tail -f logs/<strategy>.log`.
 
 ---
 
@@ -207,14 +200,14 @@ pnpm run start
 # Earns 2% resolver reward on each settled prediction
 cd agents/resolver
 cp .env.example .env
-# Set: PRIVATE_KEY=$RESOLVER_KEY
-pnpm run start
+# Set: RESOLVER_PRIVATE_KEY=$RESOLVER_KEY
+pnpm run build && pnpm run start
 
 # Refresher bot — calls CompositeFeed.refresh() every ~5 min (rate-limited per 100 blocks)
 cd agents/refresher
 cp .env.example .env
-# Set: PRIVATE_KEY=$REFRESHER_KEY
-pnpm run start
+# Set: REFRESHER_PRIVATE_KEY=$REFRESHER_KEY
+pnpm run build && pnpm run start
 
 # Keeper — updates SentimentOracle + pokes MarketStressMonitor daily
 # Currently no package exists — run as a cast one-liner in a cron job:
