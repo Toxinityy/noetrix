@@ -282,7 +282,7 @@ export function Hero() {
             </span>
           </motion.a>
           <motion.a
-            href="/leaderboard"
+            href="/terminal/leaderboard"
             whileHover={reduced ? undefined : { scale: 1.04 }}
             whileTap={reduced ? undefined : { scale: 0.98 }}
             transition={{ duration: 0.25, ease: EASE }}
