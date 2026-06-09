@@ -17,6 +17,7 @@ import { ReplayCard } from "./ReplayCard";
 import { DisagreementCallout } from "./DisagreementCallout";
 import { AnomalyFeed } from "./AnomalyFeed";
 import { YourMoveStrip } from "./YourMoveStrip";
+import { BacktestPanel } from "./BacktestPanel";
 
 export function InsightsClient() {
   const [categoryId, setCategoryId] = React.useState<CategoryId>("METH_APR_24H");
@@ -139,6 +140,9 @@ export function InsightsClient() {
       <div data-tour="alpha-yourmove">
         <YourMoveStrip categoryId={categoryId} data={data} />
       </div>
+
+      {/* §6 backtest results */}
+      <BacktestPanel />
 
       {/* "Tell us in your submission" — judge + Web2 facing */}
       <div className="mt-12 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6 text-sm leading-relaxed text-[var(--color-text-dim)]">
