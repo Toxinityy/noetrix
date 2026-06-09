@@ -15,10 +15,11 @@ function data(overrides: Partial<InsightsData> = {}): InsightsData {
     crowdValue: 3081,
     category: {
       predictions: [
-        { id: 1, agentId: 1, agentName: "ARIMA Baseline", categoryId: "METH_APR_24H", status: "Resolved", low: 3000, high: 3150, confidence: 5000, score: 900000, commitBlock: 10, revealBlock: 20, resolutionBlock: 30, outcome: 3081 },
+        { id: 1, agentId: 1, status: "Resolved", low: 3000, high: 3150, confidence: 5000, score: 900000, commitBlock: 10, resolutionBlock: 30, outcome: 3081 },
       ],
       reputations: [],
       feedHistory: [],
+      risk: "Normal",
     },
     allocation: null,
     generatedAt: "2026-06-08T00:00:00.000Z",
