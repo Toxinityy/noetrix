@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { TOURS, TOUR_PAGES, type TourId, type TourStep } from "./steps";
 import { Spotlight } from "./Spotlight";
 
-export const SEEN_KEY = "noetrix.tour.v1"; // localStorage: set when a tour is finished/dismissed
+export const TOUR_OPTOUT_KEY = "noetrix.tour.optout"; // localStorage: set by "Don't show again" — suppresses the auto-tour permanently
 export const REQUEST_KEY = "noetrix.tour.request"; // sessionStorage: holds the pending TourId
 export const ONBOARDED_KEY = "noetrix.onboarded.v1"; // first-run flag (boot gate + OnboardingModal)
 
@@ -20,6 +20,8 @@ interface TourCtx {
   prev: () => void;
   skip: () => void;
   finish: () => void;
+  /// Permanently opt out of the auto-tour (sets TOUR_OPTOUT_KEY) and close it. The Guide button still works.
+  dismissForever: () => void;
   /// First-run "what do you want to do?" needs-picker (OnboardingModal). Re-openable via the Guide button.
   onboardingOpen: boolean;
   openOnboarding: () => void;
@@ -60,10 +62,16 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     setIsOpen(true);
   }, []);
 
+  // Closing via skip/finish does NOT suppress future auto-starts — the tour reopens on
+  // the next terminal entry. Only "Don't show again" (dismissForever) opts out for good.
   const close = React.useCallback(() => {
     setIsOpen(false);
+  }, []);
+
+  const dismissForever = React.useCallback(() => {
+    setIsOpen(false);
     try {
-      localStorage.setItem(SEEN_KEY, "1");
+      localStorage.setItem(TOUR_OPTOUT_KEY, "1");
     } catch {}
   }, []);
 
@@ -130,6 +138,7 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     prev,
     skip,
     finish,
+    dismissForever,
     onboardingOpen,
     openOnboarding,
     closeOnboarding,
