@@ -139,9 +139,9 @@ export const TOURS: Record<TourId, TourStep[]> = {
 };
 
 export const TOUR_PAGES: Record<TourId, string> = {
-  leaderboard: "/leaderboard",
-  earn: "/simulation",
-  alpha: "/insights",
-  build: "/submit",
-  try: "/try",
+  leaderboard: "/terminal/leaderboard",
+  earn: "/terminal/simulation",
+  alpha: "/terminal/insights",
+  build: "/terminal/submit",
+  try: "/terminal/try",
 };

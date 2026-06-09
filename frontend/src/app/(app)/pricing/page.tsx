@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
-import { PricingClient } from "./PricingClient";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Pricing · Noetrix",
-  description: "Subscribe to the AI forecast feed on Mantle Sepolia. Pay in testnet MNT.",
-};
-
-export default function PricingPage() {
-  return <PricingClient />;
+export default function Page() {
+  redirect("/terminal/pricing");
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { motion, useScroll, useTransform } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
@@ -14,60 +15,63 @@ import { cn } from "@/lib/cn";
 // the Best-Web2-UX surface (Simulator) + the live write demo (Try). Pricing (open
 // in v1) and the niche/utility routes live under More.
 const primaryNav = [
-  { href: "/insights", label: "Insights" },
-  { href: "/leaderboard", label: "Leaderboard" },
-  { href: "/simulation", label: "Simulator" },
-  { href: "/try", label: "Try" },
+  { href: "/terminal/dashboard", label: "Dashboard" },
+  { href: "/terminal/insights", label: "Insights" },
+  { href: "/terminal/leaderboard", label: "Leaderboard" },
+  { href: "/terminal/simulation", label: "Simulator" },
+  { href: "/terminal/try", label: "Try" },
 ];
 const moreNav = [
-  { href: "/pricing", label: "Pricing" },
-  { href: "/feed/meth-apr-24h", label: "Feed" },
-  { href: "/demo-consumer", label: "For protocols" },
-  { href: "/submit", label: "Submit" },
-  { href: "/agents", label: "For agents" },
-  { href: "/about", label: "About" },
+  { href: "/terminal/pricing", label: "Pricing" },
+  { href: "/terminal/feed/meth-apr-24h", label: "Feed" },
+  { href: "/terminal/demo-consumer", label: "For protocols" },
+  { href: "/terminal/submit", label: "Submit" },
+  { href: "/terminal/agents", label: "For agents" },
+  { href: "/terminal/about", label: "About" },
 ];
 const allNav = [...primaryNav, ...moreNav];
-
-/** Active when the pathname is the route or sits under its top-level segment. */
-function isActiveHref(pathname: string, href: string): boolean {
-  return (
-    pathname === href ||
-    (href !== "/" && pathname.startsWith(href.split("/").slice(0, 2).join("/")))
-  );
-}
+const isActiveNavItem = (pathname: string, href: string) =>
+  pathname === href || pathname.startsWith(`${href}/`);
 
 export function AppHeader() {
   const pathname = usePathname();
-  const moreActive = moreNav.some((item) => isActiveHref(pathname, item.href));
+  const moreActive = moreNav.some((item) => isActiveNavItem(pathname, item.href));
+  const { scrollY } = useScroll();
+  const blur = useTransform(scrollY, [0, 120], [0, 12]);
+  const bg = useTransform(scrollY, [0, 120], ["rgba(5,6,7,0)", "rgba(5,6,7,0.72)"]);
+  const border = useTransform(scrollY, [0, 120], ["rgba(255,255,255,0)", "rgba(255,255,255,0.06)"]);
 
   return (
-    <header
-      className="sticky top-0 z-30 border-b border-[var(--color-border)] bg-[var(--color-bg)]/85 backdrop-blur-md"
+    <motion.header
+      style={{
+        backdropFilter: useTransform(blur, (v) => `blur(${v}px) saturate(140%)`),
+        background: bg,
+        borderBottom: useTransform(border, (b) => `1px solid ${b}`),
+      }}
+      className="fixed top-0 z-50 w-full"
     >
       <a href="#main" className="skip-link">
         Skip to main content
       </a>
-      <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-6 px-5 sm:px-8">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="group flex items-center gap-2.5">
-            <span
-              className="inline-block h-2 w-2 rounded-full bg-[var(--color-accent)]"
-              style={{ boxShadow: "0 0 14px var(--color-accent-glow)" }}
-            />
-            <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--color-text)]">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-6 py-4">
+        <div className="flex items-center gap-7">
+          <Link href="/terminal/dashboard" className="flex items-center gap-2.5">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)] shadow-[0_0_10px_var(--color-accent)]" />
+            </span>
+            <span className="font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-text-dim)]">
               Noetri<span className="text-[var(--color-accent)]">x</span>
             </span>
           </Link>
-          <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
+          <nav aria-label="Primary" className="hidden items-center gap-7 md:flex">
             {primaryNav.map((item) => {
-              const active = isActiveHref(pathname, item.href);
+              const active = isActiveNavItem(pathname, item.href);
               return (
                 <Link
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "rounded px-3 py-1.5 text-xs font-medium uppercase tracking-[0.12em] transition-colors",
+                    "font-mono text-[11px] uppercase tracking-[0.16em] transition-colors focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]",
                     active
                       ? "text-[var(--color-accent)]"
                       : "text-[var(--color-text-dim)] hover:text-[var(--color-text)]",
@@ -82,7 +86,7 @@ export function AppHeader() {
                 <button
                   type="button"
                   className={cn(
-                    "inline-flex items-center gap-1 rounded px-3 py-1.5 text-xs font-medium uppercase tracking-[0.12em] transition-colors hover:text-[var(--color-text)] focus-visible:text-[var(--color-text)] data-[state=open]:text-[var(--color-accent)]",
+                    "inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.16em] transition-colors hover:text-[var(--color-text)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)] data-[state=open]:text-[var(--color-accent)]",
                     moreActive ? "text-[var(--color-accent)]" : "text-[var(--color-text-dim)]",
                   )}
                 >
@@ -101,7 +105,7 @@ export function AppHeader() {
                         href={item.href}
                         className={cn(
                           "block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] outline-none transition-colors hover:text-[var(--color-text)] focus:text-[var(--color-accent)] data-[highlighted]:text-[var(--color-accent)]",
-                          isActiveHref(pathname, item.href)
+                          isActiveNavItem(pathname, item.href)
                             ? "text-[var(--color-accent)]"
                             : "text-[var(--color-text-dim)]",
                         )}
@@ -117,13 +121,19 @@ export function AppHeader() {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="hidden font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] transition-colors hover:text-[var(--color-text)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)] lg:inline-flex"
+          >
+            Exit
+          </Link>
           <div className="md:hidden">
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <button
                   type="button"
                   aria-label="Menu"
-                  className="inline-flex items-center rounded border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-2 text-[var(--color-text-dim)] transition-colors hover:text-[var(--color-text)]"
+                    className="inline-flex items-center rounded-sm border border-[var(--color-accent-soft)] bg-[var(--color-accent-glow)] p-2 text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)] hover:text-black"
                 >
                   <Menu size={16} aria-hidden />
                 </button>
@@ -134,6 +144,14 @@ export function AppHeader() {
                   sideOffset={8}
                   className="z-50 min-w-[180px] rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-1 shadow-xl"
                 >
+                  <DropdownMenu.Item asChild>
+                    <Link
+                      href="/"
+                      className="block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
+                    >
+                      Exit
+                    </Link>
+                  </DropdownMenu.Item>
                   {allNav.map((item) => (
                     <DropdownMenu.Item key={item.href} asChild>
                       <Link
@@ -160,7 +178,7 @@ export function AppHeader() {
           <ConnectButton />
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }
 
@@ -171,7 +189,7 @@ function GuideButton() {
       type="button"
       onClick={openOnboarding}
       title="What do you want to do? Pick a guided path."
-      className="hidden items-center gap-1.5 rounded border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] sm:inline-flex"
+      className="hidden items-center gap-1.5 rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent-soft)] hover:text-[var(--color-accent)] sm:inline-flex"
     >
       <HelpCircle size={13} aria-hidden />
       Guide
@@ -192,7 +210,7 @@ function ConnectButton() {
   );
 
   const base =
-    "inline-flex items-center gap-2 rounded border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] transition-colors";
+    "inline-flex items-center gap-2 rounded-sm border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] transition-colors";
 
   if (!mounted) {
     return (
@@ -230,7 +248,7 @@ function ConnectButton() {
       title={connector ? "Connect an injected wallet (e.g. MetaMask)" : "No injected wallet detected"}
       className={cn(
         base,
-        "border-[var(--color-border)] bg-[var(--color-bg-elev-1)] text-[var(--color-text)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]",
+        "border-[var(--color-accent-soft)] bg-[var(--color-accent-glow)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-black",
         (!connector || isPending) && "opacity-70",
       )}
     >

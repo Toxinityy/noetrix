@@ -1,10 +1,5 @@
-import { RwaClient } from "./RwaClient";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Yield Simulator · Noetrix",
-  description: "AI-forecast yield on Mantle real-world assets. No wallet needed to explore.",
-};
-
-export default function RwaPage() {
-  return <RwaClient />;
+export default function Page() {
+  redirect("/terminal/simulation");
 }

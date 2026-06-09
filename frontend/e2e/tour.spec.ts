@@ -2,14 +2,14 @@ import { test, expect } from "@playwright/test";
 
 test("first-visit tour auto-starts on /leaderboard and advances", async ({ page }) => {
   await page.addInitScript(() => window.localStorage.clear());
-  await page.goto("/leaderboard");
+  await page.goto("/terminal/leaderboard");
   // The leaderboard renders the data-tour anchors the spotlight targets.
   await expect(page.locator("[data-tour]").first()).toBeVisible();
   // Advancing/closing with the keyboard must not throw.
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("ArrowRight");
   await page.keyboard.press("Escape");
-  await expect(page).toHaveURL(/leaderboard/);
+  await expect(page).toHaveURL(/terminal\/leaderboard/);
 });
 
 test("Guide button re-opens the needs-picker", async ({ page }) => {
@@ -18,7 +18,7 @@ test("Guide button re-opens the needs-picker", async ({ page }) => {
   // full-screen backdrop (fixed inset-0) can intercept the Guide click under parallel
   // workers, making the test flaky (passes in isolation, fails in the full suite).
   await page.addInitScript(() => window.localStorage.setItem("noetrix.onboarded.v1", "1"));
-  await page.goto("/leaderboard");
+  await page.goto("/terminal/leaderboard");
   const guide = page.getByRole("button", { name: /guide/i });
   await expect(guide.first()).toBeVisible();
   await guide.first().click();

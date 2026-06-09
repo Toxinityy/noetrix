@@ -1,11 +1,5 @@
-import type { Metadata } from "next";
-import { TryClient } from "./TryClient";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Try it live · Noetrix",
-  description: "Connect a wallet and write to the live on-chain AI feed on Mantle Sepolia.",
-};
-
-export default function TryPage() {
-  return <TryClient />;
+export default function Page() {
+  redirect("/terminal/try");
 }
