@@ -14,6 +14,9 @@ importers:
 
   agents/arima-baseline:
     dependencies:
+      '@predictor-index/forecasters':
+        specifier: workspace:*
+        version: link:../forecasters
       '@predictor-index/sdk':
         specifier: workspace:*
         version: link:../sdk
@@ -116,6 +119,9 @@ importers:
 
   agents/naive-baseline:
     dependencies:
+      '@predictor-index/forecasters':
+        specifier: workspace:*
+        version: link:../forecasters
       '@predictor-index/sdk':
         specifier: workspace:*
         version: link:../sdk

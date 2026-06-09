@@ -1,4 +1,5 @@
 import { Agent, resolveCategory, uploadContent, type RangeValue } from "@predictor-index/sdk";
+import { confidenceFromWidth } from "@predictor-index/forecasters";
 import { loadConfig, type NaiveConfig, type CategorySeed } from "./config.js";
 import { loadState, saveState, type AgentState } from "./state.js";
 import { naiveForecast } from "./naive.js";
@@ -8,7 +9,6 @@ const FLIP_RESOLVED_THRESHOLD = 50;
 const FLIP_ELAPSED_SECONDS = 48 * 3600;
 const SEED_CADENCE_MS = Number(process.env.SEED_CADENCE_MS ?? 30 * 60 * 1000); // every 30 min (env-tunable for burst runs)
 const NORMAL_CADENCE_MS = 6 * 3600 * 1000; // every 6h
-const CONFIDENCE_BPS = 5000; // same stated confidence as ARIMA — the band/method is the differentiator
 
 /// Synthetic seed series (~15 points) for the first run when <10 real observations exist.
 function syntheticSeries(seed: CategorySeed): number[] {
@@ -67,6 +67,12 @@ async function submitForCategory(
 
   const forecast = naiveForecast(series);
   const range = clampRange(forecast.lower95, forecast.upper95, domainMin, domainMax);
+  const confidence = confidenceFromWidth(
+    Number(range.low),
+    Number(range.high),
+    Number(domainMin),
+    Number(domainMax),
+  );
 
   const content = {
     agent: "naive-baseline",
@@ -82,7 +88,7 @@ async function submitForCategory(
       fitted: forecast.fitted,
     },
     submittedRange: { low: range.low.toString(), high: range.high.toString() },
-    confidenceBps: CONFIDENCE_BPS,
+    confidenceBps: confidence,
     timestamp: new Date().toISOString(),
   };
   const { contentHash, cid } = await uploadContent(content);
@@ -92,13 +98,13 @@ async function submitForCategory(
 
   console.log(
     `[naive] ${seed.label}: forecast=${Math.round(forecast.mean)} band=[${range.low},${range.high}] ` +
-      `resBlock=${resolutionBlock}${cid ? ` cid=${cid}` : ""}`,
+      `confidence=${confidence} resBlock=${resolutionBlock}${cid ? ` cid=${cid}` : ""}`,
   );
 
   const result = await agent.submitFullCycle(
     seed.label,
     range,
-    CONFIDENCE_BPS,
+    confidence,
     resolutionBlock,
     contentHash,
   );
