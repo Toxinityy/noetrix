@@ -2,6 +2,11 @@
 
 export type CategoryId = "METH_APR_24H" | "USDY_APY_24H" | "AAVE_MANTLE_TVL_24H";
 
+/// Single source of truth for the reference reasoner's model id. The deployed agent
+/// runs deepseek-chat-v3.1 (deepseek-v4-flash returns content:null and was removed);
+/// every user-facing surface must show this exact string.
+export const DEEPSEEK_MODEL = "deepseek-chat-v3.1";
+
 export type Category = {
   id: CategoryId;
   slug: string;
@@ -24,7 +29,7 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     windowBlocks: { start: 300, end: 50_000 },
     description:
       "24-hour trailing mETH exchange-rate APR, expressed in basis points. Resolves via the MethAprResolver against the mETH staking-contract historical exchange rate (43,200-block lookback ≈ 1 day on Mantle).",
-    current: 3_812,
+    current: 382,
     unitFormatter: (n) => `${(n / 100).toFixed(2)}%`,
   },
   USDY_APY_24H: {
@@ -327,7 +332,7 @@ export const AGENTS: Agent[] = [
     registeredBlock: 12_122_701,
     badges: ["Reasoning trace", "Aggressive"],
     description:
-      "Aggressive variant — narrow ranges, high confidence. Big upside, big drawdowns.",
+      "Aggressive variant: narrow ranges, high confidence. Big upside, big drawdowns.",
     reputation: {
       METH_APR_24H: {
         accuracyScore: 198_700,
@@ -478,7 +483,7 @@ const baseReasoning = (label: string, value: string, conf: number): ReasoningTra
     },
     {
       kind: "infer",
-      text: "Restake flow is +0.78% above 30d mean — supports a slightly elevated APR. Concentration top-5 unchanged. No protocol upgrade hooks scheduled in window. Macro: BTC vol decreased; risk-on flows likely to continue mid-window.",
+      text: "Restake flow is +0.78% above 30d mean, supporting a slightly elevated APR. Concentration top-5 unchanged. No protocol upgrade hooks scheduled in window. Macro: BTC vol decreased; risk-on flows likely to continue mid-window.",
     },
     {
       kind: "forecast",
@@ -496,17 +501,17 @@ const baseReasoning = (label: string, value: string, conf: number): ReasoningTra
     {
       target: label,
       window_blocks: 43_200,
-      forecast: { low: 3_500, high: 4_200 },
+      forecast: { low: 350, high: 420 },
       confidence_bps: conf,
       sources: ["mETH exchange-rate oracle", "restake-deposit indexer"],
-      model: "deepseek-v4-flash",
+      model: DEEPSEEK_MODEL,
       generated_at_block: 12_488_001,
     },
     null,
     2,
   ),
   summary: `In plain terms: this AI expects ${label} near ${value}, and is about ${(conf / 100).toFixed(0)}% sure it lands in its range.`,
-  confidenceRationale: `The range reflects normal day-to-day movement — not too tight, not too wide.`,
+  confidenceRationale: `The range reflects normal day-to-day movement: not too tight, not too wide.`,
 });
 
 export const PREDICTIONS: Prediction[] = (() => {
@@ -522,13 +527,13 @@ export const PREDICTIONS: Prediction[] = (() => {
         const seed = (a.id * 7919 + i * 31 + (cat.id === "METH_APR_24H" ? 0 : 11)) % 100;
         const pointBase =
           cat.id === "METH_APR_24H"
-            ? 3800 + (seed - 50) * 4
+            ? 380 + (seed - 50)
             : cat.id === "USDY_APY_24H"
               ? 500 + (seed - 50)
               : 142_000_000 + (seed - 50) * 250_000;
         const halfWidth =
           cat.id === "METH_APR_24H"
-            ? 90 + (seed % 30)
+            ? 10 + (seed % 6)
             : cat.id === "USDY_APY_24H"
               ? 20 + (seed % 15)
               : 1_400_000 + (seed % 31) * 50_000;
@@ -565,9 +570,9 @@ export const PREDICTIONS: Prediction[] = (() => {
       const cb = now - 30;
       const rb = cb + 480;
       const pointBase =
-        cat.id === "METH_APR_24H" ? 3800 : cat.id === "USDY_APY_24H" ? 500 : 142_500_000;
+        cat.id === "METH_APR_24H" ? 380 : cat.id === "USDY_APY_24H" ? 500 : 142_500_000;
       const halfWidth =
-        cat.id === "METH_APR_24H" ? 110 : cat.id === "USDY_APY_24H" ? 25 : 1_700_000;
+        cat.id === "METH_APR_24H" ? 12 : cat.id === "USDY_APY_24H" ? 25 : 1_700_000;
       rows.push({
         id: id++,
         agentId: a.id,
@@ -599,8 +604,8 @@ export type FeedPoint = {
 export function makeFeedHistory(catId: CategoryId, points = 96): FeedPoint[] {
   const cat = CATEGORIES[catId];
   const base = cat.current;
-  const drift = cat.unit === "usd" ? 280_000 : cat.id === "USDY_APY_24H" ? 6 : 8;
-  const noise = cat.unit === "usd" ? 480_000 : cat.id === "USDY_APY_24H" ? 18 : 24;
+  const drift = cat.unit === "usd" ? 280_000 : cat.id === "USDY_APY_24H" ? 6 : 4;
+  const noise = cat.unit === "usd" ? 480_000 : cat.id === "USDY_APY_24H" ? 18 : 10;
   const start = 12_488_300 - points * 75;
   return Array.from({ length: points }, (_, i) => {
     const t = i / (points - 1);

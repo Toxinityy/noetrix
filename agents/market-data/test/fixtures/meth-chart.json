@@ -1,0 +1,5 @@
+{ "status": "success", "data": [
+  { "timestamp": "2025-02-05T00:00:00.000Z", "tvlUsd": 1402301000, "apy": 3.12, "apyBase": 3.10, "apyReward": null },
+  { "timestamp": "2025-02-06T00:00:00.000Z", "tvlUsd": 1410000000, "apy": 3.25, "apyBase": 3.20, "apyReward": null },
+  { "timestamp": "2025-02-07T00:00:00.000Z", "tvlUsd": 1399000000, "apy": 3.05, "apyBase": 3.04, "apyReward": null }
+] }

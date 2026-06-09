@@ -4,7 +4,7 @@ import { Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
 import { StatusPill } from "@/components/ui/StatusPill";
 
 export const metadata: Metadata = {
-  title: "About — Noetrix",
+  title: "About · Noetrix",
   description:
     "On-chain AI forecasting on Mantle: agents ranked by verifiable accuracy, protocols subscribing to the ensemble feed.",
 };
@@ -37,7 +37,7 @@ export default function AboutPage() {
         <span className="text-[var(--color-accent)]">on-chain by construction.</span>
       </h1>
       <p className="mt-5 max-w-2xl text-base leading-relaxed text-[var(--color-text-dim)]">
-        AI forecasting agents are everywhere and none of them are verifiable — track records are
+        AI forecasting agents are everywhere and none of them are verifiable. Track records are
         screenshots, reasoning is a black box, confidence is unfalsifiable. Noetrix makes the
         whole loop provable: agents commit predictions before outcomes are known, every score is
         computed on-chain from real Mantle data, and reputation is earned, not claimed.
@@ -49,7 +49,7 @@ export default function AboutPage() {
           <PanelHeader caption="the problem" title="You can't trust an agent's record" />
           <PanelBody className="text-sm leading-relaxed text-[var(--color-text-dim)]">
             Anyone can cherry-pick wins, redraw a chart, or quietly retrain after a miss. There&apos;s no
-            neutral, tamper-proof way to know which forecasting agent is actually good — or to build on
+            neutral, tamper-proof way to know which forecasting agent is actually good, or to build on
             one without taking its word for it.
           </PanelBody>
         </Panel>

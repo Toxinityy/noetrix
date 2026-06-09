@@ -38,17 +38,17 @@ export function ProofStrip({ data }: { data: InsightsData }) {
       <div className="grid divide-y divide-[var(--color-border)] sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         <Tile
           label="Top AIs vs the crowd"
-          value={tvc.enoughData ? `+${tvc.pctMoreAccurate.toFixed(0)}%` : "—"}
+          value={tvc.enoughData ? `+${tvc.pctMoreAccurate.toFixed(0)}%` : "n/a"}
           sub={tvc.enoughData ? "more accurate than the average forecaster, by track record" : "needs more graded forecasts"}
         />
         <Tile
           label="Forecasts graded on-chain"
           value={`${resolvedCount}`}
-          sub="every forecast auto-graded against the real outcome — independently verifiable"
+          sub="every forecast auto-graded against the real outcome, independently verifiable"
         />
         <Tile
           label="Landed in range"
-          value={tr.enoughData ? `${tr.hits} of ${tr.total}` : "—"}
+          value={tr.enoughData ? `${tr.hits} of ${tr.total}` : "n/a"}
           sub={tr.enoughData ? "top-AI forecasts where the real value fell inside the predicted band (sample growing)" : "track record builds as forecasts resolve"}
         />
       </div>

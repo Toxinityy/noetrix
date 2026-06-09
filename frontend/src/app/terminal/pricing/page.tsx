@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PricingClient } from "./PricingClient";
 
 export const metadata: Metadata = {
-  title: "Pricing — Noetrix",
+  title: "Pricing · Noetrix",
   description: "Subscribe to the AI forecast feed on Mantle Sepolia. Pay in testnet MNT.",
 };
 

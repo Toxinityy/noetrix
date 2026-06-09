@@ -8,6 +8,7 @@ interface ICompositeFeed {
         uint16 confidence; // bps, [0, 10000]
         uint256 contributingAgents;
         uint256 lastUpdatedBlock;
+        uint32 disagreementBps; // normalized swarm disagreement, bps [0,10000] (0 when disagreeScale unset)
     }
 
     function read(bytes32 categoryId) external view returns (CompositeForecast memory);

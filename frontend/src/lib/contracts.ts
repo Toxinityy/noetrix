@@ -22,6 +22,7 @@ export const compositeFeedAbi = [
           { name: "confidence", type: "uint16" },
           { name: "contributingAgents", type: "uint256" },
           { name: "lastUpdatedBlock", type: "uint256" },
+          { name: "disagreementBps", type: "uint32" },
         ],
       },
     ],

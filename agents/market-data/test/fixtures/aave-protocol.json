@@ -1,0 +1,5 @@
+{ "name": "AAVE V3", "chainTvls": { "Mantle": { "tvl": [
+  { "date": 1739232000, "totalLiquidityUSD": 365216006 },
+  { "date": 1739318400, "totalLiquidityUSD": 401000000 },
+  { "date": 1739404800, "totalLiquidityUSD": 388500000 }
+] }, "Ethereum": { "tvl": [ { "date": 1739232000, "totalLiquidityUSD": 11000000000 } ] } } }

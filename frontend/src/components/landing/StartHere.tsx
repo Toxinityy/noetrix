@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { PERSONA_PATHS } from "@/lib/personaPaths";
+import { REQUEST_KEY } from "@/components/tour/TourProvider";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -15,7 +16,7 @@ export function StartHere() {
       className="flex min-h-screen w-full flex-1 flex-col items-center justify-center px-6 py-20"
     >
       <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
-        Start here — pick a path
+        Start here, pick a path
       </div>
       <h2 className="max-w-2xl text-balance text-center text-[clamp(1.7rem,5vw,2.6rem)] font-semibold leading-tight tracking-tight text-[var(--color-text)]">
         What do you want to do?
@@ -34,6 +35,13 @@ export function StartHere() {
             >
               <Link
                 href={p.href}
+                onClick={() => {
+                  // Arm this persona's spotlight tour; the terminal boot gate picks it
+                  // up and auto-starts it after the boot animation finishes.
+                  try {
+                    sessionStorage.setItem(REQUEST_KEY, p.tourId);
+                  } catch {}
+                }}
                 className="group flex h-full flex-col gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6 transition-colors hover:border-[var(--color-accent)] focus-visible:border-[var(--color-accent)]"
               >
                 <Icon size={26} className="text-[var(--color-accent)]" aria-hidden />

@@ -23,6 +23,10 @@
   --color-accent-soft: #1f8a6c;
   --color-accent-glow: rgba(51, 234, 179, 0.16);
 
+  /* Second data series (USDY allocation vs the teal mETH series). Same hue as the
+     ARIMA agent glyph so the two-series encoding stays consistent across surfaces. */
+  --color-series-usdy: #9dc8ff;
+
   /* Status */
   --color-up: #33eab3;
   --color-down: #ff5b6b;
@@ -48,6 +52,7 @@
   --color-text-muted: var(--color-text-muted);
   --color-accent: var(--color-accent);
   --color-accent-soft: var(--color-accent-soft);
+  --color-series-usdy: var(--color-series-usdy);
   --color-up: var(--color-up);
   --color-down: var(--color-down);
   --color-warn: var(--color-warn);

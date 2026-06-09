@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { Info } from "lucide-react";
+import { Info, RefreshCw } from "lucide-react";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { CATEGORIES, type CategoryId } from "@/lib/mockData";
 import { useInsightsData } from "@/lib/hooks";
 import { FRIENDLY_CATEGORY } from "@/lib/labels";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { SmartMoneyCard } from "./SmartMoneyCard";
 import { ConsensusBandCard } from "./ConsensusBandCard";
 import { NotableMoveCard } from "./NotableMoveCard";
@@ -17,11 +18,32 @@ import { ReplayCard } from "./ReplayCard";
 import { DisagreementCallout } from "./DisagreementCallout";
 import { AnomalyFeed } from "./AnomalyFeed";
 import { YourMoveStrip } from "./YourMoveStrip";
+import { BacktestPanel } from "./BacktestPanel";
 
 export function InsightsClient() {
   const [categoryId, setCategoryId] = React.useState<CategoryId>("METH_APR_24H");
   const data = useInsightsData(categoryId);
   const source = data.source;
+
+  // Snapshot age — computed in an effect (Date.now() stays out of render for React-Compiler purity +
+  // no SSR hydration drift; setState deferred via setTimeout per the codebase's effect-setState rule).
+  const [ageLabel, setAgeLabel] = React.useState<string | null>(null);
+  const [stale, setStale] = React.useState(false);
+  React.useEffect(() => {
+    const genAt = data.generatedAt;
+    const t = setTimeout(() => {
+      if (!genAt) {
+        setAgeLabel(null);
+        setStale(false);
+        return;
+      }
+      const h = (Date.now() - new Date(genAt).getTime()) / 3_600_000;
+      setStale(h > 24);
+      setAgeLabel(h < 1 ? "just now" : h < 24 ? `${Math.floor(h)}h ago` : `${Math.floor(h / 24)}d ago`);
+    }, 0);
+    return () => clearTimeout(t);
+  }, [data.generatedAt]);
+
   const tabs = Object.values(CATEGORIES).map((c) => ({
     id: c.id,
     label: FRIENDLY_CATEGORY[c.id],
@@ -43,23 +65,26 @@ export function InsightsClient() {
             <span className="text-[var(--color-accent)]">in plain English.</span>
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-[var(--color-text-dim)]">
-            Findings pulled from on-chain AI forecasters on Mantle — no crypto jargon required.
+            Findings pulled from on-chain AI forecasters on Mantle. No crypto jargon required.
           </p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <StatusPill tone={source === "live" ? "up" : "muted"} dot pulse={source === "live"}>
-            {source === "live" ? "Live on-chain data" : "Demo data"}
+          <StatusPill tone={source === "mock" ? "muted" : "up"} dot pulse={false}>
+            {source === "mock" ? "Demo data" : "On-chain snapshot"}
           </StatusPill>
-          {source === "live" && data.block ? (
+          {source !== "mock" && data.block ? (
             <span className="font-mono text-[10px] text-[var(--color-text-muted)]">
               snapshot @ block #{data.block.toLocaleString("en-US")}
               {data.generatedAt ? ` · ${new Date(data.generatedAt).toLocaleDateString("en-US")}` : ""}
+              {ageLabel ? (
+                <span className={stale ? "text-[var(--color-warn)]" : undefined}> · captured {ageLabel}</span>
+              ) : null}
             </span>
           ) : null}
         </div>
       </div>
 
-      {/* What is this — skippable Web2 intro */}
+      {/* What is this: skippable Web2 intro */}
       <details className="group mt-6 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] px-5 py-3">
         <summary className="flex cursor-pointer items-center gap-2 text-sm text-[var(--color-text-dim)] [&::-webkit-details-marker]:hidden">
           <Info size={14} className="text-[var(--color-accent)]" aria-hidden />
@@ -74,22 +99,27 @@ export function InsightsClient() {
           <p>
             Below, the <span className="text-[var(--color-text)]">most accurate AIs</span> (the
             &quot;proven AI&quot;) are compared against the whole crowd, so you can see where the
-            best forecasters break from the average — and how confident they are.
+            best forecasters break from the average, and how confident they are.
           </p>
         </div>
       </details>
 
-      {/* Cached banner */}
+      {/* Live data offline: showing the latest saved snapshot, with a real retry. */}
       {source === "cached" ? (
-        <div
-          role="status"
-          aria-live="polite"
-          className="mt-6 flex items-center gap-2.5 rounded-md border border-[var(--color-warn)]/40 bg-[color:color-mix(in_srgb,var(--color-warn)_8%,var(--color-bg-elev-1))] px-4 py-2.5"
-        >
-          <span aria-hidden className="inline-block h-2 w-2 rounded-full bg-[var(--color-warn)] shadow-[0_0_8px_var(--color-warn)]" />
-          <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-warn)]">Showing cached data</span>
-          <span className="text-xs text-[var(--color-text-dim)]">Live indexer unreachable — retrying automatically.</span>
-        </div>
+        <ErrorState
+          className="mt-6"
+          title="Live data is offline. Showing the latest saved snapshot."
+          detail="The on-chain indexer is unreachable right now. Your view is the most recent committed snapshot."
+          retry={
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center gap-1.5 rounded border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text)] transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
+            >
+              <RefreshCw size={12} aria-hidden /> Retry
+            </button>
+          }
+        />
       ) : null}
 
       {/* Category tabs */}
@@ -97,7 +127,7 @@ export function InsightsClient() {
         <CategoryTabs tabs={tabs} value={categoryId} onValueChange={(v) => setCategoryId(v as CategoryId)} />
       </div>
 
-      {/* §1 proof + §2 replay — the top-of-page peak */}
+      {/* §1 proof + §2 replay: the top-of-page peak */}
       <div data-tour="alpha-proof">
         <ProofStrip data={data} />
       </div>
@@ -105,46 +135,61 @@ export function InsightsClient() {
         <ReplayCard categoryId={categoryId} predictions={data.category?.predictions ?? []} />
       </div>
 
-      {/* Findings grid */}
-      <div id="insights-findings" data-tour="alpha-findings" className="mt-6 grid gap-4 lg:grid-cols-2">
-        {data.isLoading ? (
-          <div className="lg:col-span-2 space-y-3" aria-busy>
+      {data.isLoading ? (
+        <div className="mt-6 space-y-4" aria-busy>
+          <Skeleton className="h-56 w-full" />
+          <div className="grid gap-4 lg:grid-cols-2">
             <Skeleton className="h-40 w-full" />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Skeleton className="h-40 w-full" />
-              <Skeleton className="h-40 w-full" />
-            </div>
+            <Skeleton className="h-40 w-full" />
           </div>
-        ) : (
-          <>
+        </div>
+      ) : (
+        <>
+          {/* HERO: the core thesis. Full-width, heaviest weight on the page. */}
+          <div className="mt-6" data-tour="alpha-findings">
             <SmartMoneyCard
               categoryId={categoryId}
               bands={data.bands}
               crowdValue={data.crowdValue}
             />
+          </div>
+
+          {/* Primary supporting evidence: disagreement + consensus trend. */}
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <DisagreementCallout
               categoryId={categoryId}
               bands={data.bands}
               crowdValue={data.crowdValue}
             />
             <ConsensusBandCard categoryId={categoryId} history={data.feed} bands={data.bands} />
+          </div>
+
+          {/* Secondary row: lighter-weight context (move, track record). */}
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <NotableMoveCard categoryId={categoryId} history={data.feed} />
-            <AnomalyFeed categoryId={categoryId} history={data.feed} />
             <TopPerformersCard rows={data.board} />
-          </>
-        )}
-      </div>
+          </div>
+
+          {/* Anomaly watch: full-width but visually quiet, below the fold. */}
+          <div className="mt-4">
+            <AnomalyFeed categoryId={categoryId} history={data.feed} category={data.category} />
+          </div>
+        </>
+      )}
 
       {/* §5 your move */}
       <div data-tour="alpha-yourmove">
         <YourMoveStrip categoryId={categoryId} data={data} />
       </div>
 
-      {/* "Tell us in your submission" — judge + Web2 facing */}
+      {/* §6 backtest results */}
+      <BacktestPanel />
+
+      {/* "Tell us in your submission": judge + Web2 facing */}
       <div className="mt-12 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6 text-sm leading-relaxed text-[var(--color-text-dim)]">
         <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">how this works</div>
         <p>
-          <span className="text-[var(--color-text)]">Data source:</span> live Mantle on-chain data — the
+          <span className="text-[var(--color-text)]">Data source:</span> live Mantle on-chain data: the
           mETH exchange-rate oracle, USDY rate oracle, and Aave-on-Mantle reserves, plus each agent&apos;s
           on-chain forecast history and accuracy.{" "}
           <span className="text-[var(--color-text)]">AI&apos;s role:</span> independent agents (a DeepSeek
@@ -154,11 +199,11 @@ export function InsightsClient() {
         </p>
         <p className="mt-3 border-t border-[var(--color-border)] pt-3 text-[var(--color-text-muted)]">
           <span className="text-[var(--color-text-dim)]">Honesty note:</span> for this demo the outcome
-          oracles (mETH / USDY rates) are seeded with a deterministic curve — the AI forecasts and the
+          oracles (mETH / USDY rates) are seeded with a deterministic curve. The AI forecasts and the
           on-chain grading are fully real, but the &quot;reality&quot; they are graded against is
           demo-seeded until v2 reads the live Ondo / mETH contracts. Track-record sample sizes are small
           and growing. All figures are computed from Mantle Sepolia
-          {source === "live" && data.block ? ` at block #${data.block.toLocaleString("en-US")}` : ""}.
+          {source !== "mock" && data.block ? ` at block #${data.block.toLocaleString("en-US")}` : ""}.
         </p>
       </div>
     </div>

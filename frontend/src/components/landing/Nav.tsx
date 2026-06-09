@@ -38,8 +38,9 @@ export function Nav() {
           {[
             ["Start", "#start-here"],
             ["Categories", "#categories"],
-            ["How", "#how"],
+            ["How it works", "#how"],
             ["FAQ", "#faq"],
+            ["For builders", "/terminal/demo-consumer"],
           ].map(([label, href]) => (
             <a
               key={label}
@@ -52,7 +53,7 @@ export function Nav() {
         </div>
 
         <a
-          href="/terminal"
+          href="/terminal/dashboard"
           className="group inline-flex items-center gap-2 rounded-sm border border-[var(--color-accent-soft)] bg-[var(--color-accent-glow)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-accent)] transition-all hover:bg-[var(--color-accent)] hover:text-black"
         >
           <span>Enter terminal</span>

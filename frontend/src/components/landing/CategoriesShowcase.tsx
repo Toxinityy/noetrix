@@ -179,78 +179,116 @@ export function CategoriesShowcase() {
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--color-text-dim)]">
           Each RWA market bundles its own resolver, scorer and domain config. Agents commit a
           uniform range over the configured bucket grid; CRPS-distance to the realized on-chain
-          outcome decides who gets paid — and whose forecast steers the yield strategy.
+          outcome decides who gets paid, and whose forecast steers the yield strategy.
         </p>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {CATEGORIES.map((c, i) => (
-          <motion.div
-            key={c.id}
-            initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-            className="group relative flex flex-col gap-5 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6 transition-colors hover:border-[var(--color-accent-soft)]"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex flex-col gap-1">
-                <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
-                  {c.slug}
-                </span>
-                <h3 className="text-xl font-medium tracking-tight text-[var(--color-text)]">
-                  {c.title}
-                </h3>
-                <p className="text-xs text-[var(--color-text-dim)]">{c.subtitle}</p>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <span className="inline-flex h-6 items-center rounded-sm border border-[var(--color-border)] bg-[var(--color-bg)] px-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--color-text-dim)]">
-                  {c.agents} agents
-                </span>
-                <span className="font-mono text-[10px] text-[var(--color-text-muted)]">{c.cadence}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between gap-4 rounded-sm border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2">
-              <div className="flex flex-col">
-                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                  Domain
-                </span>
-                <span className="num text-xs text-[var(--color-text)]">{c.domain}</span>
-              </div>
-              <Sparkline data={c.series} width={120} height={28} fill="var(--color-accent)" />
-            </div>
-
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                  Sample prediction
-                </span>
-                <span className="font-mono text-[10px] text-[var(--color-text-dim)]">{c.sample.label}</span>
-              </div>
-              <RangeBand card={c} />
-            </div>
-
-            <div className="rounded-sm border border-[var(--color-border)] bg-[var(--color-bg)] p-3">
-              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-                Scorer formula
-              </div>
-              <code className="mt-1 block font-mono text-[11px] leading-relaxed text-[var(--color-accent)]">
-                {c.formula}
-              </code>
-            </div>
-
-            <Link
-              href={c.href}
-              className="mt-auto inline-flex items-center gap-2 self-start rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] transition-all hover:border-[var(--color-accent-soft)] hover:text-[var(--color-accent)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
-              aria-label={`Open composite feed for ${c.title}`}
-            >
-              <span>Open feed</span>
-              <span aria-hidden>→</span>
-            </Link>
-          </motion.div>
-        ))}
+      {/* Asymmetric layout: the flagship mETH market is featured large; USDY + AAVE sit smaller below. */}
+      <div className="flex flex-col gap-6">
+        <CategoryPanel card={CATEGORIES[0]} index={0} featured reduced={reduced} />
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {CATEGORIES.slice(1).map((c, i) => (
+            <CategoryPanel key={c.id} card={c} index={i + 1} reduced={reduced} />
+          ))}
+        </div>
       </div>
     </section>
+  );
+}
+
+function CategoryPanel({
+  card: c,
+  index: i,
+  featured = false,
+  reduced,
+}: {
+  card: CategoryCard;
+  index: number;
+  featured?: boolean;
+  reduced: boolean | null;
+}) {
+  return (
+    <motion.div
+      initial={reduced ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+      className={`group relative flex flex-col gap-5 rounded-md border bg-[var(--color-bg-elev-1)] transition-colors hover:border-[var(--color-accent-soft)] ${
+        featured
+          ? "border-[var(--color-accent-soft)] p-7 sm:p-8 lg:flex-row lg:items-stretch lg:gap-8"
+          : "border-[var(--color-border)] p-6"
+      }`}
+    >
+      <div className={featured ? "flex flex-1 flex-col gap-5" : "flex flex-col gap-5"}>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
+              {featured ? `Flagship market · ${c.slug}` : c.slug}
+            </span>
+            <h3
+              className={`font-medium tracking-tight text-[var(--color-text)] ${
+                featured ? "text-2xl sm:text-3xl" : "text-xl"
+              }`}
+            >
+              {c.title}
+            </h3>
+            <p className={featured ? "text-sm text-[var(--color-text-dim)]" : "text-xs text-[var(--color-text-dim)]"}>
+              {c.subtitle}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <span className="inline-flex h-6 items-center rounded-sm border border-[var(--color-border)] bg-[var(--color-bg)] px-2 font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--color-text-dim)]">
+              {c.agents} agents
+            </span>
+            <span className="font-mono text-[10px] text-[var(--color-text-muted)]">{c.cadence}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-4 rounded-sm border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2">
+          <div className="flex flex-col">
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+              Domain
+            </span>
+            <span className="num text-xs text-[var(--color-text)]">{c.domain}</span>
+          </div>
+          <Sparkline
+            data={c.series}
+            width={featured ? 200 : 120}
+            height={featured ? 36 : 28}
+            fill="var(--color-accent)"
+          />
+        </div>
+      </div>
+
+      <div className={featured ? "flex flex-1 flex-col gap-5 lg:border-l lg:border-[var(--color-border)] lg:pl-8" : "flex flex-col gap-5"}>
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+              Sample prediction
+            </span>
+            <span className="font-mono text-[10px] text-[var(--color-text-dim)]">{c.sample.label}</span>
+          </div>
+          <RangeBand card={c} />
+        </div>
+
+        <div className="rounded-sm border border-[var(--color-border)] bg-[var(--color-bg)] p-3">
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+            Scorer formula
+          </div>
+          <code className="mt-1 block font-mono text-[11px] leading-relaxed text-[var(--color-accent)]">
+            {c.formula}
+          </code>
+        </div>
+
+        <Link
+          href={c.href}
+          className="mt-auto inline-flex items-center gap-2 self-start rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] transition-all hover:border-[var(--color-accent-soft)] hover:text-[var(--color-accent)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
+          aria-label={`Open composite feed for ${c.title}`}
+        >
+          <span>Open feed</span>
+          <span aria-hidden>→</span>
+        </Link>
+      </div>
+    </motion.div>
   );
 }

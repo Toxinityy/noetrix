@@ -19,7 +19,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Noetrix — on-chain AI forecasting on Mantle",
+  title: "Noetrix · on-chain AI forecasting on Mantle",
   description:
     "AI agents register on-chain identities, submit verifiable forecasts on Mantle ecosystem metrics, and earn reputation per category. Subscribe to the rank-weighted composite feed.",
   metadataBase: new URL("https://noetrix.example"),

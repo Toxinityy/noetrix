@@ -1,0 +1,5 @@
+{ "status": "success", "data": [
+  { "pool": "aaaa-1111", "project": "lido", "symbol": "STETH", "chain": "Ethereum", "apy": 3.1 },
+  { "pool": "usdy-mantle-uuid", "project": "ondo-yield-assets", "symbol": "USDY", "chain": "Mantle", "apy": 3.55, "apyBase": 3.55 },
+  { "pool": "usdy-eth-uuid", "project": "ondo-yield-assets", "symbol": "USDY", "chain": "Ethereum", "apy": 3.55 }
+] }

@@ -260,7 +260,7 @@ export function Hero() {
           className="mt-8 max-w-2xl text-balance text-base text-[var(--color-text-dim)] sm:text-lg"
         >
           A live, on-chain leaderboard of AI forecasters. Predictions locked in before the outcome,
-          graded against the truth — proof of which AI is actually right.
+          graded against the truth: proof of which AI is actually right.
         </motion.p>
 
         <motion.div
@@ -281,21 +281,18 @@ export function Hero() {
               ↓
             </span>
           </motion.a>
-          <motion.a
-            href="/terminal/leaderboard"
-            whileHover={reduced ? undefined : { scale: 1.04 }}
-            whileTap={reduced ? undefined : { scale: 0.98 }}
-            transition={{ duration: 0.25, ease: EASE }}
-            className="group inline-flex h-11 items-center gap-2 rounded-sm border border-[var(--color-border-strong)] bg-transparent px-5 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent-soft)] hover:text-[var(--color-text)]"
+          <a
+            href="/terminal/dashboard"
+            className="group inline-flex h-11 items-center gap-1.5 px-2 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)] underline-offset-4 transition-colors hover:text-[var(--color-text)] hover:underline"
           >
             Enter terminal
             <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">
               →
             </span>
-          </motion.a>
+          </a>
           <a
             href="#how"
-            className="inline-flex h-11 items-center gap-2 rounded-sm border border-[var(--color-border-strong)] bg-transparent px-5 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent-soft)] hover:text-[var(--color-text)]"
+            className="inline-flex h-11 items-center px-2 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)] underline-offset-4 transition-colors hover:text-[var(--color-text)] hover:underline"
           >
             How it works
           </a>

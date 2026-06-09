@@ -6,23 +6,24 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { HelpCircle, ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { StatusPill } from "@/components/ui/StatusPill";
-import { useTour } from "@/components/tour/TourProvider";
 import { cn } from "@/lib/cn";
 
+// Primary nav follows the pitch priority: Alpha & Data (Insights/Leaderboard) +
+// the Best-Web2-UX surface (Simulator) + the live write demo (Try). Pricing (open
+// in v1) and the niche/utility routes live under More.
 const primaryNav = [
   { href: "/terminal/dashboard", label: "Dashboard" },
   { href: "/terminal/insights", label: "Insights" },
   { href: "/terminal/leaderboard", label: "Leaderboard" },
+  { href: "/terminal/simulation", label: "Simulator" },
   { href: "/terminal/try", label: "Try" },
-  { href: "/terminal/pricing", label: "Pricing" },
 ];
 const moreNav = [
-  { href: "/terminal/simulation", label: "Earn" },
+  { href: "/terminal/pricing", label: "Pricing" },
   { href: "/terminal/feed/meth-apr-24h", label: "Feed" },
-  { href: "/terminal/demo-consumer", label: "Consumer" },
+  { href: "/terminal/demo-consumer", label: "For protocols" },
   { href: "/terminal/submit", label: "Submit" },
   { href: "/terminal/agents", label: "For agents" },
   { href: "/terminal/about", label: "About" },
@@ -33,6 +34,7 @@ const isActiveNavItem = (pathname: string, href: string) =>
 
 export function AppHeader() {
   const pathname = usePathname();
+  const moreActive = moreNav.some((item) => isActiveNavItem(pathname, item.href));
   const { scrollY } = useScroll();
   const blur = useTransform(scrollY, [0, 120], [0, 12]);
   const bg = useTransform(scrollY, [0, 120], ["rgba(5,6,7,0)", "rgba(5,6,7,0.72)"]);
@@ -87,7 +89,10 @@ export function AppHeader() {
               <DropdownMenu.Trigger asChild>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] transition-colors hover:text-[var(--color-text)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)] data-[state=open]:text-[var(--color-accent)]"
+                  className={cn(
+                    "inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.16em] transition-colors hover:text-[var(--color-text)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)] data-[state=open]:text-[var(--color-accent)]",
+                    moreActive ? "text-[var(--color-accent)]" : "text-[var(--color-text-dim)]",
+                  )}
                 >
                   More <ChevronDown size={13} aria-hidden />
                 </button>
@@ -102,7 +107,12 @@ export function AppHeader() {
                     <DropdownMenu.Item key={item.href} asChild>
                       <Link
                         href={item.href}
-                        className="block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] outline-none transition-colors hover:text-[var(--color-text)] focus:text-[var(--color-accent)] data-[highlighted]:text-[var(--color-accent)]"
+                        className={cn(
+                          "block cursor-pointer rounded px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] outline-none transition-colors hover:text-[var(--color-text)] focus:text-[var(--color-accent)] data-[highlighted]:text-[var(--color-accent)]",
+                          isActiveNavItem(pathname, item.href)
+                            ? "text-[var(--color-accent)]"
+                            : "text-[var(--color-text-dim)]",
+                        )}
                       >
                         {item.label}
                       </Link>
@@ -141,7 +151,7 @@ export function AppHeader() {
                   <DropdownMenu.Item asChild>
                     <Link
                       href="/"
-                      className="block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
+                      className="block cursor-pointer rounded px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
                     >
                       Exit
                     </Link>
@@ -150,7 +160,7 @@ export function AppHeader() {
                     <DropdownMenu.Item key={item.href} asChild>
                       <Link
                         href={item.href}
-                        className="block cursor-pointer rounded px-3 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
+                        className="block cursor-pointer rounded px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
                       >
                         {item.label}
                       </Link>
@@ -160,34 +170,10 @@ export function AppHeader() {
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
           </div>
-          <div className="hidden items-center gap-2 sm:flex">
-            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-              network
-            </span>
-            <StatusPill tone="accent" dot pulse>
-              Mantle Sepolia
-            </StatusPill>
-          </div>
-          <GuideButton />
           <ConnectButton />
         </div>
       </div>
     </motion.header>
-  );
-}
-
-function GuideButton() {
-  const { openOnboarding } = useTour();
-  return (
-    <button
-      type="button"
-      onClick={openOnboarding}
-      title="What do you want to do? Pick a guided path."
-      className="hidden items-center gap-1.5 rounded-sm border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent-soft)] hover:text-[var(--color-accent)] sm:inline-flex"
-    >
-      <HelpCircle size={13} aria-hidden />
-      Guide
-    </button>
   );
 }
 

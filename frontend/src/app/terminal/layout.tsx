@@ -2,6 +2,7 @@ import { AppHeader } from "@/components/app/AppHeader";
 import { AppFooter } from "@/components/app/AppFooter";
 import { TourProvider } from "@/components/tour/TourProvider";
 import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
+import { TerminalBootGate } from "./TerminalBootGate";
 
 export default function TerminalLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,7 +13,7 @@ export default function TerminalLayout({ children }: { children: React.ReactNode
         <div aria-hidden className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(51,234,179,.12),transparent_42%)]" />
         <AppHeader />
         <main id="main" tabIndex={-1} className="relative z-10 flex-1 pt-20 focus:outline-none">
-          {children}
+          <TerminalBootGate>{children}</TerminalBootGate>
         </main>
         <AppFooter />
       </div>

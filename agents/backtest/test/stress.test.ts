@@ -1,0 +1,65 @@
+import { describe, it, expect } from "vitest";
+import { classifyStress, surpriseBps, DEFAULT_STRESS, percentileNum, tuneStressThresholds } from "../src/stress.js";
+import { alignByDay } from "../src/align.js";
+
+describe("surpriseBps", () => {
+  it("normalizes |realized - ensemble| to bps of the domain width", () => {
+    // domain 100000, gap 5000 → 500 bps
+    expect(surpriseBps(55_000n, 50_000n, 0n, 100_000n)).toBe(500);
+  });
+});
+
+describe("classifyStress", () => {
+  it("calm when all signals are benign", () => {
+    const s = classifyStress(100, 50, 50, DEFAULT_STRESS);
+    expect(s.level).toBe("Calm");
+  });
+  it("stressed on extreme fear regardless of model agreement", () => {
+    const s = classifyStress(100, 50, 10, DEFAULT_STRESS); // fg=10 extreme fear
+    expect(s.level).toBe("Stressed");
+    expect(s.reasons).toContain("extreme-fear");
+  });
+  it("stressed on high disagreement", () => {
+    const s = classifyStress(9000, 50, 50, DEFAULT_STRESS);
+    expect(s.level).toBe("Stressed");
+  });
+  it("elevated on moderate surprise", () => {
+    const s = classifyStress(100, 800, 50, DEFAULT_STRESS);
+    expect(s.level).toBe("Elevated");
+  });
+});
+
+describe("percentileNum", () => {
+  it("nearest-rank percentile of a number list", () => {
+    expect(percentileNum([10, 20, 30, 40, 50], 90)).toBe(50);
+  });
+  it("empty list → 0", () => {
+    expect(percentileNum([], 90)).toBe(0);
+  });
+});
+
+describe("tuneStressThresholds", () => {
+  it("derives dMed/dHigh from the train disagreement distribution (p70/p90)", () => {
+    const dis = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+    const sur = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90];
+    const th = tuneStressThresholds(dis, sur);
+    expect(th.dMed).toBe(percentileNum(dis, 70));
+    expect(th.dHigh).toBe(percentileNum(dis, 90));
+    expect(th.surpriseMed).toBe(percentileNum(sur, 70));
+    expect(th.surpriseHigh).toBe(percentileNum(sur, 90));
+    expect(th.fearExtreme).toBe(25);
+  });
+});
+
+describe("alignByDay", () => {
+  it("maps a value series to a reference timestamp series by UTC day", () => {
+    const ref = [{ ts: 86_400, value: 1 }, { ts: 172_800, value: 2 }];
+    const other = [{ ts: 86_400, value: 40 }, { ts: 172_800, value: 60 }];
+    expect(alignByDay(ref, other)).toEqual([40, 60]);
+  });
+  it("fills missing days with null", () => {
+    const ref = [{ ts: 86_400, value: 1 }, { ts: 172_800, value: 2 }];
+    const other = [{ ts: 86_400, value: 40 }];
+    expect(alignByDay(ref, other)).toEqual([40, null]);
+  });
+});

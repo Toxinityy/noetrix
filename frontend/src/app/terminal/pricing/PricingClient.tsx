@@ -12,6 +12,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { formatEther } from "viem";
+import { Check, Lock, Unlock } from "lucide-react";
 import { subscriptionGateAbi, SUB_TIER, type SubTier } from "@/lib/contracts";
 import { env, hasSubscriptionGate, explorerTx } from "@/lib/env";
 import { derivePanelState } from "@/lib/tryState";
@@ -23,6 +24,7 @@ const PRO_FALLBACK = BigInt("500000000000000000"); // 0.5 MNT
 const PROTOCOL_FALLBACK = BigInt("2000000000000000000"); // 2 MNT
 
 const TIER_NAME: Record<number, string> = { 1: "Pro / Whale", 2: "Protocol / API" };
+const tierName = (t: number): string => TIER_NAME[t] ?? "None";
 
 interface TierDef {
   tier: SubTier;
@@ -39,7 +41,7 @@ const TIERS: TierDef[] = [
     audience: "Traders, funds, yield farmers",
     fallback: PRO_FALLBACK,
     features: [
-      "Calibration-weighted alpha signal — all 3 markets",
+      "Calibration-weighted alpha signal across all 3 markets",
       "Smart-money-vs-crowd divergence + confidence bands",
       "In-app anomaly + smart-money alerts",
     ],
@@ -106,7 +108,7 @@ export function PricingClient() {
     if (!receipt.isSuccess) return;
     expiryRead.refetch();
     tierRead.refetch();
-    // setState only inside a callback (not the sync effect body) — React Compiler set-state-in-effect.
+    // setState only inside a callback (not the sync effect body) , React Compiler set-state-in-effect.
     const t = setTimeout(() => setPendingTier(null), 0);
     return () => clearTimeout(t);
   }, [receipt.isSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -120,10 +122,10 @@ export function PricingClient() {
     return (onchain as bigint | undefined) ?? t.fallback;
   };
 
-  // "now" lives in state (set in an effect) — calling Date.now() in render is impure (React Compiler).
+  // "now" lives in state (set in an effect) , calling Date.now() in render is impure (React Compiler).
   const [now, setNow] = React.useState(0);
   React.useEffect(() => {
-    // setState only inside callbacks (not the sync effect body) — React Compiler set-state-in-effect.
+    // setState only inside callbacks (not the sync effect body) , React Compiler set-state-in-effect.
     const t = setTimeout(() => setNow(Date.now()), 0);
     const id = setInterval(() => setNow(Date.now()), 30_000);
     return () => {
@@ -169,17 +171,17 @@ export function PricingClient() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-12">
-      <h1 className="text-3xl font-semibold text-white">Subscribe to the alpha signal</h1>
-      <p className="mt-3 text-white/60">
-        The calibration-weighted consensus of the top on-chain AI forecasters — the signal their
+      <h1 className="text-3xl font-semibold text-[var(--color-text)]">Subscribe to the alpha signal</h1>
+      <p className="mt-3 text-[var(--color-text-dim)]">
+        The calibration-weighted consensus of the top on-chain AI forecasters: the signal their
         verified track record makes worth trusting. You pay for the proven signal, not raw data.
       </p>
 
-      {/* Two-sided explainer — answers "do I stake AND subscribe?" (no: two different sides) */}
+      {/* Two-sided explainer , answers "do I stake AND subscribe?" (no: two different sides) */}
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-4">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-            Agents (supply) — earn
+            Agents (supply) · earn
           </div>
           <p className="mt-1.5 text-sm text-[var(--color-text-dim)]">
             AI agents <span className="text-[var(--color-text)]">stake</span> MNT on each forecast as
@@ -189,7 +191,7 @@ export function PricingClient() {
         </div>
         <div className="rounded-lg border border-[var(--color-accent)]/40 bg-[var(--color-bg-elev-1)] p-4">
           <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-accent)]">
-            You (demand) — subscribe
+            You (demand) · subscribe
           </div>
           <p className="mt-1.5 text-sm text-[var(--color-text-dim)]">
             Traders &amp; protocols <span className="text-[var(--color-text)]">subscribe</span> for the
@@ -201,7 +203,7 @@ export function PricingClient() {
 
       {/* Honest banner */}
       <div className="mt-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-4 text-sm text-[var(--color-text-dim)]">
-        Live on <span className="text-[var(--color-text)]">Mantle Sepolia testnet</span> — pay in test MNT (free from
+        Live on <span className="text-[var(--color-text)]">Mantle Sepolia testnet</span>. Pay in test MNT (free from
         the{" "}
         <a href={env.faucetUrl} target="_blank" rel="noreferrer" className="text-[var(--color-accent)] hover:underline">
           faucet
@@ -234,7 +236,7 @@ export function PricingClient() {
           </button>
         ) : state === "no-gas" ? (
           <span className="text-[var(--color-text-dim)]">
-            You need test MNT for gas —{" "}
+            You need test MNT for gas.{" "}
             <a href={env.faucetUrl} target="_blank" rel="noreferrer" className="text-[var(--color-accent)] hover:underline">
               open the faucet
             </a>
@@ -247,7 +249,7 @@ export function PricingClient() {
             </span>
             {activeSub && (
               <span className="text-[var(--color-up)]">
-                Subscribed: {TIER_NAME[currentTier] ?? "—"} · expires{" "}
+                Subscribed: {tierName(currentTier)} · expires{" "}
                 {new Date(expirySec * 1000).toLocaleDateString()}
               </span>
             )}
@@ -272,34 +274,49 @@ export function PricingClient() {
               <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
                 {t.audience}
               </div>
-              <div className="mt-1 text-lg font-medium text-white">{t.name}</div>
+              <div className="mt-1 text-lg font-medium text-[var(--color-text)]">{t.name}</div>
               <div className="mt-2 text-2xl font-semibold text-[var(--color-accent)]">
                 {formatEther(price)} <span className="text-sm text-[var(--color-text-dim)]">MNT / 30 days</span>
               </div>
               <ul className="mt-4 flex-1 space-y-2 text-sm text-[var(--color-text-dim)]">
                 {t.features.map((f) => (
                   <li key={f} className="flex gap-2">
-                    <span aria-hidden className="text-[var(--color-accent)]">
-                      ✓
-                    </span>
+                    <Check size={16} className="mt-0.5 shrink-0 text-[var(--color-up)]" aria-hidden />
                     {f}
                   </li>
                 ))}
               </ul>
-              <button
-                type="button"
-                onClick={() => handleSubscribe(t)}
-                disabled={state !== "ready" || busy}
-                className="mt-5 rounded border border-[var(--color-accent)] bg-[var(--color-accent)]/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)] disabled:opacity-50"
-              >
-                {busy
+              {(() => {
+                // When the wallet isn't ready, relabel the disabled button to the blocking
+                // reason (instead of a silent grey button explained only in the strip above).
+                const blockedLabel =
+                  state === "disconnected"
+                    ? "Connect wallet to subscribe"
+                    : state === "wrong-network"
+                      ? "Switch network to subscribe"
+                      : state === "no-gas"
+                        ? "Need test MNT for gas"
+                        : null;
+                const label = busy
                   ? receipt.isLoading
-                    ? "Mining…"
+                    ? "Confirming…"
                     : "Confirm in wallet…"
-                  : isCurrent
-                    ? "Renew"
-                    : `Subscribe · ${formatEther(price)} MNT`}
-              </button>
+                  : blockedLabel
+                    ? blockedLabel
+                    : isCurrent
+                      ? "Renew"
+                      : `Subscribe · ${formatEther(price)} MNT`;
+                return (
+                  <button
+                    type="button"
+                    onClick={() => handleSubscribe(t)}
+                    disabled={state !== "ready" || busy || !hasSubscriptionGate}
+                    className="mt-5 rounded border border-[var(--color-accent)] bg-[var(--color-accent)]/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)] disabled:opacity-50"
+                  >
+                    {label}
+                  </button>
+                );
+              })()}
             </div>
           );
         })}
@@ -310,7 +327,7 @@ export function PricingClient() {
           <p className="text-[var(--color-up)]">Subscription confirmed on-chain.</p>
           {activeSub && (
             <p className="mt-1 font-mono text-xs text-[var(--color-text-dim)]">
-              {TIER_NAME[currentTier] ?? "—"} · expires {new Date(expirySec * 1000).toLocaleDateString()}
+              {tierName(currentTier)} · expires {new Date(expirySec * 1000).toLocaleDateString()}
             </p>
           )}
           <a
@@ -331,7 +348,7 @@ export function PricingClient() {
         </p>
       )}
 
-      {/* Premium signal — gated by the on-chain subscription. Proves the payment buys something:
+      {/* Premium signal , gated by the on-chain subscription. Proves the payment buys something:
           raw feed reads stay open (verifiable), but the productized alpha signal + alerts unlock
           only for an active subscriber (read from SubscriptionGate.tierOf/subscriptionExpiry). */}
       <div className="mt-6">
@@ -339,34 +356,36 @@ export function PricingClient() {
           <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
             Premium signal
           </span>
-          <span className={`font-mono text-[10px] uppercase tracking-[0.18em] ${activeSub ? "text-[var(--color-up)]" : "text-[var(--color-text-muted)]"}`}>
-            {activeSub ? "● unlocked" : "🔒 locked"}
+          <span className={`inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em] ${activeSub ? "text-[var(--color-up)]" : "text-[var(--color-text-muted)]"}`}>
+            {activeSub ? <Unlock size={12} aria-hidden /> : <Lock size={12} aria-hidden />}
+            {activeSub ? "unlocked" : "locked"}
           </span>
         </div>
         {activeSub ? (
           <div className="rounded-lg border border-[var(--color-up)]/40 bg-[var(--color-up)]/5 p-4 text-sm">
-            <p className="text-[var(--color-text)]">Calibration-weighted alpha signal + anomaly alerts — live.</p>
+            <p className="text-[var(--color-text)]">Calibration-weighted alpha signal + anomaly alerts, live.</p>
             <ul className="mt-2 space-y-1 font-mono text-xs text-[var(--color-text-dim)]">
-              <li>▸ mETH — proven AIs vs crowd divergence + confidence-weighted consensus</li>
-              <li>▸ Anomaly watch — fires when qualified-agent consensus breaks from the crowd</li>
+              <li>▸ mETH: proven AIs vs crowd divergence + confidence-weighted consensus</li>
+              <li>▸ Anomaly watch: fires when qualified-agent consensus breaks from the crowd</li>
               <li>▸ On-chain signal read for your contracts (Protocol tier)</li>
             </ul>
             <p className="mt-2 text-[11px] text-[var(--color-text-muted)]">
-              Unlocked by your on-chain subscription ({TIER_NAME[currentTier] ?? "—"}). Raw feed reads stay open to all.
+              Unlocked by your on-chain subscription ({tierName(currentTier)}). Raw feed reads stay open to all.
             </p>
           </div>
         ) : (
           <div className="relative rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-4 text-sm">
             <div className="pointer-events-none select-none blur-[3px]" aria-hidden>
-              <p className="text-[var(--color-text-dim)]">Calibration-weighted alpha signal + anomaly alerts — live.</p>
+              <p className="text-[var(--color-text-dim)]">Calibration-weighted alpha signal + anomaly alerts, live.</p>
               <ul className="mt-2 space-y-1 font-mono text-xs text-[var(--color-text-muted)]">
-                <li>▸ mETH — proven AIs vs crowd divergence ········</li>
-                <li>▸ Anomaly watch — ················</li>
+                <li>▸ mETH: proven AIs vs crowd divergence ········</li>
+                <li>▸ Anomaly watch: ················</li>
                 <li>▸ On-chain signal read for your contracts ····</li>
               </ul>
             </div>
-            <div className="mt-3 text-center text-xs text-[var(--color-text-dim)]">
-              🔒 Subscribe above to unlock the live alpha signal + anomaly alerts.
+            <div className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-[var(--color-text-dim)]">
+              <Lock size={13} className="text-[var(--color-text-muted)]" aria-hidden />
+              Subscribe above to unlock the live alpha signal + anomaly alerts.
             </div>
           </div>
         )}

@@ -72,13 +72,68 @@ export function simulateMarket(stress: number, base: MarketBase): MarketResult {
   return { allocMethBps, allocUsdyBps, riskState, methConfBps, usdyConfBps, blendedApyPct };
 }
 
+/// Stress-level classification — mirrors the 3-source logic in MarketStressMonitor on-chain
+/// (backtest/src/stress.ts semantics): as the slider rises, simulated disagreementBps and
+/// fear&greed cross the same Elevated/Stressed thresholds the contract uses.
+///
+/// Slider 0–100 → simulated disagreementBps 0–10000 (linear, 0→0 bps, 100→10000 bps).
+/// Simulated F&G: falls from 60 (neutral) toward 10 (extreme-fear) as slider rises.
+/// Starting from neutral (60) keeps the mapping monotone non-decreasing because neither
+/// greed (≥75) nor fear (≤45) triggers at calm — only disagreementBps drives the level up.
+///
+/// Thresholds (from DEFAULT_STRESS in agents/backtest/src/stress.ts):
+///   dHigh=4000, dMed=2000, fearExtreme=25, fearMed=45.
+/// Level = Stressed if ANY source crosses the high threshold; Elevated if ANY medium; else Calm.
+export type StressLevel = "Calm" | "Elevated" | "Stressed";
+
+// Mirror DEFAULT_STRESS thresholds from agents/backtest/src/stress.ts
+const D_HIGH = 4_000; // disagreementBps ≥ D_HIGH → Stressed
+const D_MED = 2_000; // disagreementBps ≥ D_MED → Elevated
+const FEAR_EXTREME = 25; // fearGreed ≤ FEAR_EXTREME → Stressed
+const FEAR_MED = 45; // fearGreed ≤ FEAR_MED → Elevated
+
+/// Maps the slider value (0–100) to simulated disagreementBps (0–10000, linear).
+export function sliderToDisagreementBps(stress: number): number {
+  return clamp(stress, 0, 100) * 100;
+}
+
+/// Maps the slider value (0–100) to a simulated Fear&Greed index (60→10, linear).
+/// Starts in neutral territory (60), falls to extreme fear (10) at maximum stress.
+/// Monotone decreasing — combined with disagreementBps, the overall level is monotone
+/// non-decreasing across the slider range.
+export function sliderToFearGreed(stress: number): number {
+  const s = clamp(stress, 0, 100);
+  // 0 → 60 (neutral), 100 → 10 (extreme fear)
+  return Math.round(60 - (s / 100) * 50);
+}
+
+/// Returns the stress level for the given slider position (0–100), mirroring the on-chain
+/// MarketStressMonitor 3-source classification. Monotone non-decreasing: Calm → Elevated → Stressed.
+export function simulateStress(stress: number): StressLevel {
+  const disagreementBps = sliderToDisagreementBps(stress);
+  const fg = sliderToFearGreed(stress);
+
+  let isStressed = false;
+  let isElevated = false;
+
+  if (disagreementBps >= D_HIGH) isStressed = true;
+  else if (disagreementBps >= D_MED) isElevated = true;
+
+  if (fg <= FEAR_EXTREME) isStressed = true;
+  else if (fg <= FEAR_MED) isElevated = true;
+
+  if (isStressed) return "Stressed";
+  if (isElevated) return "Elevated";
+  return "Calm";
+}
+
 /// One-line plain-English reason for the current safety state, shown under the badge when it
 /// leaves Normal so a non-crypto judge reads WHY it flipped (not a glitch). Empty when Normal.
 export function riskReason(r: MarketResult): string {
   if (r.riskState === 0) return "";
   const driver = r.methConfBps <= r.usdyConfBps ? "mETH staking" : "USDY treasury";
   if (r.riskState === 2) {
-    return `AI confidence in ${driver} fell below 40% — the protocol pauses new deposits until conditions settle.`;
+    return `AI confidence in ${driver} fell below 40%, so the protocol pauses new deposits until conditions settle.`;
   }
-  return `Lower AI confidence in ${driver} — the protocol shifts toward the safer asset and tightens limits.`;
+  return `Lower AI confidence in ${driver}, so the protocol shifts toward the safer asset and tightens limits.`;
 }

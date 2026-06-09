@@ -34,7 +34,7 @@ export async function GET(req: Request) {
       abi: compositeFeedAbi,
       functionName: "read",
       args: [categoryHash(category)],
-    })) as { value: `0x${string}`; confidence: number; contributingAgents: bigint; lastUpdatedBlock: bigint };
+    })) as { value: `0x${string}`; confidence: number; contributingAgents: bigint; lastUpdatedBlock: bigint; disagreementBps: number };
 
     let value = BigInt(0);
     try {
@@ -53,6 +53,7 @@ export async function GET(req: Request) {
         confidenceBps: Number(res.confidence),
         contributingAgents: Number(res.contributingAgents),
         lastUpdatedBlock: Number(res.lastUpdatedBlock),
+        disagreementBps: Number(res.disagreementBps),
         compositeFeed: env.addresses.compositeFeed,
       },
       { headers: CORS },

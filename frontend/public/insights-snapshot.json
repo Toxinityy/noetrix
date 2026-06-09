@@ -657,7 +657,11 @@
           "contributors": 2
         }
       ],
-      "risk": "Frozen"
+      "risk": "Frozen",
+      "swarmAgreementPct": null,
+      "disagreementBps": null,
+      "stress": null,
+      "fearGreed": null
     },
     "USDY_APY_24H": {
       "reputations": [
@@ -1224,7 +1228,11 @@
           "contributors": 2
         }
       ],
-      "risk": "Frozen"
+      "risk": "Frozen",
+      "swarmAgreementPct": null,
+      "disagreementBps": null,
+      "stress": null,
+      "fearGreed": null
     },
     "AAVE_MANTLE_TVL_24H": {
       "reputations": [
@@ -1809,7 +1817,11 @@
           "contributors": 2
         }
       ],
-      "risk": "Frozen"
+      "risk": "Frozen",
+      "swarmAgreementPct": null,
+      "disagreementBps": null,
+      "stress": null,
+      "fearGreed": null
     }
   }
 }

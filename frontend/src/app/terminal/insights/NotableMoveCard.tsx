@@ -39,7 +39,7 @@ export function NotableMoveCard({
           {m.current == null
             ? "No recent data for this market yet."
             : m.isNotable
-              ? `${friendly} ${m.direction === "up" ? "jumped" : "dropped"} ${Math.abs(m.deltaPct).toFixed(1)}% in the last day — from ${friendlyValue(categoryId, m.prior ?? 0)} to ${friendlyValue(categoryId, m.current)}.`
+              ? `${friendly} ${m.direction === "up" ? "jumped" : "dropped"} ${Math.abs(m.deltaPct).toFixed(1)}% in the last day, from ${friendlyValue(categoryId, m.prior ?? 0)} to ${friendlyValue(categoryId, m.current)}.`
               : `${friendly} has been steady over the last day (now ${friendlyValue(categoryId, m.current)}).`}
         </p>
       </PanelBody>

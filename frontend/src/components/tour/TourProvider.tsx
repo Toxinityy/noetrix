@@ -5,9 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { TOURS, TOUR_PAGES, type TourId, type TourStep } from "./steps";
 import { Spotlight } from "./Spotlight";
 
-const SEEN_KEY = "noetrix.tour.v1";
-const REQUEST_KEY = "noetrix.tour.request"; // sessionStorage: holds the pending TourId
-export const ONBOARDED_KEY = "noetrix.onboarded.v1"; // set by OnboardingModal
+export const SEEN_KEY = "noetrix.tour.v1"; // localStorage: set when a tour is finished/dismissed
+export const REQUEST_KEY = "noetrix.tour.request"; // sessionStorage: holds the pending TourId
+export const ONBOARDED_KEY = "noetrix.onboarded.v1"; // first-run flag (boot gate + OnboardingModal)
 
 interface TourCtx {
   steps: TourStep[];
@@ -51,17 +51,9 @@ export function TourProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, []);
 
-  // First run: show the needs-picker once per browser. Deferred out of the effect
-  // body (React-Compiler: no synchronous setState in effects).
-  React.useEffect(() => {
-    let onboarded = false;
-    try {
-      onboarded = localStorage.getItem(ONBOARDED_KEY) === "1";
-    } catch {}
-    if (onboarded) return;
-    const t = setTimeout(() => setOnboardingOpen(true), 0);
-    return () => clearTimeout(t);
-  }, []);
+  // First-run is owned by TerminalBootGate: after the boot animation it auto-starts
+  // the guided leaderboard tour (and sets ONBOARDED_KEY) on the first-ever visit.
+  // The needs-picker (OnboardingModal) stays reachable any time via the Guide button.
 
   const start = React.useCallback(() => {
     setIndex(0);

@@ -23,7 +23,7 @@ export function SmartMoneyCard({
     <Panel elevation={2} className="lg:col-span-2">
       <PanelHeader
         caption="Crowd vs proven AI"
-        title={`Where the proven AIs break from the crowd — ${friendly}`}
+        title={`Where the proven AIs break from the crowd: ${friendly}`}
         right={<StatusPill tone="accent">{d.qualifiedCount} qualified AIs</StatusPill>}
       />
       <PanelBody>
@@ -34,7 +34,7 @@ export function SmartMoneyCard({
           />
         ) : (
           <div className="flex flex-col gap-6">
-            <p className="text-[15px] leading-relaxed text-[var(--color-text)]">
+            <p className="text-xl leading-snug text-[var(--color-text)] sm:text-2xl">
               The most accurate AIs expect {friendly}{" "}
               <span
                 className={
@@ -49,7 +49,7 @@ export function SmartMoneyCard({
               </span>{" "}
               than the crowd
               {d.direction !== "in line"
-                ? ` — by about ${Math.abs(d.deltaPct).toFixed(1)}%.`
+                ? `, by about ${Math.abs(d.deltaPct).toFixed(1)}%.`
                 : "."}
             </p>
             <p className="-mt-3 text-xs leading-relaxed text-[var(--color-text-muted)]">

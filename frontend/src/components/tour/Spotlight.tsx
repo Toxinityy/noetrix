@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
 import { useTour } from "./TourProvider";
 import { cn } from "@/lib/cn";
@@ -20,6 +21,8 @@ const GAP = 14;
 export function Spotlight() {
   const { steps, index, next, prev, skip, finish } = useTour();
   const reduced = useReducedMotion();
+  const router = useRouter();
+  const pathname = usePathname();
   const [rect, setRect] = React.useState<Rect | null>(null);
   const cardRef = React.useRef<HTMLDivElement>(null);
   const prevFocus = React.useRef<HTMLElement | null>(null);
@@ -38,14 +41,39 @@ export function Spotlight() {
     setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
   }, [step]);
 
-  // On step change: scroll target into view (instant) then measure next frame.
+  // On step change: if the step lives on another page, navigate there first; then
+  // poll for the anchor (the page needs a moment to render) and measure it.
   React.useEffect(() => {
     if (!step) return;
-    const el = document.querySelector(step.selector) as HTMLElement | null;
-    el?.scrollIntoView({ block: "center", behavior: "auto" });
-    const id = requestAnimationFrame(measure);
-    return () => cancelAnimationFrame(id);
-  }, [step, measure]);
+
+    if (step.page && step.page !== pathname) {
+      // Hide the stale cutout during the page transition (deferred so it isn't a
+      // synchronous setState in the effect body). pathname updates -> this effect
+      // re-runs on the right page and measures the new anchor.
+      const hideRaf = requestAnimationFrame(() => setRect(null));
+      router.push(step.page);
+      return () => cancelAnimationFrame(hideRaf);
+    }
+
+    let cancelled = false;
+    const poll = (attemptsLeft: number) => {
+      if (cancelled) return;
+      const el = document.querySelector(step.selector) as HTMLElement | null;
+      if (el) {
+        el.scrollIntoView({ block: "center", behavior: "auto" });
+        requestAnimationFrame(measure);
+      } else if (attemptsLeft > 0) {
+        window.setTimeout(() => poll(attemptsLeft - 1), 120);
+      } else {
+        setRect(null); // anchor never rendered; fall back to a plain scrim
+      }
+    };
+    poll(24); // ~2.9s budget for the anchor to render after a page change
+
+    return () => {
+      cancelled = true;
+    };
+  }, [step, pathname, measure, router]);
 
   // Re-measure on resize/scroll.
   React.useEffect(() => {

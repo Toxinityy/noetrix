@@ -46,7 +46,7 @@ flowchart TD
     chain --> IDX --> FE
 ```
 
-Full spec in [`docs/PRD.md`](docs/PRD.md). Contract count: 9 production + 2 mocks.
+Full spec in [`docs/PRD.md`](docs/PRD.md). Contract count: 14 production + 3 mocks (17 deployed addresses).
 
 ## Quick start
 
@@ -60,7 +60,7 @@ pnpm install          # installs all workspace packages
 ```bash
 cd contracts
 forge build
-forge test                                   # 147 tests
+forge test                                   # 169 tests
 # deploy (needs a funded key):
 forge script script/Deploy.s.sol:Deploy --rpc-url $MANTLE_SEPOLIA_RPC \
   --private-key $PRIVATE_KEY --broadcast --verify
@@ -100,7 +100,7 @@ Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/de
 | BonusDistributor | `0xFdC62165DCA68A9D6A1570EDf5AE0EDe606E191F` |
 | **Feed / consumer** | |
 | CompositeFeed | `0xc962011fd96527022e034a2cd715ccAb5bDe1331` |
-| SubscriptionGate | `0x0AbEC5f6B8e91Fcba23bd332719C9c8a3c9fFCbA` |
+| SubscriptionGate | `0x0b759e12Baedbb30891666193D33d689F5c23373` |
 | DemoFeedConsumer | `0x85F0cb237FF30600Bee7Cd2D260493a5bd795B8A` |
 | **AI × RWA** | |
 | YieldAllocator | `0x3dde2344b3aE6ca8D72183f00c5C25a48528AFA3` |
@@ -121,16 +121,16 @@ Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/de
 
 ## Submission
 
-- **Track:** AI x RWA — Predictor Index delivers **dynamic yield strategies** (YieldAllocator across mETH + USDY) and **automated risk management** (RiskManager) for Mantle RWA assets, driven by verifiable AI forecasts. It also competes for **Best UX / Smoothest Web2 Onboarding** via the wallet-free `/rwa` deposit simulator. Grand Champion nominated for full-stack depth (contracts + 2 reference AI agents + indexer + frontend) and native Mantle composition.
-- Full submission: [`docs/SUBMISSION.md`](docs/SUBMISSION.md) · Pre-flight status: [`docs/PREFLIGHT.md`](docs/PREFLIGHT.md)
+- **Track:** AI Alpha & Data (primary) — a verifiable on-chain leaderboard of AI forecasters: every prediction committed before the outcome, CRPS-graded against on-chain truth, surfaced as smart-money-vs-crowd signals, anomaly alerts, and a calibration-weighted composite feed. Secondary **AI x RWA** — a **YieldAllocator** (dynamic mETH/USDY allocation) and **RiskManager** (automated risk state) consume that feed; plus **Best UX / Smoothest Web2 Onboarding** via the wallet-free `/simulation` deposit simulator. Grand Champion nominated for full-stack depth (14 production contracts + 3 reference AI agents + indexer + frontend) and native Mantle composition.
+- Full submission: [`docs/SUBMISSION.md`](docs/SUBMISSION.md) · Pre-flight status: [`docs/PREFLIGHT.md`](docs/PREFLIGHT.md) · Go-live runbook: [`docs/DEPLOY.md`](docs/DEPLOY.md)
 
 ## Repo layout
 
 ```
-contracts/   Foundry — 9 production contracts + 2 mocks, deploy/smoke/e2e
+contracts/   Foundry — 14 production contracts + 3 mocks, deploy/smoke/e2e
 indexer/     Ponder — event handlers + REST API
 frontend/    Next.js 16 — cinematic landing + terminal-core app
-agents/      sdk, arima-baseline, deepseek-reasoner, refresher
+agents/      sdk, arima-baseline, naive-baseline, deepseek-reasoner, refresher, resolver
 docs/        PRD, submission, demo script, pre-flight
 ```
 

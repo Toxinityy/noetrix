@@ -30,6 +30,9 @@ const METH_ID = categoryHash("METH_APR_24H");
 const USDY_ID = categoryHash("USDY_APY_24H");
 
 /// Decode a CompositeFeed.read() result into { aprBps, confidenceBps }.
+/// Note: the Calm→Elevated→Stressed stress level is shown by the DepositSimulator slider.
+/// Its classification is driven by simulateStress() (rwaSim.ts), which mirrors the
+/// 3-source on-chain MarketStressMonitor (disagreementBps + Fear&Greed thresholds).
 function decodeFeed(data: unknown): { bps: number; confBps: number } | null {
   if (!data) return null;
   const f = data as { value: `0x${string}`; confidence: number };
@@ -111,8 +114,8 @@ export function RwaClient() {
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-12">
-      <h1 className="text-3xl font-semibold text-white">Earn yield on Mantle’s real-world assets</h1>
-      <p className="mt-3 text-white/60">
+      <h1 className="text-3xl font-semibold text-[var(--color-text)]">Earn yield on Mantle’s real-world assets</h1>
+      <p className="mt-3 text-[var(--color-text-dim)]">
         AI agents forecast the best yield across mETH and USDY, so you don’t have to. No wallet needed to explore.
       </p>
 
@@ -140,7 +143,7 @@ export function RwaClient() {
       </div>
 
       <div className="mt-8 text-center" data-tour="earn-more">
-        <Link href="/terminal/leaderboard" className="text-sm text-teal-300 hover:underline focus-visible:underline">
+        <Link href="/terminal/leaderboard" className="text-sm text-[var(--color-accent)] hover:underline focus-visible:underline">
           Want the full picture? See the live agent leaderboard →
         </Link>
       </div>

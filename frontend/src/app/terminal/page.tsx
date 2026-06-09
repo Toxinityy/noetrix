@@ -1,11 +1,7 @@
-import type { Metadata } from "next";
-import { TerminalBootClient } from "./TerminalBootClient";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Initializing Terminal — Noetrix",
-  description: "Boot into the Noetrix protocol terminal.",
-};
-
+// The boot animation now lives in TerminalBootGate (terminal/layout.tsx), so it
+// plays on entry to ANY /terminal route. /terminal itself just lands on the home.
 export default function TerminalPage() {
-  return <TerminalBootClient />;
+  redirect("/terminal/dashboard");
 }
