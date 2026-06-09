@@ -38,13 +38,15 @@ test("landing shows the Start-here strip and has no horizontal overflow at 375px
   expect(overflow).toBeLessThanOrEqual(2);
 });
 
-test("first-run onboarding modal appears once then not again", async ({ page }) => {
+test("first-run guided tour auto-starts once then not again", async ({ page }) => {
   await page.goto("/terminal/leaderboard");
-  const dialog = page.getByRole("dialog");
-  await expect(dialog).toBeVisible();
-  await page.getByRole("button", { name: "Just looking" }).click();
-  await expect(dialog).toBeHidden();
-  // Reload — the onboarded flag persists in this context, so the modal must not return.
+  // After the boot animation, the guided spotlight tour auto-starts on the first visit.
+  const tour = page.getByRole("dialog", { name: /guided tour/i });
+  await expect(tour).toBeVisible({ timeout: 10000 });
+  await page.keyboard.press("Escape"); // dismiss the tour
+  await expect(tour).toBeHidden();
+  // Reload: the onboarded flag persists in this context, so the tour must not auto-start again.
   await page.reload({ waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("dialog")).toBeHidden();
+  await page.waitForTimeout(2500); // let the boot animation finish on reload
+  await expect(page.getByRole("dialog", { name: /guided tour/i })).toBeHidden();
 });
