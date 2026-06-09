@@ -138,6 +138,11 @@ Each agent is a standalone Node process using a dedicated hot wallet. The swarm 
 
 ### 3 existing agents
 
+> `register` runs via `tsx` (no build needed) and mints the agentId. `start` runs the compiled
+> `dist/`, so run `pnpm run build` once before `start` (or use `pnpm run dev` to run from source via
+> tsx-watch). After any contract **redeploy**, delete `agents/resolver/resolver.state.json` so the
+> resolver re-scans from the new prediction set.
+
 ```bash
 # arima-baseline
 cd agents/arima-baseline
@@ -163,21 +168,22 @@ pnpm run start
 
 ### 4 new thin-runner agents (one per strategy in `forecasters`)
 
-These agents don't exist as packages yet — create each one as a thin wrapper over the matching `forecasters` strategy. Each follows the same pattern as `arima-baseline`:
+These agents don't exist as packages yet — create each one as a thin wrapper over the matching `forecasters` strategy. All strategies are exported from the **barrel** `@predictor-index/forecasters` (there are no subpath exports); the export names are the plain strategy names (no `Forecast` suffix). Each follows the same pattern as `arima-baseline`:
 
-1. **`agents/mean-reversion-agent/`** — imports `meanReversionForecast` from `@predictor-index/forecasters/strategies/meanReversion`
-2. **`agents/momentum-agent/`** — imports `momentumForecast` from `@predictor-index/forecasters/strategies/momentum`
-3. **`agents/ewma-vol-agent/`** — imports `ewmaVolForecast` from `@predictor-index/forecasters/strategies/ewmaVol`
-4. **`agents/sentiment-agent/`** — imports `sentimentForecast` from `@predictor-index/forecasters/strategies/sentiment` (reads live F&G from `SentimentOracle.latest()`)
+1. **`agents/mean-reversion-agent/`** — imports `meanReversion` from `@predictor-index/forecasters`
+2. **`agents/momentum-agent/`** — imports `momentum` from `@predictor-index/forecasters`
+3. **`agents/ewma-vol-agent/`** — imports `ewmaVol` from `@predictor-index/forecasters`
+4. **`agents/sentiment-agent/`** — imports `sentiment` from `@predictor-index/forecasters` (pass live F&G from `SentimentOracle.latest()` as the `fg` arg)
 
 **Template for each new agent** (mirror `agents/arima-baseline/src/index.ts`, replace the forecast call):
 
 ```ts
-import { confidenceFromWidth } from "@predictor-index/forecasters";
-import { <strategyForecast> } from "@predictor-index/forecasters/strategies/<strategy>";
+// all from the barrel — e.g. meanReversion | momentum | ewmaVol | sentiment
+import { confidenceFromWidth, meanReversion } from "@predictor-index/forecasters";
 // ... same register + submitFullCycle pattern as arima-baseline
-const confidence = confidenceFromWidth(low, high, domainMin, domainMax);
-await agent.submitFullCycle(agentId, categoryId, { low, high }, confidence, ...);
+const band = meanReversion(series, { domainMin, domainMax }); // strategies return { mean, lower, upper, fitted }
+const confidence = confidenceFromWidth(band.lower, band.upper, domainMin, domainMax);
+await agent.submitFullCycle(agentId, categoryId, { low: band.lower, high: band.upper }, confidence, ...);
 ```
 
 Register + run each:
