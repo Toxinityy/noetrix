@@ -21,6 +21,9 @@ import {DemoFeedConsumer} from "../src/examples/DemoFeedConsumer.sol";
 import {YieldAllocator} from "../src/examples/YieldAllocator.sol";
 import {RiskManager} from "../src/examples/RiskManager.sol";
 
+import {SentimentOracle} from "../src/mocks/SentimentOracle.sol";
+import {MarketStressMonitor} from "../src/examples/MarketStressMonitor.sol";
+
 import {IAgentRegistry} from "../src/interfaces/IAgentRegistry.sol";
 import {IPredictionMarket} from "../src/interfaces/IPredictionMarket.sol";
 import {IMethRateOracle} from "../src/interfaces/IMethRateOracle.sol";
@@ -45,7 +48,7 @@ contract Deploy is Script {
 
     // Category config (RangeCrpsScorer domain = abi.encode(domainMin, domainMax), split into 100 buckets).
     uint256 internal constant METH_DOMAIN_MIN = 0;
-    uint256 internal constant METH_DOMAIN_MAX = 100_000; // APR bps space, bucket width 1000
+    uint256 internal constant METH_DOMAIN_MAX = 2_000; // APR bps space, bucket width 20 (realistic mETH ~0–20%)
     uint256 internal constant TVL_DOMAIN_MIN = 0;
     uint256 internal constant TVL_DOMAIN_MAX = 1e17; // USD 8-dec up to ~$1B, bucket width $10M
     uint256 internal constant USDY_DOMAIN_MIN = 0;
@@ -55,8 +58,8 @@ contract Deploy is Script {
     uint256 internal constant WINDOW_START = 300; // == PredictionMarket.MIN_RESOLUTION_OFFSET
     uint256 internal constant WINDOW_END = 500_000;
 
-    // mETH synthetic curve: ~822 ppm/day → resolved APR ≈ 822 × 3.65 ≈ 3000 bps (matches agent seed center).
-    uint256 internal constant METH_DAILY_GROWTH_PPM = 822;
+    // mETH synthetic curve: ~96 ppm/day → resolved APR ≈ 96 × 3.65 ≈ 350 bps (realistic mETH, fits [0,2000]).
+    uint256 internal constant METH_DAILY_GROWTH_PPM = 96;
     // USDY synthetic curve: ~137 ppm/day → resolved APY ≈ 137 × 3.65 ≈ 500 bps (≈5%, matches agent seed).
     uint256 internal constant USDY_DAILY_GROWTH_PPM = 137;
     // anchor = deployBlock − this; must sit below the earliest queried block (first resolutionBlock − 43200).
@@ -85,6 +88,8 @@ contract Deploy is Script {
     UsdyApyResolver usdyApyResolver;
     YieldAllocator yieldAllocator;
     RiskManager riskManager;
+    SentimentOracle sentimentOracle;
+    MarketStressMonitor stressMonitor;
 
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
@@ -138,6 +143,10 @@ contract Deploy is Script {
         // 13. RWA consumers — dynamic yield strategy + automated risk management.
         yieldAllocator = new YieldAllocator(ICompositeFeed(address(compositeFeed)), METH_APR_24H, USDY_APY_24H);
         riskManager = new RiskManager(ICompositeFeed(address(compositeFeed)), deployer);
+        // 14. Sentiment oracle + market-stress monitor
+        sentimentOracle = new SentimentOracle(deployer);
+        stressMonitor =
+            new MarketStressMonitor(address(compositeFeed), address(resolutionEngine), address(sentimentOracle), deployer);
     }
 
     function _wire() internal {
@@ -197,10 +206,11 @@ contract Deploy is Script {
             abi.encode(USDY_DOMAIN_MIN, USDY_DOMAIN_MAX)
         );
 
-        // mETH oracle synthetic curve so any agent-chosen resolutionBlock resolves to ~3000 bps APR.
-        methOracle.setSynthetic(block.number - METH_ANCHOR_LOOKBACK, 1e18, METH_DAILY_GROWTH_PPM);
+        // mETH oracle synthetic curve so any agent-chosen resolutionBlock resolves to ~350 bps APR.
+        uint256 methAnchor = block.number > METH_ANCHOR_LOOKBACK ? block.number - METH_ANCHOR_LOOKBACK : 0;
+        methOracle.setSynthetic(methAnchor, 1e18, METH_DAILY_GROWTH_PPM);
         // USDY oracle synthetic curve so any agent-chosen resolutionBlock resolves to ~500 bps APY.
-        usdyOracle.setSynthetic(block.number - METH_ANCHOR_LOOKBACK, 1e18, USDY_DAILY_GROWTH_PPM);
+        usdyOracle.setSynthetic(methAnchor, 1e18, USDY_DAILY_GROWTH_PPM);
 
         // CompositeFeed dependencies.
         compositeFeed.setAgentRegistry(IAgentRegistry(address(agentRegistry)));
@@ -210,6 +220,38 @@ contract Deploy is Script {
         // RiskManager asset registry (categoryId → base collateral factor + max deposit cap).
         riskManager.registerAsset(METH_APR_24H, 8_000, 1_000_000_000 * 1e8); // 80% baseCf, $1B cap
         riskManager.registerAsset(USDY_APY_24H, 9_000, 1_000_000_000 * 1e8); // 90% baseCf (stablecoin), $1B cap
+
+        // ── Switch the feed onto the real swarm math + register Monitor configs ───
+        // Read the tuned calibration emitted by the backtest.
+        string memory calib = vm.readFile("config/swarm-calibration.json");
+        _configureCategory(compositeFeed, stressMonitor, calib, "METH_APR", METH_APR_24H);
+        _configureCategory(compositeFeed, stressMonitor, calib, "AAVE_TVL", AAVE_MANTLE_TVL_24H);
+        _configureCategory(compositeFeed, stressMonitor, calib, "USDY_APY", USDY_APY_24H);
+
+        // Seed a recent Fear & Greed value (replaced live by the keeper). 22 ≈ the recent on-chain window.
+        sentimentOracle.setFearGreed(22);
+    }
+
+    function _configureCategory(
+        CompositeFeed _compositeFeed,
+        MarketStressMonitor _stressMonitor,
+        string memory calib,
+        string memory key,
+        bytes32 categoryId
+    ) internal {
+        string memory base = string.concat("$.categories.", key, ".");
+        uint256 domainMin = vm.parseJsonUint(calib, string.concat(base, "domainMin"));
+        uint256 domainMax = vm.parseJsonUint(calib, string.concat(base, "domainMax"));
+        uint256 disagreeScale = vm.parseJsonUint(calib, string.concat(base, "disagreeScale"));
+        uint256 dMed = vm.parseJsonUint(calib, string.concat(base, "dMed"));
+        uint256 dHigh = vm.parseJsonUint(calib, string.concat(base, "dHigh"));
+        uint256 sMed = vm.parseJsonUint(calib, string.concat(base, "surpriseMed"));
+        uint256 sHigh = vm.parseJsonUint(calib, string.concat(base, "surpriseHigh"));
+
+        _compositeFeed.setCategoryBounds(categoryId, domainMin, domainMax, disagreeScale);
+        _stressMonitor.setStressConfig(
+            categoryId, domainMin, domainMax, uint16(dMed), uint16(dHigh), uint16(sMed), uint16(sHigh)
+        );
     }
 
     function _writeJson() internal {
@@ -232,7 +274,9 @@ contract Deploy is Script {
         vm.serializeAddress(key, "UsdyOracle", address(usdyOracle));
         vm.serializeAddress(key, "UsdyApyResolver", address(usdyApyResolver));
         vm.serializeAddress(key, "YieldAllocator", address(yieldAllocator));
-        string memory json = vm.serializeAddress(key, "RiskManager", address(riskManager));
+        vm.serializeAddress(key, "RiskManager", address(riskManager));
+        vm.serializeAddress(key, "SentimentOracle", address(sentimentOracle));
+        string memory json = vm.serializeAddress(key, "MarketStressMonitor", address(stressMonitor));
 
         string memory path = string.concat("deployments/", net, ".json");
         vm.writeJson(json, path);
@@ -258,5 +302,7 @@ contract Deploy is Script {
         console2.log("UsdyApyResolver      ", address(usdyApyResolver));
         console2.log("YieldAllocator       ", address(yieldAllocator));
         console2.log("RiskManager          ", address(riskManager));
+        console2.log("SentimentOracle      ", address(sentimentOracle));
+        console2.log("MarketStressMonitor  ", address(stressMonitor));
     }
 }
