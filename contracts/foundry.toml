@@ -11,6 +11,8 @@ optimizer_runs = 200
 via_ir = false
 fs_permissions = [
     { access = "read", path = "./" },
+    { access = "read", path = "./deployments" },
+    { access = "read", path = "../agents/market-data/data" },
     { access = "write", path = "./deployments" },
 ]
 ffi = true
