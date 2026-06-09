@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
+import { Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/Providers";
 
-// Space Grotesk (geometric grotesk) for UI/headings + IBM Plex Mono (technical) for numbers,
-// addresses, labels, nav. Distinctive fintech-terminal pairing — not the Inter/JetBrains default.
-const sans = Space_Grotesk({
-  variable: "--font-grotesk",
+// Inter for UI/body + IBM Plex Mono (technical) for numbers, addresses, labels, nav — the mono is
+// the distinctive terminal signature; Inter keeps the body neutral + highly legible.
+const sans = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
