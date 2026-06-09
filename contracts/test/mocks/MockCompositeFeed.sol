@@ -14,13 +14,14 @@ contract MockCompositeFeed is ICompositeFeed {
             value: abi.encode(value),
             confidence: confidence,
             contributingAgents: contributors,
-            lastUpdatedBlock: updatedBlock
+            lastUpdatedBlock: updatedBlock,
+            disagreementBps: 0
         });
     }
 
     /// @notice Set an empty (never-refreshed) forecast: empty bytes, zeroed fields.
     function setEmpty(bytes32 id) external {
-        _f[id] = CompositeForecast({value: "", confidence: 0, contributingAgents: 0, lastUpdatedBlock: 0});
+        _f[id] = CompositeForecast({value: "", confidence: 0, contributingAgents: 0, lastUpdatedBlock: 0, disagreementBps: 0});
     }
 
     function read(bytes32 id) external view returns (CompositeForecast memory) {

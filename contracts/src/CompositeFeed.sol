@@ -116,7 +116,8 @@ contract CompositeFeed is ICompositeFeed, Ownable {
             value: abi.encode(ensemble),
             confidence: confidence,
             contributingAgents: n,
-            lastUpdatedBlock: block.number
+            lastUpdatedBlock: block.number,
+            disagreementBps: 0
         });
 
         emit CompositeFeedRefreshed(categoryId, ensemble, confidence, n, block.number);
