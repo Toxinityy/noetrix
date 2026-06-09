@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { useTour, SEEN_KEY, REQUEST_KEY } from "@/components/tour/TourProvider";
+import { useTour, TOUR_OPTOUT_KEY, REQUEST_KEY } from "@/components/tour/TourProvider";
 import type { TourId } from "@/components/tour/steps";
 
 /**
@@ -13,8 +13,8 @@ import type { TourId } from "@/components/tour/steps";
  * persona deep-link, a redirected old route, or a direct URL), and never on
  * in-app navigation between terminal pages.
  *
- * On the first-ever visit it also auto-starts the guided leaderboard tour once the
- * boot finishes (unless a persona tour is already pending).
+ * On EVERY entry it also auto-starts the guided essentials tour once the boot finishes,
+ * unless a persona tour is pending or the user clicked "Don't show again" (opt-out).
  */
 export function TerminalBootGate({ children }: { children: React.ReactNode }) {
   const reduceMotion = useReducedMotion();
@@ -50,9 +50,9 @@ export function TerminalBootGate({ children }: { children: React.ReactNode }) {
         if (pendingTour) {
           // Entered via a persona pick (StartHere): auto-start that path's tour.
           requestStartRef.current(pendingTour as TourId);
-        } else if (localStorage.getItem(SEEN_KEY) !== "1") {
-          // Default entry: auto-start the full essentials walkthrough (cross-page),
-          // until the user completes or dismisses it once (TourProvider sets SEEN_KEY).
+        } else if (localStorage.getItem(TOUR_OPTOUT_KEY) !== "1") {
+          // Default entry: auto-start the full essentials walkthrough (cross-page) on
+          // EVERY terminal entry, until the user clicks "Don't show again" (opt-out).
           requestStartRef.current("full");
         }
       } catch {}

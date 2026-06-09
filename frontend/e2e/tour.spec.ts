@@ -19,9 +19,9 @@ test("the full essentials tour auto-starts on the dashboard and advances across 
 
 test("entering with a pending persona tour auto-starts it after boot", async ({ page }) => {
   // Simulate clicking a persona card on the StartHere landing picker, which arms the
-  // tour via sessionStorage. tour.v1=1 isolates this from the default full essentials tour.
+  // tour via sessionStorage. The opt-out flag isolates this from the default full essentials tour.
   await page.addInitScript(() => {
-    window.localStorage.setItem("noetrix.tour.v1", "1");
+    window.localStorage.setItem("noetrix.tour.optout", "1");
     window.sessionStorage.setItem("noetrix.tour.request", "alpha");
   });
   await page.goto("/terminal/insights", { waitUntil: "domcontentloaded" });

@@ -19,7 +19,7 @@ const CARD_EST_H = 180;
 const GAP = 14;
 
 export function Spotlight() {
-  const { steps, index, next, prev, skip, finish } = useTour();
+  const { steps, index, next, prev, skip, finish, dismissForever } = useTour();
   const reduced = useReducedMotion();
   const router = useRouter();
   const pathname = usePathname();
@@ -212,6 +212,14 @@ export function Spotlight() {
             {isLast ? "Finish" : "Next →"}
           </button>
         </div>
+        {/* Permanent opt-out — distinct from Skip (which only closes for this entry). */}
+        <button
+          type="button"
+          onClick={dismissForever}
+          className="mt-3 w-full text-center font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--color-text-muted)] transition-colors hover:text-[var(--color-text-dim)]"
+        >
+          Don&apos;t show again
+        </button>
       </motion.div>
     </div>
   );
