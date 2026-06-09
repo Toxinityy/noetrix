@@ -90,4 +90,57 @@ contract SwarmParityTest is Test {
         assertEq(conf, 7874, "confidence");
         assertEq(dis, 1250, "disagreementBps");
     }
+
+    // ── Edge-case tests (Task 4) ──────────────────────────────────────────────
+
+    function test_Empty_ReturnsZero() public view {
+        uint256[] memory e = new uint256[](0);
+        uint16[] memory e16 = new uint16[](0);
+        int256[] memory ei = new int256[](0);
+        (uint256 ens, uint16 conf, uint32 dis) = feed.aggregatePreview(e, e, e16, ei, 0, 100000, 5000);
+        assertEq(ens, 0); assertEq(conf, 0); assertEq(dis, 0);
+    }
+
+    function test_AntiGaming_WideBandsHighDisagreement() public view {
+        // identical midpoints but full-domain bands → high disagreement + confidence haircut
+        (, uint16 tightConf, uint32 tightDis) = feed.aggregatePreview(
+            _u([uint256(49800), 49800, 49800]), _u([uint256(50200), 50200, 50200]),
+            _u16([uint16(9000), 9000, 9000]), _i([int256(0), 0, 0]), 0, 100000, 5000);
+        (, uint16 wideConf, uint32 wideDis) = feed.aggregatePreview(
+            _u([uint256(0), 0, 0]), _u([uint256(100000), 100000, 100000]),
+            _u16([uint16(9000), 9000, 9000]), _i([int256(0), 0, 0]), 0, 100000, 5000);
+        assertGt(wideDis, 5000);
+        assertGt(wideDis, tightDis);
+        assertLt(wideConf, tightConf);
+    }
+
+    function test_MinCombine_BadCalibrationHaircut() public view {
+        (, uint16 goodConf,) = feed.aggregatePreview(
+            _u([uint256(49000), 49000, 49000]), _u([uint256(51000), 51000, 51000]),
+            _u16([uint16(9000), 9000, 9000]), _i([int256(0), 0, 0]), 0, 100000, 5000);
+        (, uint16 badConf,) = feed.aggregatePreview(
+            _u([uint256(49000), 49000, 49000]), _u([uint256(51000), 51000, 51000]),
+            _u16([uint16(9000), 9000, 9000]), _i([int256(-500000), -500000, -500000]), 0, 100000, 5000);
+        assertLt(badConf, goodConf);
+    }
+
+    function test_Legacy_DisagreeScaleZero_NoQuorumNoAgreement() public view {
+        // disagreeScale 0 → legacy: even n=1 keeps full (calMult-only) confidence, disagreement 0
+        uint256[] memory lo = new uint256[](1); lo[0] = 49000;
+        uint256[] memory hi = new uint256[](1); hi[0] = 51000;
+        uint16[] memory st = new uint16[](1); st[0] = 9000;
+        int256[] memory cl = new int256[](1); cl[0] = 0;
+        (, uint16 conf, uint32 dis) = feed.aggregatePreview(lo, hi, st, cl, 0, 100000, 0);
+        assertEq(dis, 0);
+        assertGt(conf, 5000, "legacy not quorum-capped");
+    }
+
+    function test_TvlDomain_NoOverflow() public view {
+        (, uint16 conf,) = feed.aggregatePreview(
+            _u([uint256(9_000_000_000_000_000), 9_100_000_000_000_000, 9_050_000_000_000_000]),
+            _u([uint256(9_200_000_000_000_000), 9_300_000_000_000_000, 9_250_000_000_000_000]),
+            _u16([uint16(8000), 8000, 8000]), _i([int256(0), 0, 0]),
+            0, 100_000_000_000_000_000, 2_000_000_000_000_000);
+        assertGt(conf, 0);
+    }
 }
