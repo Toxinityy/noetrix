@@ -211,6 +211,112 @@ contract CompositeFeed is ICompositeFeed, Ownable {
         ok = true;
     }
 
+    /// @dev Clamp bands to domain, compute midpoints/widths/ensemble/weightedStated in one pass.
+    ///      Returns (mid[], width[], ensemble, weightedStated). Extracted to avoid stack-too-deep.
+    function _clampAndWeigh(
+        uint256[] memory lo,
+        uint256[] memory hi,
+        uint16[] memory stated,
+        uint256 domainMin,
+        uint256 domainMax
+    ) internal pure returns (uint256[] memory mid, uint256[] memory width, uint256 ensemble, uint256 weightedStated) {
+        uint256 n = lo.length;
+        mid = new uint256[](n);
+        width = new uint256[](n);
+        uint256 denom = (n * (n + 1)) / 2;
+        for (uint256 i = 0; i < n; ++i) {
+            uint256 a = lo[i] < domainMin ? domainMin : (lo[i] > domainMax ? domainMax : lo[i]);
+            uint256 b = hi[i] < domainMin ? domainMin : (hi[i] > domainMax ? domainMax : hi[i]);
+            mid[i] = (a + b) / 2;
+            width[i] = b - a;
+            uint256 w = ((n - i) * WEIGHT_SCALE) / denom;
+            ensemble += (w * mid[i]) / WEIGHT_SCALE;
+            weightedStated += w * uint256(stated[i]);
+        }
+    }
+
+    /// @dev Compute raw disagreement = floor(sqrt(weighted variance)) + weightedMeanBandWidth/2.
+    ///      Extracted to avoid stack-too-deep in aggregatePreview.
+    function _rawDisagreement(uint256[] memory mid, uint256[] memory width, uint256 ensemble)
+        internal
+        pure
+        returns (uint256 dRaw)
+    {
+        uint256 n = mid.length;
+        uint256 denom = (n * (n + 1)) / 2;
+        uint256 V;
+        uint256 Wbar;
+        for (uint256 i = 0; i < n; ++i) {
+            uint256 w = ((n - i) * WEIGHT_SCALE) / denom;
+            uint256 diff = mid[i] > ensemble ? mid[i] - ensemble : ensemble - mid[i];
+            V += (w * (diff * diff)) / WEIGHT_SCALE;
+            Wbar += (w * width[i]) / WEIGHT_SCALE;
+        }
+        dRaw = Math.sqrt(V) + Wbar / 2;
+    }
+
+    /// @notice Pure Solidity mirror of forecasters/aggregateSwarm. Contributors in RANK ORDER. When
+    ///         disagreeScale==0, reproduces the legacy confidence (no agreement, no quorum, disagreement 0).
+    /// @dev Bit-parity with the TS golden vectors (test/SwarmParity.t.sol). All scaled-integer.
+    function aggregatePreview(
+        uint256[] memory lo,
+        uint256[] memory hi,
+        uint16[] memory stated,
+        int256[] memory cals,
+        uint256 domainMin,
+        uint256 domainMax,
+        uint256 disagreeScale
+    ) public pure returns (uint256 ensemble, uint16 confidence, uint32 disagreementBps) {
+        uint256 n = lo.length;
+        if (n == 0) return (0, 0, 0);
+
+        uint256[] memory mid;
+        uint256[] memory width;
+        uint256 weightedStated;
+        (mid, width, ensemble, weightedStated) = _clampAndWeigh(lo, hi, stated, domainMin, domainMax);
+
+        // Calibration multiplier (existing derivation): mean of clipped (<=0, floored at CAL_FLOOR) + 1.
+        uint256 calMult = _calMult(cals, n);
+
+        // Legacy path: agreement + quorum disabled, fully backward-compatible.
+        if (disagreeScale == 0) {
+            uint256 legacy = (weightedStated * calMult) / (WEIGHT_SCALE * CAL_SCALE);
+            if (legacy > MAX_CONFIDENCE_BPS) legacy = MAX_CONFIDENCE_BPS;
+            return (ensemble, uint16(legacy), 0);
+        }
+
+        // Dispersion → normalized disagreement d in [0, CAL_SCALE].
+        uint256 dRaw = _rawDisagreement(mid, width, ensemble);
+        uint256 d = (dRaw * CAL_SCALE) / disagreeScale;
+        if (d > CAL_SCALE) d = CAL_SCALE;
+
+        // Agreement multiplier g = max(AGREE_FLOOR, CAL_SCALE - d).
+        uint256 g = CAL_SCALE - d;
+        if (g < AGREE_FLOOR) g = AGREE_FLOOR;
+
+        // Combine penalties with MIN (not product).
+        uint256 mult = calMult < g ? calMult : g;
+        uint256 finalConf = (weightedStated * mult) / (WEIGHT_SCALE * CAL_SCALE);
+        if (finalConf > MAX_CONFIDENCE_BPS) finalConf = MAX_CONFIDENCE_BPS;
+
+        // Quorum cap: a sub-MIN_SWARM swarm cannot claim full consensus confidence.
+        if (n < MIN_SWARM && finalConf > SINGLE_SOURCE_CEILING_BPS) finalConf = SINGLE_SOURCE_CEILING_BPS;
+
+        confidence = uint16(finalConf);
+        disagreementBps = uint32((d * MAX_CONFIDENCE_BPS) / CAL_SCALE);
+    }
+
+    /// @dev Calibration multiplier = 1 + mean(clipped cal) in CAL_SCALE. Extracted to avoid stack-too-deep.
+    function _calMult(int256[] memory cals, uint256 n) internal pure returns (uint256) {
+        int256 sumClipped;
+        for (uint256 i = 0; i < n; ++i) {
+            int256 c = cals[i] < CAL_FLOOR ? CAL_FLOOR : cals[i];
+            if (c > 0) c = 0;
+            sumClipped += c;
+        }
+        return uint256(int256(CAL_SCALE) + sumClipped / int256(n));
+    }
+
     /// @dev Rank-weighted ensemble value + outlier-resistant confidence.
     function _aggregate(uint256[] memory points, uint16[] memory stated, int256[] memory cals, uint256 n)
         internal
