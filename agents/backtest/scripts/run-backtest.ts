@@ -10,6 +10,7 @@ import { runOneCategory } from "../src/run.js";
 import { renderReport } from "../src/report.js";
 import { buildSnapshot } from "../src/snapshot.js";
 import type { DeepSeekCache } from "../src/roster.js";
+import type { CategoryResult } from "../src/types.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -26,7 +27,7 @@ function main(stamp: string) {
   const fng = loadSeries("FEAR_GREED");
   const cache = loadDeepSeekCache();
   const categories: MetricKey[] = ["METH_APR", "AAVE_TVL", "USDY_APY"];
-  const results = [];
+  const results: CategoryResult[] = [];
   for (const metric of categories) {
     const s = loadSeries(metric);
     if (!s || s.points.length < 16) {

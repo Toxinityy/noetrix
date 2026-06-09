@@ -2,7 +2,6 @@
 /// DeepSeek forecast per (category, ts) over the real series — so DeepSeek joins the swarm as a true
 /// peer in the backtest. Run later: OPENROUTER_API_KEY=... pnpm --filter @predictor-index/backtest gen:deepseek
 /// This is a stub that documents the contract + fails fast without a key, so the harness never blocks on it.
-import { existsSync } from "node:fs";
 
 function main() {
   const key = process.env.OPENROUTER_API_KEY;
@@ -16,7 +15,6 @@ function main() {
   }
   // Full implementation deferred per plan (P1b ops): iterate the real series, call the reasoner per
   // step on data[0..t-1], cache the parsed forecast. Intentionally not implemented in this pass.
-  void existsSync;
   console.error("gen-deepseek-cache: implementation deferred (P1b ops); see contract above.");
   process.exitCode = 1;
 }

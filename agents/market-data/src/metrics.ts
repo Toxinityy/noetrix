@@ -22,7 +22,7 @@ export const METRICS: Record<MetricKey, MetricConfig> = {
     categoryLabel: "METH_APR_24H",
     workingUnit: "bps",
     domainMin: 0n,
-    domainMax: 100_000n,
+    domainMax: 2_000n,
     toDomain: (bps) => BigInt(r(bps)),
     volMethod: "firstDiff",
   },

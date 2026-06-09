@@ -1,5 +1,5 @@
-import type { CategoryResult } from "./types.js";
-import { correlationMatrix } from "./metrics.js";
+import type { CategoryResult, StressLevel } from "./types.js";
+import { buildErrByAgent, correlationMatrix } from "./metrics.js";
 
 /// Render a human-readable markdown report. Honest about thin data (notes when test steps are few).
 export function renderReport(results: CategoryResult[]): string {
@@ -14,16 +14,7 @@ export function renderReport(results: CategoryResult[]): string {
       lines.push(`| ${a.label} | ${a.accuracy} | ${a.calibration} | ${a.resolved} | ${Math.round(a.meanScore)} |`);
     }
     // Diversity: pairwise error correlation over the test window.
-    const errByAgent: Record<string, number[]> = {};
-    for (const a of r.agents) errByAgent[a.label] = [];
-    for (const s of r.steps) {
-      for (const ag of s.agents) {
-        if (!ag.fitted) continue;
-        const label = r.agents.find((x) => x.agentKey === ag.agentKey)?.label ?? ag.agentKey;
-        const mid = (ag.lo + ag.hi) / 2n;
-        (errByAgent[label] ||= []).push(Number(s.realized - mid));
-      }
-    }
+    const errByAgent = buildErrByAgent(r);
     const corr = correlationMatrix(errByAgent);
     lines.push("", "### Inter-agent error correlation (diversity proof)", "");
     lines.push("| | " + corr.keys.join(" | ") + " |");
@@ -32,7 +23,7 @@ export function renderReport(results: CategoryResult[]): string {
       lines.push(`| ${corr.keys[i]} | ` + row.map((v) => v.toFixed(2)).join(" | ") + " |");
     });
     // Stress over test window.
-    const stressCounts = { Calm: 0, Elevated: 0, Stressed: 0 } as Record<string, number>;
+    const stressCounts: Record<StressLevel, number> = { Calm: 0, Elevated: 0, Stressed: 0 };
     for (const s of r.steps) stressCounts[s.stress.level]++;
     lines.push("", `Stress distribution: Calm ${stressCounts.Calm} · Elevated ${stressCounts.Elevated} · Stressed ${stressCounts.Stressed}`, "");
   }

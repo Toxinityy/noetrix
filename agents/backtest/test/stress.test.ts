@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { classifyStress, surpriseBps, DEFAULT_STRESS } from "../src/stress.js";
+import { classifyStress, surpriseBps, DEFAULT_STRESS, percentileNum, tuneStressThresholds } from "../src/stress.js";
 import { alignByDay } from "../src/align.js";
 
 describe("surpriseBps", () => {
@@ -26,6 +26,28 @@ describe("classifyStress", () => {
   it("elevated on moderate surprise", () => {
     const s = classifyStress(100, 800, 50, DEFAULT_STRESS);
     expect(s.level).toBe("Elevated");
+  });
+});
+
+describe("percentileNum", () => {
+  it("nearest-rank percentile of a number list", () => {
+    expect(percentileNum([10, 20, 30, 40, 50], 90)).toBe(50);
+  });
+  it("empty list → 0", () => {
+    expect(percentileNum([], 90)).toBe(0);
+  });
+});
+
+describe("tuneStressThresholds", () => {
+  it("derives dMed/dHigh from the train disagreement distribution (p70/p90)", () => {
+    const dis = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
+    const sur = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90];
+    const th = tuneStressThresholds(dis, sur);
+    expect(th.dMed).toBe(percentileNum(dis, 70));
+    expect(th.dHigh).toBe(percentileNum(dis, 90));
+    expect(th.surpriseMed).toBe(percentileNum(sur, 70));
+    expect(th.surpriseHigh).toBe(percentileNum(sur, 90));
+    expect(th.fearExtreme).toBe(25);
   });
 });
 

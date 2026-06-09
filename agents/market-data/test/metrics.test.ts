@@ -11,7 +11,7 @@ describe("metrics registry", () => {
     expect(METRICS.AAVE_TVL.toDomain(92_000_000)).toBe(9_200_000_000_000_000n);
   });
   it("domain bounds match the on-chain categories", () => {
-    expect(METRICS.METH_APR.domainMax).toBe(100_000n);
+    expect(METRICS.METH_APR.domainMax).toBe(2_000n);
     expect(METRICS.USDY_APY.domainMax).toBe(2_000n);
     expect(METRICS.AAVE_TVL.domainMax).toBe(100_000_000_000_000_000n);
   });

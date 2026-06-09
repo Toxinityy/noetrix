@@ -1,5 +1,5 @@
 import type { CategoryResult } from "./types.js";
-import { correlationMatrix } from "./metrics.js";
+import { buildErrByAgent, correlationMatrix } from "./metrics.js";
 
 export interface BacktestSnapshot {
   generatedAt: string;
@@ -21,16 +21,7 @@ export function buildSnapshot(results: CategoryResult[], generatedAt: string): B
   return {
     generatedAt,
     categories: results.map((r) => {
-      const errByAgent: Record<string, number[]> = {};
-      for (const a of r.agents) errByAgent[a.label] = [];
-      for (const s of r.steps) {
-        for (const ag of s.agents) {
-          if (!ag.fitted) continue;
-          const label = r.agents.find((x) => x.agentKey === ag.agentKey)?.label ?? ag.agentKey;
-          const mid = (ag.lo + ag.hi) / 2n;
-          (errByAgent[label] ||= []).push(Number(s.realized - mid));
-        }
-      }
+      const errByAgent = buildErrByAgent(r);
       return {
         metric: r.metric,
         disagreeScale: r.disagreeScale,

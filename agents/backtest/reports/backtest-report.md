@@ -7,12 +7,12 @@
 
 | agent | accuracy | calibration | resolved | mean test score |
 |---|---:|---:|---:|---:|
-| ARIMA | 998325 | -9666 | 896 | 998334 |
-| EWMA-Vol | 998325 | -9666 | 896 | 998334 |
-| Mean-Reversion | 998325 | -9666 | 896 | 998288 |
-| Momentum | 998325 | -9666 | 896 | 998288 |
-| Naive | 998325 | -9666 | 896 | 998273 |
-| Sentiment (F&G) | 998325 | -9666 | 895 | 998242 |
+| EWMA-Vol | 960234 | -127455 | 896 | 945583 |
+| ARIMA | 952387 | -246240 | 896 | 940649 |
+| Mean-Reversion | 947202 | -271186 | 896 | 928830 |
+| Momentum | 946509 | -129819 | 896 | 926747 |
+| Naive | 943134 | -266498 | 896 | 923290 |
+| Sentiment (F&G) | 939240 | -326069 | 895 | 919264 |
 
 ### Inter-agent error correlation (diversity proof)
 
@@ -25,7 +25,7 @@
 | EWMA-Vol | 0.71 | 0.92 | 0.81 | 0.69 | 1.00 | -0.09 |
 | Sentiment (F&G) | 0.12 | -0.11 | 0.08 | 0.13 | -0.09 | 1.00 |
 
-Stress distribution: Calm 0 · Elevated 213 · Stressed 683
+Stress distribution: Calm 229 · Elevated 380 · Stressed 287
 
 ## AAVE_TVL
 
@@ -52,7 +52,7 @@ Stress distribution: Calm 0 · Elevated 213 · Stressed 683
 | EWMA-Vol | 0.38 | 0.09 | 0.69 | -0.07 | 1.00 | 0.67 |
 | Sentiment (F&G) | 0.89 | 0.71 | 0.85 | 0.65 | 0.67 | 1.00 |
 
-Stress distribution: Calm 0 · Elevated 27 · Stressed 76
+Stress distribution: Calm 7 · Elevated 25 · Stressed 71
 
 ## USDY_APY
 
@@ -79,4 +79,4 @@ Stress distribution: Calm 0 · Elevated 27 · Stressed 76
 | EWMA-Vol | 0.51 | 0.69 | 0.60 | -0.54 | 1.00 | -0.59 |
 | Sentiment (F&G) | -0.28 | -0.47 | -0.36 | 0.34 | -0.59 | 1.00 |
 
-Stress distribution: Calm 0 · Elevated 0 · Stressed 124
+Stress distribution: Calm 9 · Elevated 30 · Stressed 85

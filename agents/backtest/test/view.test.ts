@@ -5,7 +5,7 @@ describe("metricView", () => {
   it("bps metric: working domain equals on-chain domain", () => {
     const v = metricView("METH_APR");
     expect(v.workingMin).toBe(0);
-    expect(v.workingMax).toBe(100_000);
+    expect(v.workingMax).toBe(2_000);
     expect(v.toDomain(350)).toBe(350n);
   });
   it("USD TVL metric: working max is the on-chain max divided by 1e8 (stays a safe Number)", () => {

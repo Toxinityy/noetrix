@@ -1,3 +1,6 @@
+import { METRICS } from "@predictor-index/market-data";
+import type { CategoryResult } from "./types.js";
+
 /// Pearson correlation; returns 0 when either series has zero variance (avoids NaN).
 export function pearson(xs: number[], ys: number[]): number {
   const n = Math.min(xs.length, ys.length);
@@ -34,4 +37,21 @@ export function correlationMatrix(seriesByKey: Record<string, number[]>): Correl
 /// Mean of a number list (0 for empty).
 export function mean(xs: number[]): number {
   return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0;
+}
+
+/// Per-agent forecast-error series (realized − midpoint), in WORKING units so TVL's 8-dec bigints
+/// don't overflow Number. Used for the diversity correlation matrix.
+export function buildErrByAgent(r: CategoryResult): Record<string, number[]> {
+  const scale = METRICS[r.metric].workingUnit === "usd" ? 100_000_000n : 1n;
+  const out: Record<string, number[]> = {};
+  for (const a of r.agents) out[a.label] = [];
+  for (const s of r.steps) {
+    for (const ag of s.agents) {
+      if (!ag.fitted) continue;
+      const label = r.agents.find((x) => x.agentKey === ag.agentKey)?.label ?? ag.agentKey;
+      const mid = (ag.lo + ag.hi) / 2n;
+      (out[label] ||= []).push(Number((s.realized - mid) / scale));
+    }
+  }
+  return out;
 }

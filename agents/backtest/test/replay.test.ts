@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { replayCategory } from "../src/replay.js";
 import { buildRoster } from "../src/roster.js";
 
+const DEFAULT_MIN = 6;
 const roster = buildRoster(null);
 // synthetic but realistic bps series (METH-like), 30 daily points
 const series = Array.from({ length: 30 }, (_, i) => 320 + Math.round(8 * Math.sin(i / 3)));
@@ -26,5 +27,3 @@ describe("replayCategory", () => {
     expect(step2.agents.map((a) => a.lo.toString())).toEqual(step.agents.map((a) => a.lo.toString()));
   });
 });
-
-const DEFAULT_MIN = 6;

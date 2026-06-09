@@ -1,4 +1,4 @@
-import { rawDisagreement, confidenceFromWidth } from "@predictor-index/forecasters";
+import { rawDisagreement } from "@predictor-index/forecasters";
 import type { MetricKey } from "@predictor-index/market-data";
 import { buildRoster } from "./roster.js";
 import { metricView } from "./view.js";
@@ -41,8 +41,6 @@ export function tuneDisagreeScale(
       if (!band.fitted) continue;
       lo.push(view.toDomain(Math.min(band.lower, band.upper)));
       hi.push(view.toDomain(Math.max(band.lower, band.upper)));
-      // confidenceFromWidth call kept for parity of the contributor set (not needed for dRaw)
-      confidenceFromWidth(band.lower, band.upper, view.workingMin, view.workingMax);
     }
     if (lo.length > 0) dRaws.push(rawDisagreement(lo, hi, view.domainMin, view.domainMax));
   }

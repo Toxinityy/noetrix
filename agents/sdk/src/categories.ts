@@ -13,7 +13,7 @@ export const METH_APR_24H: CategoryConfig = {
   id: categoryId("METH_APR_24H"),
   label: "METH_APR_24H",
   domainMin: 0n,
-  domainMax: 100_000n, // APR in bps, bucket width 1000
+  domainMax: 2_000n, // METH APR in bps (~0–20% APR), bucket width 20
   bucketCount: 100,
 };
 

@@ -56,3 +56,30 @@ export function classifyStress(
   const level = stressed ? "Stressed" : elevated ? "Elevated" : "Calm";
   return { level, reasons, surpriseBps: surprise, fearGreed: fg };
 }
+
+/// p-th percentile (nearest-rank) of a number list. Empty → 0.
+export function percentileNum(xs: number[], p: number): number {
+  if (xs.length === 0) return 0;
+  const b = xs.slice().sort((a, c) => a - c);
+  return b[Math.min(b.length - 1, Math.max(0, Math.ceil((p / 100) * b.length) - 1))];
+}
+
+/// Tune disagreement + surprise thresholds from the TRAIN distribution so the stress signal is
+/// DIFFERENTIAL ("unusually high vs this category's normal"), making Calm reachable. Fear & Greed
+/// stays absolute (extreme fear is a real stress condition regardless of history).
+export function tuneStressThresholds(
+  trainDisagreement: number[],
+  trainSurprise: number[],
+  pctMed = 70,
+  pctHigh = 90,
+): StressThresholds {
+  return {
+    dMed: percentileNum(trainDisagreement, pctMed),
+    dHigh: percentileNum(trainDisagreement, pctHigh),
+    surpriseMed: percentileNum(trainSurprise, pctMed),
+    surpriseHigh: percentileNum(trainSurprise, pctHigh),
+    fearExtreme: 25,
+    fearMed: 45,
+    greedExtreme: 75,
+  };
+}

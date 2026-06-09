@@ -17,6 +17,18 @@ describe("runOneCategory", () => {
   });
 });
 
+describe("differential stress (Calm reachable)", () => {
+  it("a calm stretch followed by a volatile stretch yields at least one Calm step", () => {
+    // 30 flat-ish points (low disagreement/surprise) then 10 wild points (regime break).
+    const calm = Array.from({ length: 30 }, (_, i) => 320 + (i % 2));
+    const wild = [600, 120, 700, 90, 800, 60, 900, 40, 1000, 30];
+    const s = [...calm, ...wild];
+    const fgFlat = s.map(() => 50); // neutral F&G so it never forces stress
+    const r = runOneCategory("METH_APR", s, fgFlat, null);
+    expect(r.steps.some((st) => st.stress.level === "Calm")).toBe(true);
+  });
+});
+
 describe("renderReport + buildSnapshot", () => {
   it("report is non-empty markdown and snapshot is JSON-serializable", () => {
     const r = runOneCategory("METH_APR", series, fg, null);
