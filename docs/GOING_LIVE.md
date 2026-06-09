@@ -4,6 +4,8 @@
 >
 > **Invariant:** never run `--broadcast` or any `cast send` until this checklist is followed in order.  
 > **Dry-run first** by omitting `--broadcast`; only add it once the simulation is clean.
+>
+> ⚠️ **A dry-run (no `--broadcast`) still writes `deployments/<network>.json` — but with anvil simulation addresses (`chainId: 31337`).** Do NOT commit that file after a dry-run; `git checkout -- contracts/deployments/mantle-sepolia.json` to discard it. Only the real `--broadcast` (chainId `5003`) produces the authoritative addresses to commit.
 
 ---
 
