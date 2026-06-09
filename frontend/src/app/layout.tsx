@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { Space_Grotesk, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers/Providers";
 
-const inter = Inter({
-  variable: "--font-inter",
+// Space Grotesk (geometric grotesk) for UI/headings + IBM Plex Mono (technical) for numbers,
+// addresses, labels, nav. Distinctive fintech-terminal pairing — not the Inter/JetBrains default.
+const sans = Space_Grotesk({
+  variable: "--font-grotesk",
   subsets: ["latin"],
   display: "swap",
 });
 
-const jbmono = JetBrains_Mono({
-  variable: "--font-jbmono",
+const mono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -34,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${jbmono.variable} h-full antialiased`}
+      className={`${sans.variable} ${mono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full">

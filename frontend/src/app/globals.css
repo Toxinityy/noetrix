@@ -3,7 +3,7 @@
 /*
   Noetrix design tokens.
   - Dark by default. Mantle teal as single accent.
-  - Inter for UI, JetBrains Mono for numbers/addresses/hashes.
+  - Space Grotesk for UI/headings, IBM Plex Mono for numbers/addresses/hashes/labels.
   - Terminal-core surfaces stay near-monochrome; cinematic landing layers additive teal glow.
 */
 
@@ -29,8 +29,8 @@
   --color-warn: #f8d97a;
 
   /* Typography */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: var(--font-jbmono), ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
+  --font-sans: var(--font-grotesk), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, "IBM Plex Mono", Menlo, monospace;
 
   /* Motion */
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
