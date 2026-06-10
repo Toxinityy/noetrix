@@ -13,16 +13,25 @@ export function StartHere() {
     <section
       id="start-here"
       aria-label="Start here"
-      className="flex min-h-screen w-full flex-1 flex-col items-center justify-center px-6 py-20"
+      className="relative flex min-h-screen w-full flex-1 flex-col items-center justify-center overflow-hidden px-6 py-20"
     >
-      <div className="mb-3 font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
+      {/* Backdrop: square grid texture + a soft teal gradient wash, edge-faded so the strip
+          reads as a focal stage without competing with the cards. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-grid mask-radial-fade" />
+        <div className="absolute inset-0 bg-grid-fine opacity-40 mask-radial-fade" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_38%,_var(--color-accent-glow)_0%,_transparent_70%)] opacity-60" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,_var(--color-bg)_0%,_transparent_22%,_transparent_78%,_var(--color-bg)_100%)]" />
+      </div>
+
+      <div className="relative z-10 mb-3 font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
         Start here, pick a path
       </div>
-      <h2 className="max-w-2xl text-balance text-center text-[clamp(1.7rem,5vw,2.6rem)] font-semibold leading-tight tracking-tight text-[var(--color-text)]">
+      <h2 className="relative z-10 max-w-2xl text-balance text-center text-[clamp(1.7rem,5vw,2.6rem)] font-semibold leading-tight tracking-tight text-[var(--color-text)]">
         What do you want to do?
       </h2>
 
-      <div className="mt-10 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="relative z-10 mt-10 grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-3">
         {PERSONA_PATHS.map((p, i) => {
           const Icon = p.icon;
           return (
