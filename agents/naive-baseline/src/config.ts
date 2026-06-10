@@ -46,7 +46,7 @@ export function loadConfig(): NaiveConfig {
     indexerUrl,
     addresses,
     categories: [
-      { label: "METH_APR_24H", syntheticCenter: 3000, syntheticDriftPpm: 800 }, // ~30% APR-bps band seed
+      { label: "METH_APR_24H", syntheticCenter: 350, syntheticDriftPpm: 800 }, // ~3.5% APR bps (domain [0,2000]; oracle resolves ≈350)
       { label: "AAVE_MANTLE_TVL_24H", syntheticCenter: 1.4e16, syntheticDriftPpm: 500 }, // ~$140M, 8-dec
       { label: "USDY_APY_24H", syntheticCenter: 500, syntheticDriftPpm: 300 }, // ~5% APY bps
     ],
