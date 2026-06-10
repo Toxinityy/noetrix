@@ -56,6 +56,64 @@ const RADAR_AXES = [
   { id: "recency", label: "Recency" },
 ];
 
+/// A REAL forecast by the live DeepSeek reasoner (agent 2): on-chain prediction #140 on Mantle
+/// Sepolia (committed 2026-06-07, seed-mode). The full provenance payload — system prompt,
+/// few-shots, raw model response, parsed forecast — is pinned to IPFS at the contentURI below;
+/// its keccak hash is the prediction's on-chain contentHash. The reasoning/summary strings here
+/// are quoted verbatim from that payload, so the IPFS link lets anyone verify them.
+const REAL_TRACE_PREDICTION: Prediction = {
+  id: 140,
+  agentId: 2,
+  categoryId: "METH_APR_24H",
+  status: "Resolved",
+  value: { low: 2500, high: 4000 },
+  confidence: 5000,
+  contentURI: "ipfs://QmREFScRDmHTm82P391LrmSds1BSutPVHDRCHKgJhm3Wvy",
+  stake: 0.05,
+  commitBlock: 39_649_491,
+  resolutionBlock: 39_649_841,
+  reasoning: {
+    steps: [
+      {
+        kind: "frame",
+        text: "Forecast the 24h annualized mETH staking APR (bps, domain 0–100,000) on a cold start: no resolved history for this agent in context, no news items returned, composite feed empty.",
+      },
+      {
+        kind: "infer",
+        text: "No historical data or news available; initial forecast must cover a wide plausible range for mETH APR based on typical staking yields (often 2-4% in calm periods) while acknowledging high uncertainty without any prior information.",
+      },
+      {
+        kind: "forecast",
+        text: "Band 2,500–4,000 bps at 50% stated confidence — wide band, low confidence, consistent with zero prior information.",
+      },
+    ],
+    citations: [
+      {
+        label: "full provenance payload · IPFS (pinned)",
+        href: "ipfs://QmREFScRDmHTm82P391LrmSds1BSutPVHDRCHKgJhm3Wvy",
+      },
+    ],
+    rawJSON: JSON.stringify(
+      {
+        predicted_value: { lower: 2500, upper: 4000 },
+        confidence: 5000,
+        reasoning:
+          "No historical data or news available; initial forecast must cover a wide plausible range for mETH APR based on typical staking yields (often 2-4% in calm periods) while acknowledging high uncertainty without any prior information.",
+        summary:
+          "I expect mETH staking yield to be between 2.5% and 4%, but I'm not very sure because there's no recent data to go on.",
+        confidence_rationale:
+          "I made the range wide and confidence low because there is no data to inform a more precise estimate.",
+      },
+      null,
+      2,
+    ),
+    summary:
+      "I expect mETH staking yield to be between 2.5% and 4%, but I'm not very sure because there's no recent data to go on.",
+    confidenceRationale:
+      "I made the range wide and confidence low because there is no data to inform a more precise estimate.",
+  },
+};
+
 export function AgentDetailClient({ agentId }: { agentId: number }) {
   const agent = getAgentById(agentId)!;
   const reducedMotion = useReducedMotion();
@@ -70,12 +128,15 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
   ).sort((a, b) => b.commitBlock - a.commitBlock);
 
   // Most recent prediction that carries a reasoning trace: surfaced as the page's visual peak.
-  // Gate is semantic (does a trace exist?), not tied to the stale "CLAUDE" enum name.
+  // Agent 2 (the live DeepSeek reasoner) features its REAL pinned trace — verifiable end to end —
+  // instead of a mock; everyone else falls back to the demo-shaped trace.
   const featuredReasoning =
-    predictions.find((p) => p.reasoning) ??
-    PREDICTIONS.filter((p) => p.agentId === agent.id && p.reasoning).sort(
-      (a, b) => b.commitBlock - a.commitBlock,
-    )[0];
+    agent.id === REAL_TRACE_PREDICTION.agentId
+      ? REAL_TRACE_PREDICTION
+      : (predictions.find((p) => p.reasoning) ??
+        PREDICTIONS.filter((p) => p.agentId === agent.id && p.reasoning).sort(
+          (a, b) => b.commitBlock - a.commitBlock,
+        )[0]);
   const hasReasoning = !!featuredReasoning?.reasoning;
 
   const equity = agent.equityCurve;
@@ -128,8 +189,9 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
           Illustrative profile
         </span>
         <span className="text-[var(--color-text-dim)]">
-          Reputation history, equity curve, and the reasoning trace below are demo-shaped pending the
-          hosted indexer. Live verified scores:
+          {agent.id === REAL_TRACE_PREDICTION.agentId
+            ? "Reputation history and equity curve are demo-shaped pending the hosted indexer — but the featured reasoning trace below is a REAL pinned forecast (on-chain prediction #140). Live verified scores:"
+            : "Reputation history, equity curve, and the reasoning trace below are demo-shaped pending the hosted indexer. Live verified scores:"}
         </span>
         <Link href="/terminal/leaderboard" className="text-[var(--color-accent)] hover:underline">
           leaderboard
@@ -730,6 +792,11 @@ function FeaturedReasoning({ prediction }: { prediction: Prediction }) {
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
+            {prediction === REAL_TRACE_PREDICTION ? (
+              <StatusPill tone="up" dot>
+                real · on-chain #{prediction.id} · pinned
+              </StatusPill>
+            ) : null}
             <StatusPill tone="muted">{cat.label}</StatusPill>
             <StatusPill tone="accent">conf {fmtBps(prediction.confidence, 1)}</StatusPill>
             {prediction.score !== undefined ? (
