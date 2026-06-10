@@ -17,7 +17,9 @@ cd "$(dirname "$0")" # -> contracts/
 NET="${DEPLOY_NETWORK:-mantle-sepolia}"
 CHAIN="${CHAIN_ID:-5003}"
 JSON="deployments/${NET}.json"
-VERIFIER_URL="https://api.etherscan.io/v2/api"
+# Etherscan V2 is multichain — chainid MUST be a query param on the URL (forge does not
+# append it to a custom --verifier-url; without it every request fails "Missing chainid").
+VERIFIER_URL="https://api.etherscan.io/v2/api?chainid=${CHAIN}"
 
 [ -f "$JSON" ] || { echo "missing $JSON — deploy first"; exit 1; }
 addr() { jq -er ".$1" "$JSON"; }
