@@ -30,6 +30,9 @@ agents/**/*.log.jsonl
 agents/**/logs/
 logs/
 
+# submission drafts (local only)
+docs/BUIDL.md
+
 # editor/os
 .DS_Store
 Thumbs.db
