@@ -60,7 +60,7 @@ pnpm install          # installs all workspace packages
 ```bash
 cd contracts
 forge build
-forge test                                   # 169 tests
+forge test                                   # 191 tests
 # deploy (needs a funded key):
 forge script script/Deploy.s.sol:Deploy --rpc-url $MANTLE_SEPOLIA_RPC \
   --private-key $PRIVATE_KEY --broadcast --verify

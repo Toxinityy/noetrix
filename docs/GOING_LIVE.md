@@ -213,6 +213,20 @@ pnpm run build && pnpm run start
 # Currently no package exists — run as a cast one-liner in a cron job:
 ```
 
+**One-time keeper authorization (owner)** — `setFearGreed` is `onlyKeeper` (owner OR an
+authorized keeper), and `Deploy.s.sol` never calls `setKeeper`. So before the cron below can
+use a separate `$KEEPER_KEY`, the OWNER must authorize that keeper wallet once (otherwise
+every `setFearGreed` from it reverts `NotKeeper`):
+
+```bash
+# Run once with the deployer/owner key ($PRIVATE_KEY); $KEEPER_ADDR = the keeper wallet's address
+cast send $SENTIMENT_ORACLE_ADDR "setKeeper(address,bool)" $KEEPER_ADDR true \
+  --rpc-url $MANTLE_SEPOLIA_RPC \
+  --private-key $PRIVATE_KEY
+```
+
+(Alternative: skip the separate keeper wallet and run the cron with the owner key itself.)
+
 **Keeper cron** (add to crontab for daily runs):
 
 ```bash
@@ -252,6 +266,33 @@ USDY_CATEGORY_ID=$(cast keccak "USDY_APY_24H")
 
 ---
 
+## Step 5.5 — Run the indexer (Ponder)
+
+The agents use the indexer (`INDEXER_URL=http://localhost:42069`) for forecast history +
+the SEED-mode flip count, and the leaderboard's live tier reads it. Three gotchas, all
+previously learned the hard way (see also `docs/DEPLOY.md`):
+
+1. **Ponder loads `indexer/.env.local`, NOT `.env`.** Copy your config there or nothing loads
+   (and the backfill starts from block 0 — ~40M blocks).
+2. **`PONDER_START_BLOCK` must be the NEW AgentRegistry deploy block** after a redeploy
+   (find it in `contracts/broadcast/Deploy.s.sol/5003/run-latest.json` or on Mantlescan).
+3. **`ponder start` needs a fresh `--schema` name on every restart** (bump `liveN`); clear
+   `indexer/.ponder/` if PGlite crashes (exit 75).
+
+```bash
+cd indexer
+cp .env .env.local            # then edit: keyed RPC URL, new PONDER_START_BLOCK, DEPLOY_NETWORK
+node node_modules/ponder/dist/esm/bin/ponder.js start --schema live1
+# health check:
+curl http://localhost:42069/leaderboard?category=METH_APR_24H
+```
+
+For a hosted (always-on) deployment, point `DATABASE_URL` at a Postgres instance (Railway)
+instead of local PGlite, and set the frontend's `NEXT_PUBLIC_INDEXER_URL` to the hosted URL
+(or leave it BLANK on Vercel — `localhost:42069` is dead in visitors' browsers).
+
+---
+
 ## Step 6 — Refresh snapshots + redeploy frontend
 
 Once ≥ a few resolved predictions per category have accumulated (check with `cast call $AGENT_REGISTRY "getReputation(uint256,bytes32)(uint256,int256,uint256)" 1 $METH_CATEGORY_ID`):
@@ -260,8 +301,10 @@ Once ≥ a few resolved predictions per category have accumulated (check with `c
 # Refresh backtest snapshot (re-runs the offline backtest against real data)
 pnpm --filter @predictor-index/backtest run:backtest
 
-# Regenerate live on-chain insights snapshot
+# Regenerate live on-chain insights snapshot + the leaderboard fallback
+# (BOTH must run BEFORE build — /api/leaderboard statically imports fallback-leaderboard.json)
 pnpm --filter frontend gen:insights
+pnpm --filter frontend gen:fallback
 
 # Rebuild + redeploy
 pnpm --filter frontend build
