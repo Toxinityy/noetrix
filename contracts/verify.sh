@@ -71,4 +71,9 @@ verify "$(addr DemoFeedConsumer)"    src/examples/DemoFeedConsumer.sol:DemoFeedC
 verify "$(addr YieldAllocator)"      src/examples/YieldAllocator.sol:YieldAllocator            "$(enc 'constructor(address,bytes32,bytes32)' "$COMPOSITE_FEED" "$METH" "$USDY")"
 verify "$(addr RiskManager)"         src/examples/RiskManager.sol:RiskManager                  "$(enc 'constructor(address,address)' "$COMPOSITE_FEED" "$DEPLOYER")"
 
+# Swarm stress contracts (constructor args per Deploy.s.sol lines 147-149)
+SENTIMENT_ORACLE=$(addr SentimentOracle)
+verify "$SENTIMENT_ORACLE"           src/mocks/SentimentOracle.sol:SentimentOracle              "$(enc 'constructor(address)' "$DEPLOYER")"
+verify "$(addr MarketStressMonitor)" src/examples/MarketStressMonitor.sol:MarketStressMonitor   "$(enc 'constructor(address,address,address,address)' "$COMPOSITE_FEED" "$(addr ResolutionEngine)" "$SENTIMENT_ORACLE" "$DEPLOYER")"
+
 echo "Done. Spot-check: https://sepolia.mantlescan.xyz/address/${COMPOSITE_FEED}#code"
