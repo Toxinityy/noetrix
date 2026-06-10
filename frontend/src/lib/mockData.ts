@@ -83,10 +83,17 @@ export const KIND_GLYPH: Record<AgentKind, string> = {
 /// exposes agentId + an IPFS metadataURI; resolving the human name requires an IPFS round-trip we
 /// skip for demo reliability. These two are the live reference agents (CLAUDE.md: arima=1,
 /// reasoner=2). Unknown ids fall back to "agent #N" → inferKind → QUANT.
+// Ids assume the canonical registration order in docs/SERVER_DEPLOY.md (arima → deepseek →
+// naive → mean-reversion → momentum → ewma-vol → sentiment). If a registration lands out of
+// order, fix the ids here to match `cast call $AGENT_REGISTRY "tokenURI(uint256)"` per id.
 export const KNOWN_AGENTS: Record<number, string> = {
   1: "ARIMA Baseline",
   2: "DeepSeek Reasoner",
   3: "Naive Baseline", // control benchmark; inferKind → QUANT glyph (no llm/arima keyword)
+  4: "Mean-Reversion",
+  5: "Momentum",
+  6: "EWMA-Volatility",
+  7: "Sentiment (Fear & Greed)",
 };
 
 /// Display name for an on-chain agent id (real name when known, else generic).

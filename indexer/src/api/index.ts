@@ -1,10 +1,15 @@
 import { db } from "ponder:api";
 import schema from "ponder:schema";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { client, graphql, and, desc, eq } from "ponder";
 import { keccak256, toBytes } from "viem";
 
 const app = new Hono();
+
+// Public read-only API: allow cross-origin reads (the Vercel-hosted frontend fetches this
+// from visitors' browsers, which is a different origin than the tunneled indexer host).
+app.use("*", cors());
 
 // Built-in GraphQL + SQL-over-HTTP (handy for debugging / the frontend).
 app.use("/sql/*", client({ db, schema }));
