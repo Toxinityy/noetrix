@@ -1,0 +1,18 @@
+# Cloudflare Tunnel config — exposes ONLY the indexer REST API (the bots are outbound-only
+# and need no exposure). Copy to ~/.cloudflared/config.yml on the server and fill in:
+#
+#   cloudflared tunnel login                       # one-time browser auth
+#   cloudflared tunnel create noetrix-indexer      # prints the <TUNNEL_ID>
+#   cloudflared tunnel route dns noetrix-indexer indexer.<yourdomain>
+#   cloudflared service install                    # installs + starts the systemd service
+#
+# Then set NEXT_PUBLIC_INDEXER_URL=https://indexer.<yourdomain> in Vercel (rebuild required —
+# NEXT_PUBLIC_* values are baked into the bundle at build time).
+
+tunnel: <TUNNEL_ID>
+credentials-file: /root/.cloudflared/<TUNNEL_ID>.json
+
+ingress:
+  - hostname: indexer.<yourdomain>
+    service: http://localhost:42069
+  - service: http_status:404

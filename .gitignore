@@ -41,3 +41,4 @@ Thumbs.db
 *.log
 .gstack/
 .worktrees/
+deploy/keeper.env
