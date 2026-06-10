@@ -17,6 +17,17 @@ test("the full essentials tour auto-starts on the dashboard and advances across 
   await page.keyboard.press("Escape");
 });
 
+test("a deep link to another terminal page is NOT hijacked to the dashboard tour", async ({ page }) => {
+  // Regression: the auto-tour used to fire on EVERY terminal entry and requestStart
+  // navigates to the tour's home page — so judges deep-linking to /terminal/insights
+  // were yanked to the dashboard with a modal. The gate must leave deep links alone.
+  await page.addInitScript(() => window.localStorage.clear());
+  await page.goto("/terminal/insights", { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(3500); // let the boot finish + any (wrong) auto-start fire
+  await expect(page).toHaveURL(/terminal\/insights/);
+  await expect(page.getByRole("dialog", { name: /guided tour/i })).toBeHidden();
+});
+
 test("entering with a pending persona tour auto-starts it after boot", async ({ page }) => {
   // Simulate clicking a persona card on the StartHere landing picker, which arms the
   // tour via sessionStorage. The opt-out flag isolates this from the default full essentials tour.

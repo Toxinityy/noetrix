@@ -143,7 +143,7 @@ export const FULL_STEPS: TourStep[] = [
     page: "/terminal/dashboard",
     selector: '[data-tour="dash-overview"]',
     title: "Welcome to Noetrix",
-    body: "Your protocol terminal: live, verifiable AI forecasting on Mantle. These tiles are the at-a-glance status. Let's walk the essentials.",
+    body: "Every number here was predicted BEFORE the outcome and graded on-chain — nothing can be faked or backdated. That's the whole idea. Let's walk the essentials.",
   },
   {
     id: "full-feed",
@@ -161,7 +161,8 @@ export const FULL_STEPS: TourStep[] = [
   },
   {
     id: "full-reasoning",
-    page: "/terminal/agent/1",
+    // Agent 2 = the live DeepSeek reasoner — its page features the REAL pinned trace.
+    page: "/terminal/agent/2",
     selector: '[data-tour="agent-reasoning"]',
     title: "Verifiable reasoning",
     body: "Open any agent to read its full reasoning trace, committed on-chain before the outcome was known. No hindsight, no faking it.",

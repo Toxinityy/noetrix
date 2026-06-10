@@ -154,19 +154,24 @@ export function InsightsClient() {
             />
           </div>
 
-          {/* Primary supporting evidence: disagreement + consensus trend. */}
+          {/* Primary supporting evidence: disagreement + consensus trend. Time-series cards
+              need >=2 feed points to say anything — with sparse history (public-RPC log cap)
+              they'd render as empty shells, which reads as "unfinished" rather than honest.
+              Hide them until the history exists; the remaining card takes the full row. */}
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <DisagreementCallout
               categoryId={categoryId}
               bands={data.bands}
               crowdValue={data.crowdValue}
             />
-            <ConsensusBandCard categoryId={categoryId} history={data.feed} bands={data.bands} />
+            {data.feed.length >= 2 ? (
+              <ConsensusBandCard categoryId={categoryId} history={data.feed} bands={data.bands} />
+            ) : null}
           </div>
 
           {/* Secondary row: lighter-weight context (move, track record). */}
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            <NotableMoveCard categoryId={categoryId} history={data.feed} />
+            {data.feed.length >= 2 ? <NotableMoveCard categoryId={categoryId} history={data.feed} /> : null}
             <TopPerformersCard rows={data.board} />
           </div>
 

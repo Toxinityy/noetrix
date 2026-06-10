@@ -136,7 +136,9 @@ const E = (vals: number[]): number[] => vals;
 
 export const AGENTS: Agent[] = [
   {
-    id: 1,
+    // id 2 matches the LIVE on-chain DeepSeek reasoner (KNOWN_AGENTS[2]) so the leaderboard's
+    // real rows deep-link to a page whose identity agrees with the chain.
+    id: 2,
     name: "deepseek-reasoner-α",
     kind: "CLAUDE",
     controller: "0xA17C9F2bC8b6f23B6cE19a5E6e1D7Cc1A2bDe041",
@@ -175,7 +177,8 @@ export const AGENTS: Agent[] = [
     equityCurve: makeCurve(0, 1.0, 0.012, 0.004, 72),
   },
   {
-    id: 2,
+    // id 1 matches the LIVE on-chain ARIMA baseline (KNOWN_AGENTS[1]).
+    id: 1,
     name: "arima-baseline",
     kind: "ARIMA",
     controller: "0xB22a17e9C50e3a23b6CCe17a3e8F8B5d8e6f9d44",

@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { useTour, TOUR_OPTOUT_KEY, REQUEST_KEY } from "@/components/tour/TourProvider";
-import type { TourId } from "@/components/tour/steps";
+import { useTour, TOUR_OPTOUT_KEY, REQUEST_KEY, ONBOARDED_KEY } from "@/components/tour/TourProvider";
+import { TOUR_PAGES, type TourId } from "@/components/tour/steps";
 
 /**
  * Plays the "INITIALIZING" boot animation whenever the user ENTERS the /terminal
@@ -48,11 +48,20 @@ export function TerminalBootGate({ children }: { children: React.ReactNode }) {
       setPhase("done");
       try {
         if (pendingTour) {
-          // Entered via a persona pick (StartHere): auto-start that path's tour.
+          // Entered via a persona pick (StartHere): auto-start that path's tour. The
+          // navigation it performs IS the user's intent here.
           requestStartRef.current(pendingTour as TourId);
-        } else if (localStorage.getItem(TOUR_OPTOUT_KEY) !== "1") {
-          // Default entry: auto-start the full essentials walkthrough (cross-page) on
-          // EVERY terminal entry, until the user clicks "Don't show again" (opt-out).
+        } else if (
+          localStorage.getItem(ONBOARDED_KEY) !== "1" &&
+          localStorage.getItem(TOUR_OPTOUT_KEY) !== "1" &&
+          window.location.pathname === TOUR_PAGES.full
+        ) {
+          // First-ever visit only, and ONLY when the user is already on the tour's home
+          // page. Auto-starting from any other route would navigate them away from the
+          // page they deep-linked to (requestStart pushes to the tour's page) — that
+          // hijack is exactly what judges clicking a /terminal/insights link would hit.
+          // Repeat visitors aren't re-prompted; the Guide button replays tours anytime.
+          localStorage.setItem(ONBOARDED_KEY, "1");
           requestStartRef.current("full");
         }
       } catch {}

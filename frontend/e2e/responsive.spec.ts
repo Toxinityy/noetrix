@@ -38,20 +38,17 @@ test("landing shows the Start-here strip and has no horizontal overflow at 375px
   expect(overflow).toBeLessThanOrEqual(2);
 });
 
-test("guided tour auto-starts on every entry until 'Don't show again'", async ({ page }) => {
-  // Fresh context (no opt-out): the full essentials tour auto-starts after boot.
+test("guided tour auto-starts on the FIRST dashboard entry only", async ({ page }) => {
+  // Fresh context: the full essentials tour auto-starts after boot — once.
+  // (Re-prompting on every entry modal-blocked returning users and, worse, the
+  // auto-start navigates to the dashboard, hijacking deep links. First visit only;
+  // the Guide button replays tours on demand.)
   await page.goto("/terminal/dashboard");
   const tour = page.getByRole("dialog", { name: /guided tour/i });
   await expect(tour).toBeVisible({ timeout: 10000 });
-  await page.keyboard.press("Escape"); // skip closes it for now, but does NOT opt out
+  await page.keyboard.press("Escape");
   await expect(tour).toBeHidden();
-  // Reload: it auto-starts AGAIN — the tour shows on every entry, not just the first.
-  await page.reload({ waitUntil: "domcontentloaded" });
-  await expect(tour).toBeVisible({ timeout: 10000 });
-  // Opt out permanently via the "Don't show again" button.
-  await page.getByRole("button", { name: /don't show again/i }).click();
-  await expect(tour).toBeHidden();
-  // Reload: now suppressed for good (opt-out flag persists in this context).
+  // Reload: already onboarded — the tour must NOT re-open.
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForTimeout(2500); // let the boot animation finish on reload
   await expect(page.getByRole("dialog", { name: /guided tour/i })).toBeHidden();

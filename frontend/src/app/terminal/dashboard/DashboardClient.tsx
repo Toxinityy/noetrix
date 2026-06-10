@@ -7,9 +7,9 @@ import { CategoryTabs } from "@/components/ui/CategoryTabs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
 import { StatusPill } from "@/components/ui/StatusPill";
-import { CATEGORIES, KIND_GLYPH, type CategoryId } from "@/lib/mockData";
+import { CATEGORIES, KIND_GLYPH, agentDisplayName, type CategoryId } from "@/lib/mockData";
 import { env, hasIndexer, hasSubscriptionGate } from "@/lib/env";
-import { fmtBlock, fmtBps, fmtScore, fmtUSD } from "@/lib/format";
+import { fmtBlock, fmtBps, fmtScore, fmtUSDCompact } from "@/lib/format";
 import { useInsightsData, useLeaderboard, type DataSource, type InsightsData } from "@/lib/hooks";
 import { FRIENDLY_CATEGORY, friendlyValue } from "@/lib/labels";
 import type { LeaderRow } from "@/lib/indexer";
@@ -108,7 +108,8 @@ export function dashboardSystemStatus(
 
 function formatCategoryValue(categoryId: CategoryId, value: number | null): string {
   if (value == null) return "no value";
-  return CATEGORIES[categoryId].unit === "usd" ? fmtUSD(value) : fmtBps(value);
+  // Compact USD ($140.0M) — full precision is unscannable at dashboard glance distance.
+  return CATEGORIES[categoryId].unit === "usd" ? fmtUSDCompact(value) : fmtBps(value);
 }
 
 function sourceLabel(source: DataSource): string {
@@ -149,7 +150,7 @@ export function DashboardClient() {
   const tabs = ACTIVE_CATEGORY_IDS.map((id) => ({
     id,
     label: FRIENDLY_CATEGORY[id],
-    caption: CATEGORIES[id].id,
+    caption: CATEGORIES[id].unit === "usd" ? "in US$" : "annual yield %",
   }));
 
   return (
@@ -168,24 +169,49 @@ export function DashboardClient() {
             Factual status from the configured indexer, committed chain snapshots, and public runtime configuration.
           </p>
         </div>
+        {/* Lead with what the data IS, not which internal service is down — ops detail lives in
+            the Runtime status panel below. */}
         <div className="flex flex-wrap items-center gap-2">
-          <StatusPill tone={hasIndexer ? "up" : "warn"} dot pulse={hasIndexer}>
-            {system.indexer}
+          <StatusPill tone={metrics.source === "live" ? "up" : "accent"} dot pulse={metrics.source === "live"}>
+            {sourceLabel(metrics.source)}
           </StatusPill>
-          <StatusPill tone={hasSubscriptionGate ? "accent" : "muted"}>{system.subscriptionGate}</StatusPill>
+          <StatusPill tone="muted">Mantle Sepolia</StatusPill>
         </div>
       </div>
 
+      {/* Hero metrics double as navigation — each card opens the surface that explains it. The 4th
+          card shows the flagship consensus value (the product), not a raw block height. */}
       <div data-tour="dash-overview" className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard icon={<Activity size={16} />} label="Resolved forecasts" value={metrics.resolvedForecasts.toString()} detail={sourceLabel(metrics.source)} />
-        <MetricCard icon={<Users size={16} />} label="Qualified / listed agents" value={`${metrics.qualifiedAgents} / ${metrics.listedAgents}`} detail={`qualified threshold ${QUALIFIED_RESOLVED} resolved`} />
-        <MetricCard icon={<Layers size={16} />} label="Active categories" value={metrics.activeCategories.toString()} detail={ACTIVE_CATEGORY_IDS.join(" · ")} />
-        <MetricCard icon={<Database size={16} />} label="Block / source" value={metrics.block == null ? "unavailable" : `#${fmtBlock(metrics.block)}`} detail={sourceLabel(metrics.source)} />
+        <MetricCard href="/terminal/leaderboard" icon={<Activity size={16} />} label="Resolved forecasts" value={metrics.resolvedForecasts.toString()} detail="graded on-chain · view leaderboard" />
+        <MetricCard href="/terminal/leaderboard" icon={<Users size={16} />} label="Qualified / listed agents" value={`${metrics.qualifiedAgents} / ${metrics.listedAgents}`} detail={`qualified at ${QUALIFIED_RESOLVED}+ resolved`} />
+        <MetricCard href="/terminal/insights" icon={<Layers size={16} />} label="Active categories" value={metrics.activeCategories.toString()} detail="mETH · USDY · Aave TVL" />
+        <MetricCard href="/terminal/feed/meth-apr-24h" icon={<Radio size={16} />} label="mETH consensus" value={formatCategoryValue("METH_APR_24H", statuses[0].value)} detail="composite feed · seeded testnet oracle" />
       </div>
+
+      {/* The interactive proof — judges/users can write to the live feed themselves. Promoted
+          here because it's the strongest "this is real" moment and was buried in the nav. */}
+      <Link
+        href="/terminal/try"
+        className="group mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[var(--color-accent-soft)] bg-[color:color-mix(in_srgb,var(--color-accent)_6%,var(--color-bg-elev-1))] px-5 py-3.5 transition-colors hover:border-[var(--color-accent)]"
+      >
+        <div className="flex items-center gap-3">
+          <Radio size={16} className="text-[var(--color-accent)]" aria-hidden />
+          <span className="text-sm text-[var(--color-text)]">
+            Don&apos;t trust the numbers? Write to the live feed yourself — one transaction, fully permissionless.
+          </span>
+        </div>
+        <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-accent)] transition-transform group-hover:translate-x-0.5">
+          try it live →
+        </span>
+      </Link>
 
       <div className="mt-8 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <Panel elevation={2}>
-          <PanelHeader caption="Category feed status" title="Active categories" />
+          <PanelHeader
+            caption="Category feed status"
+            title="Active categories"
+            right={<StatusPill tone="accent">{sourceLabel(metrics.source)}</StatusPill>}
+          />
           <PanelBody className="grid gap-3 lg:grid-cols-3">
             {statuses.map((status) => (
               <div key={status.categoryId} className="rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-4">
@@ -196,7 +222,9 @@ export function DashboardClient() {
                     </div>
                     <div className="mt-1 text-sm font-medium text-[var(--color-text)]">{status.label}</div>
                   </div>
-                  <StatusPill tone={status.isSnapshotAvailable ? "accent" : "warn"}>{sourceLabel(status.source)}</StatusPill>
+                  {/* Per-card pill only when this category deviates (no snapshot) — the shared
+                      source already sits in the panel header. */}
+                  {!status.isSnapshotAvailable ? <StatusPill tone="warn">no snapshot</StatusPill> : null}
                 </div>
                 <div className="mt-5 font-mono text-2xl text-[var(--color-text)] tabular">
                   {formatCategoryValue(status.categoryId, status.value)}
@@ -214,16 +242,29 @@ export function DashboardClient() {
         <Panel elevation={2}>
           <PanelHeader caption="Network / system" title="Runtime status" />
           <PanelBody className="space-y-3">
-            <SystemRow icon={<Radio size={15} />} label="Network" value={system.network} />
+            <SystemRow icon={<Radio size={15} />} label="Network" value={`${system.network} · chain ${env.chainId}`} />
             <SystemRow icon={<Database size={15} />} label="Indexer" value={system.indexer} />
-            <SystemRow icon={<Activity size={15} />} label="Snapshot" value={system.snapshot} />
+            <SystemRow
+              icon={<Activity size={15} />}
+              label="Snapshot"
+              value={
+                selectedInsights.generatedAt && selectedInsights.block != null
+                  ? `${new Date(selectedInsights.generatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })} · block #${fmtBlock(selectedInsights.block)}`
+                  : "unavailable"
+              }
+            />
             <SystemRow icon={<ShieldCheck size={15} />} label="Subscription gate" value={system.subscriptionGate} />
-            <SystemRow icon={<Layers size={15} />} label="RPC" value={`chain ${env.chainId} · ${env.rpcUrl}`} />
           </PanelBody>
         </Panel>
       </div>
 
-      <div className="mt-8">
+      {/* The tabs scope ONLY the two panels below — labeled so users don't expect the overview
+          above to react. */}
+      <div className="mt-10">
+        <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
+          <span>category detail</span>
+          <span className="text-[var(--color-accent)]">↓</span>
+        </div>
         <CategoryTabs tabs={tabs} value={categoryId} onValueChange={(v) => setCategoryId(v as CategoryId)} />
       </div>
 
@@ -246,11 +287,24 @@ export function DashboardClient() {
                         resolved {agent.resolvedCount} · last block #{fmtBlock(agent.lastUpdatedBlock)}
                       </div>
                     </div>
-                    <div className="text-right font-mono text-sm text-[var(--color-text-dim)]">{fmtScore(agent.accuracyScore)}</div>
+                    <div className="text-right">
+                      <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-text-muted)]">accuracy</div>
+                      <div
+                        className={`mt-0.5 font-mono text-sm tabular ${agent.accuracyScore >= 0 ? "text-[var(--color-up)]" : "text-[var(--color-down)]"}`}
+                      >
+                        {fmtScore(agent.accuracyScore)}
+                      </div>
+                    </div>
                   </Link>
                 ))}
               </div>
             )}
+            <Link
+              href="/terminal/leaderboard"
+              className="mt-4 inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-accent)] hover:underline"
+            >
+              full leaderboard →
+            </Link>
           </PanelBody>
         </Panel>
 
@@ -262,17 +316,27 @@ export function DashboardClient() {
             ) : resolved.length === 0 ? (
               <EmptyState title="No resolved predictions yet" body="No resolved prediction rows are available in the current snapshot for this category." />
             ) : (
-              <div className="overflow-x-auto">
-                <div className="min-w-[720px] divide-y divide-[var(--color-border)]">
-                  {resolved.map((prediction) => (
-                    <div key={prediction.id} className="grid grid-cols-[80px_1fr_1fr_1fr_1fr] items-center gap-4 py-3 first:pt-0 last:pb-0">
-                      <Cell label="prediction" value={`#${prediction.id}`} />
-                      <Cell label="agent" value={`agent #${prediction.agentId}`} />
-                      <Cell label="band" value={`${formatCategoryValue(categoryId, prediction.low)} – ${formatCategoryValue(categoryId, prediction.high)}`} />
-                      <Cell label="outcome" value={prediction.outcome == null ? "n/a" : friendlyValue(categoryId, prediction.outcome)} />
-                      <Cell label="score / block" value={`${prediction.score == null ? "n/a" : fmtScore(prediction.score)} · #${fmtBlock(prediction.resolutionBlock)}`} align="right" />
-                    </div>
-                  ))}
+              <div>
+                <div className="mb-2 font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-text-muted)] md:hidden">
+                  scroll →
+                </div>
+                <div className="overflow-x-auto">
+                  <div className="min-w-[720px] divide-y divide-[var(--color-border)]">
+                    {resolved.map((prediction) => (
+                      <div key={prediction.id} className="grid grid-cols-[80px_1fr_1fr_1fr_1fr] items-center gap-4 py-3 first:pt-0 last:pb-0">
+                        <Cell label="prediction" value={`#${prediction.id}`} />
+                        <Cell label="agent" value={agentDisplayName(prediction.agentId)} />
+                        <Cell label="band" value={`${formatCategoryValue(categoryId, prediction.low)} – ${formatCategoryValue(categoryId, prediction.high)}`} />
+                        <Cell label="outcome" value={prediction.outcome == null ? "n/a" : friendlyValue(categoryId, prediction.outcome)} />
+                        <Cell
+                          label="score / block"
+                          value={`${prediction.score == null ? "n/a" : fmtScore(prediction.score)} · #${fmtBlock(prediction.resolutionBlock)}`}
+                          align="right"
+                          tone={prediction.score == null ? undefined : prediction.score >= 0 ? "up" : "down"}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -283,9 +347,21 @@ export function DashboardClient() {
   );
 }
 
-function MetricCard({ icon, label, value, detail }: { icon: React.ReactNode; label: string; value: string; detail: string }) {
-  return (
-    <Panel elevation={1}>
+function MetricCard({
+  icon,
+  label,
+  value,
+  detail,
+  href,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  detail: string;
+  href?: string;
+}) {
+  const card = (
+    <Panel elevation={1} className={href ? "transition-colors group-hover:border-[var(--color-accent-soft)]" : undefined}>
       <PanelBody className="p-4">
         <div className="flex items-center gap-2 text-[var(--color-text-muted)]">
           {icon}
@@ -295,6 +371,12 @@ function MetricCard({ icon, label, value, detail }: { icon: React.ReactNode; lab
         <div className="mt-1 truncate text-xs text-[var(--color-text-dim)]">{detail}</div>
       </PanelBody>
     </Panel>
+  );
+  if (!href) return card;
+  return (
+    <Link href={href} className="group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]">
+      {card}
+    </Link>
   );
 }
 
@@ -317,11 +399,23 @@ function SystemRow({ icon, label, value }: { icon: React.ReactNode; label: strin
   );
 }
 
-function Cell({ label, value, align = "left" }: { label: string; value: string; align?: "left" | "right" }) {
+function Cell({
+  label,
+  value,
+  align = "left",
+  tone,
+}: {
+  label: string;
+  value: string;
+  align?: "left" | "right";
+  tone?: "up" | "down";
+}) {
+  const toneClass =
+    tone === "up" ? "text-[var(--color-up)]" : tone === "down" ? "text-[var(--color-down)]" : "text-[var(--color-text-dim)]";
   return (
     <div className={align === "right" ? "text-right" : undefined}>
       <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-[var(--color-text-muted)]">{label}</div>
-      <div className="mt-1 font-mono text-xs text-[var(--color-text-dim)] tabular">{value}</div>
+      <div className={`mt-1 font-mono text-xs tabular ${toneClass}`}>{value}</div>
     </div>
   );
 }
