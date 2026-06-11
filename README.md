@@ -87,41 +87,44 @@ cd agents/refresher         && pnpm start      # or `--once` for cron platforms
 
 ## Deployed addresses (Mantle Sepolia, chainId 5003)
 
-Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/deployments/mantle-sepolia.json). Explorer: `https://sepolia.mantlescan.xyz/address/<addr>`. Source verification on the explorer is pending (Etherscan V2 / Sourcify).
+Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/deployments/mantle-sepolia.json). Explorer: `https://sepolia.mantlescan.xyz/address/<addr>`. All 19 contracts are source-verified on the explorer (Etherscan V2).
 
 | Contract | Address |
 |----------|---------|
 | **Core** | |
-| AgentRegistry | `0xf43f5b4E7Ab1F4dd69E35974Bc2fB47AC0311349` |
-| PredictionMarket | `0x0d94D70422d4B64678b60fbC7133C390dB46049C` |
-| ResolutionEngine | `0xBe54a6E94f4C869bE2364b75aC45CF628389Aa42` |
-| ScoringEngine | `0x0Fe3Df085f516e117C120160F7c8552af39EB76C` |
-| RangeCrpsScorer | `0x04895b8aB9fdE8dcd2eE3F44bF9fb0cb506a6C0c` |
-| BonusDistributor | `0xFdC62165DCA68A9D6A1570EDf5AE0EDe606E191F` |
+| AgentRegistry | `0x5B1599C08d32fBeD095B37E1A17C1cc03dcc3396` |
+| PredictionMarket | `0xaa92b0434F89a17F2275b655c6fA459C43813f22` |
+| ResolutionEngine | `0xBB62C1948D35DCf60259c2003bbf3d9578DDB825` |
+| ScoringEngine | `0x8993D6b4a3CEA896a77558A1AfD2896d3505F517` |
+| RangeCrpsScorer | `0xDf39a2994CF82b3d6Fd2e27F904A5dE1c3C36487` |
+| BonusDistributor | `0xD4Aa72f2628797a99b98dC06e0772b995691E9B0` |
 | **Feed / consumer** | |
-| CompositeFeed | `0xc962011fd96527022e034a2cd715ccAb5bDe1331` |
-| SubscriptionGate | `0x0b759e12Baedbb30891666193D33d689F5c23373` |
-| DemoFeedConsumer | `0x85F0cb237FF30600Bee7Cd2D260493a5bd795B8A` |
+| CompositeFeed | `0x695aC1428FcFAb4406468A664FD7670b968aB689` |
+| SubscriptionGate | `0x21D39847d46299C358181e25741BFceee097705f` |
+| DemoFeedConsumer | `0x7434CA16d6d497F070B36dDB0D036ab91903A742` |
 | **AI × RWA** | |
-| YieldAllocator | `0x3dde2344b3aE6ca8D72183f00c5C25a48528AFA3` |
-| RiskManager | `0x2bFC256176139936F1F73cfC6e3108824363CF9d` |
+| YieldAllocator | `0xD68ABfAD2f7429A71ae98dEc0203c4F0032b447d` |
+| RiskManager | `0xEfE0edF058f364D9BdF65eD206c58019CD1Cb21B` |
+| **Swarm / stress** | |
+| SentimentOracle | `0x43F573B43C6AD990FAFA388E1E34710c535b1e46` |
+| MarketStressMonitor | `0xF8a5122f0167c06BFAa57B6203eF962Ab7750eB6` |
 | **Resolvers & oracles** | |
-| MethAprResolver | `0x08597a30135937ef683749D15c9FA49bc145477c` |
-| AaveMantleTvlResolver | `0x8a09381dA2Ec29C817fEf310aC244e2812202cF9` |
-| UsdyApyResolver | `0x4D3E8046E4171637e8418ba625a220186De9BFd5` |
-| MockMethRateOracle | `0xaDd06C1Ec17762fDAaE88b5F8244bcf9A6fCbE79` |
-| UsdyOracle | `0x97325C3851c167556a43C99fF5091f4EAae3556f` |
-| MockAavePool | `0x6B456AA2cBBE0841d1215CdD1882c4199aA0FFc0` |
+| MethAprResolver | `0x5c42FcFA0fC9D7fc556993eC6072cE029808E39b` |
+| AaveMantleTvlResolver | `0x93849a12b49f967A2c1eB6CD0A8e978D4d036a91` |
+| UsdyApyResolver | `0xdeCB5d17C52eC8665705F460Bc35B6e4556580E2` |
+| MockMethRateOracle | `0x19E22B85addb8D98ac471481C170029C2Ea6Fc8C` |
+| UsdyOracle | `0x19142Db9bd14C5D592022548C72f5D23D88c6597` |
+| MockAavePool | `0x5F429885aed023b38866BC7CBFf803fF51DCDe36` |
 
 ## Live links
 
 - **Frontend:** _TBD (Vercel)_
-- **Indexer API:** _TBD_
+- **Indexer API:** [`https://noetrix-indexer.jeco.my.id`](https://noetrix-indexer.jeco.my.id/leaderboard?category=METH_APR_24H) (REST: `/leaderboard`, `/agent/:id`, `/predictions`, `/feed`)
 - **Demo video:** _TBD — see [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md)_
 
 ## Submission
 
-- **Track:** AI Alpha & Data (primary) — a verifiable on-chain leaderboard of AI forecasters: every prediction committed before the outcome, CRPS-graded against on-chain truth, surfaced as smart-money-vs-crowd signals, anomaly alerts, and a calibration-weighted composite feed. Secondary **AI x RWA** — a **YieldAllocator** (dynamic mETH/USDY allocation) and **RiskManager** (automated risk state) consume that feed; plus **Best UX / Smoothest Web2 Onboarding** via the wallet-free `/simulation` deposit simulator. Grand Champion nominated for full-stack depth (14 production contracts + 3 reference AI agents + indexer + frontend) and native Mantle composition.
+- **Track:** AI Alpha & Data (primary) — a verifiable on-chain leaderboard of AI forecasters: every prediction committed before the outcome, CRPS-graded against on-chain truth, surfaced as smart-money-vs-crowd signals, anomaly alerts, and a calibration-weighted composite feed. Secondary **AI x RWA** — a **YieldAllocator** (dynamic mETH/USDY allocation) and **RiskManager** (automated risk state) consume that feed; plus **Best UX / Smoothest Web2 Onboarding** via the wallet-free `/simulation` deposit simulator. Grand Champion nominated for full-stack depth (15 production contracts + a 7-agent AI forecasting swarm + indexer + frontend) and native Mantle composition.
 - Full submission: [`docs/SUBMISSION.md`](docs/SUBMISSION.md) · Pre-flight status: [`docs/PREFLIGHT.md`](docs/PREFLIGHT.md) · Go-live runbook: [`docs/DEPLOY.md`](docs/DEPLOY.md)
 
 ## Repo layout
