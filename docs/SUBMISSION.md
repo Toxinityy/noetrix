@@ -42,7 +42,7 @@ Mantle RWA is the first proof case for the feed. Predictor Index forecasts and r
 
 The `/simulation` page is a deliberately Web2-friendly surface: **no wallet, no login, no MetaMask** — ever. A traditional user types a deposit amount and instantly sees projected annual yield, the AI's auto-balanced allocation, and a plain-language safety check, computed client-side from the live feed. Crypto jargon is translated throughout (bps → %, "composite feed" → "AI consensus forecast", risk enum → "Looking healthy / Cautious / Paused"). It's grounded in an accessible-by-design system (WCAG contrast, SVG-not-emoji icons, reduced-motion, keyboard, 375px) and is the conversion bridge from curious Web2 users to the on-chain product.
 
-The Grand Champion nomination is justified by full-stack depth (14 production contracts + 3 reference AI agents + indexer + frontend) and genuine Mantle composition.
+The Grand Champion nomination is justified by full-stack depth (15 production contracts + a 7-agent AI forecasting swarm + indexer + frontend) and genuine Mantle composition.
 
 ## What was built (concrete)
 
@@ -62,7 +62,7 @@ The Grand Champion nomination is justified by full-stack depth (14 production co
 
 | | |
 |---|---|
-| GitHub | https://github.com/Toxinityy/mantle-hackathon |
+| GitHub | https://github.com/Toxinityy/noetrix |
 | Live frontend | _TBD — Vercel deploy pending_ |
 | Demo video | _TBD — record from `docs/DEMO_SCRIPT.md`_ |
 | Deployed addresses | 17 contracts live — full table in [`README.md`](../README.md#deployed-addresses-mantle-sepolia-chainid-5003); source: `contracts/deployments/mantle-sepolia.json`. Headline: CompositeFeed `0xc962011f…`, YieldAllocator `0x3dde2344…`, RiskManager `0x2bFC2561…`, DemoFeedConsumer `0x85F0cb23…` |
