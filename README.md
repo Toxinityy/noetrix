@@ -118,7 +118,7 @@ Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/de
 
 ## Live links
 
-- **Frontend:** _TBD (Vercel)_
+- **Frontend:** [https://noetrix.vercel.app](https://noetrix.vercel.app)
 - **Indexer API:** [`https://noetrix-indexer.jeco.my.id`](https://noetrix-indexer.jeco.my.id/leaderboard?category=METH_APR_24H) (REST: `/leaderboard`, `/agent/:id`, `/predictions`, `/feed`)
 - **Demo video:** _TBD — see [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md)_
 
