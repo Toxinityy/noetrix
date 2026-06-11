@@ -1,7 +1,8 @@
 # Architecture
 
 ```
-AI agents (off-chain: DeepSeek · ARIMA · Naive · yours)
+AI agents (off-chain, 7 on-chain identities: DeepSeek · ARIMA · Naive ·
+           4-strategy swarm [mean-reversion · momentum · ewma-vol · sentiment] · yours)
         │  commit → reveal (stake MNT)
         ▼
 ┌─ MANTLE SEPOLIA ────────────────────────────────────────────┐
@@ -18,6 +19,7 @@ AI agents (off-chain: DeepSeek · ARIMA · Naive · yours)
 │  CompositeFeed (rank-weighted consensus, rate-limited)      │
 │        │ read()                                             │
 │  DemoFeedConsumer · YieldAllocator · RiskManager            │
+│  MarketStressMonitor ◄── SentimentOracle (Fear & Greed)     │
 │  SubscriptionGate (paid tiers; reads open in v1)            │
 └─────────────────────────────────────────────────────────────┘
         ▲                                  ▲
@@ -38,6 +40,8 @@ AI agents (off-chain: DeepSeek · ARIMA · Naive · yours)
 | `CompositeFeed` | Rank-weighted ensemble of the top agents' active forecasts + calibration-clamped confidence; 100-block refresh rate limit; holds the last good value when no forecasts are active |
 | `SubscriptionGate` | Paid tiers (Pro 0.5 / Protocol 2 test MNT, 30 days); `requiresSubscription` off in v1 |
 | `YieldAllocator` / `RiskManager` / `DemoFeedConsumer` | Reference consumers — allocation, risk parameters, and a deposits/throttle example driven by the feed |
+| `SentimentOracle` | Keeper-posted Crypto Fear & Greed index (0–100), seeded from real alternative.me data; consumers ignore it when stale |
+| `MarketStressMonitor` | 3-level alert (Calm / Elevated / Stressed) combining swarm-feed disagreement + quorum + freshness, resolver-read forecast surprise, and Fear & Greed sentiment — alerting only, `RiskManager` owns parameter gating |
 
 ## Load-bearing design decisions
 
@@ -49,7 +53,8 @@ AI agents (off-chain: DeepSeek · ARIMA · Naive · yours)
 
 ## Off-chain pieces
 
-* **Agents** — workspace packages sharing the `@predictor-index/sdk` (commit-hash construction, reveal-window polling, receipt parsing) and `@predictor-index/forecasters` helpers.
+* **Agents** — workspace packages sharing the `@predictor-index/sdk` (commit-hash construction, reveal-window polling, receipt parsing) and `@predictor-index/forecasters` strategy library (arima, persistence, mean-reversion, momentum, ewma-vol, sentiment).
+* **Swarm runner** — one process per strategy agent (ids 4–7: mean-reversion, momentum, ewma-vol, sentiment), each a thin config over the shared forecasters library.
 * **Resolver bot** — scans `nextPredictionId`, resolves matured predictions straight from RPC (no indexer dependency).
 * **Refresher bot** — calls `refresh()` per category on a cadence; the contract's rate limit makes it idempotent.
 * **Ponder indexer** — REST over events (leaderboard, prediction history). The frontend degrades gracefully to a committed chain snapshot when no indexer is hosted.

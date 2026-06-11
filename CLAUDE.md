@@ -123,6 +123,12 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-06-11 — Architecture docs sync (README mermaid + gitbook architecture)
+**Type:** Docs (sync to deployed reality). Spec: `docs/superpowers/specs/2026-06-11-architecture-docs-sync-design.md`. User asked to modify architecture on root README + gitbook Architecture; chose "sync to current reality" via AskUserQuestion.
+- **README.md:** mermaid rewritten — 7 agents (3 named pkgs + swarm-runner's 4 strategies), SDK+forecasters lib, resolver bot → `resolve()`, UsdyApy added to resolvers node, consumers node (DemoFeedConsumer/YieldAllocator/RiskManager), SentimentOracle → sentiment agent + MarketStressMonitor. Caption + repo layout: "14 production + 3 mocks (17 deployed)" → "15 production + 4 mock instances (19 deployed)"; agents line += swarm-runner, forecasters, market-data, backtest.
+- **docs/gitbook/protocol/architecture.md:** ASCII diagram agents line → 7 identities incl. 4-strategy swarm; added `MarketStressMonitor ◄── SentimentOracle` row in chain box; contract table += SentimentOracle (keeper-posted F&G 0–100, stale-aware) + MarketStressMonitor (3-level alert from disagreement+surprise+sentiment; alerting only, RiskManager gates); off-chain pieces += swarm-runner bullet + forecasters strategy list.
+- All facts traced to source (`KNOWN_AGENTS`, deployments JSON, contract NatSpec). Verified: grep for stale counts ("14 production"/"17 deployed"/"3 mocks") returns none in either file.
+
 ### 2026-06-09 — Operational-workflow audit (4-agent workflow) + 6 targeted fixes (branch `workflow-audit-fixes`)
 **Type:** Audit (multi-agent workflow) + targeted fixes. User asked "have you audited the overall workflows?" — the prior 2026-06-08 audit was subsystem *state*, not end-to-end *workflows*. Ran a 4-agent **Workflow** tracing each operational pipeline for correctness/races/SPOFs/automation gaps: on-chain lifecycle, off-chain bot orchestration, CI/CD, frontend+deploy-runbook (the last adversarially reviewing the runway authored 2026-06-08). User picked (AskUserQuestion) "patch my runbook" + "cheap code footguns" (deferred CI).
 

@@ -15,10 +15,10 @@ Mantle RWA is the first proof case. Predictor Index forecasts and resolves again
 ```mermaid
 flowchart TD
     subgraph offchain["Off-chain"]
-      ARIMA["arima-baseline agent"]
-      DEEPSEEK["deepseek-reasoner agent"]
+      AGENTS["7 agents: arima-baseline · naive-baseline · deepseek-reasoner<br/>+ swarm-runner (mean-reversion · momentum · ewma-vol · sentiment)"]
+      SDK["agent SDK + forecasters lib"]
+      RESOLVERBOT["resolver bot"]
       REFRESH["refresher cron"]
-      SDK["agent SDK"]
       IDX["Ponder indexer + REST"]
       FE["Next.js frontend"]
     end
@@ -27,26 +27,32 @@ flowchart TD
       AR["AgentRegistry (ERC-8004 + topAgents)"]
       PM["PredictionMarket (commit-reveal escrow)"]
       RE["ResolutionEngine"]
-      RES["Resolvers: MethApr / AaveMantleTvl"]
+      RES["Resolvers: MethApr / UsdyApy / AaveMantleTvl"]
       SE["ScoringEngine + RangeCrpsScorer"]
       BD["BonusDistributor (pull-claim epochs)"]
       CF["CompositeFeed + SubscriptionGate"]
-      DC["DemoFeedConsumer (example)"]
+      SENT["SentimentOracle (Fear & Greed)"]
+      CONS["Consumers: DemoFeedConsumer ·<br/>YieldAllocator · RiskManager"]
+      MSM["MarketStressMonitor (3-level alert)"]
     end
 
-    ARIMA & DEEPSEEK -->|commit/reveal via SDK| PM
+    AGENTS -->|commit/reveal via SDK| PM
     SDK --> AR
+    SENT -->|fear & greed| AGENTS
+    RESOLVERBOT -->|"resolve()"| RE
     PM --> RE --> RES
     RE --> SE --> AR
     SE --> BD
     AR -->|top-20| CF
     PM -->|latest revealed| CF
     REFRESH -->|refresh| CF
-    CF --> DC
+    CF --> CONS
+    CF --> MSM
+    SENT --> MSM
     chain --> IDX --> FE
 ```
 
-Full spec in [`docs/PRD.md`](docs/PRD.md). Contract count: 14 production + 3 mocks (17 deployed addresses).
+Full spec in [`docs/PRD.md`](docs/PRD.md). Contract count: 15 production + 4 mock instances (19 deployed addresses).
 
 ## Quick start
 
@@ -130,10 +136,11 @@ Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/de
 ## Repo layout
 
 ```
-contracts/   Foundry — 14 production contracts + 3 mocks, deploy/smoke/e2e
+contracts/   Foundry — 15 production contracts + 4 mocks, deploy/smoke/e2e
 indexer/     Ponder — event handlers + REST API
 frontend/    Next.js 16 — cinematic landing + terminal-core app
-agents/      sdk, arima-baseline, naive-baseline, deepseek-reasoner, refresher, resolver
+agents/      sdk, forecasters, arima-baseline, naive-baseline, deepseek-reasoner,
+             swarm-runner, refresher, resolver, market-data, backtest
 docs/        PRD, submission, demo script, pre-flight
 ```
 
