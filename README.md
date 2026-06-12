@@ -1,14 +1,20 @@
-# Predictor Index
+<p align="center">
+  <img src="frontend/public/logo-noetrix.png" alt="Noetrix" width="320" />
+</p>
+
+# Noetrix — Predictor Index
 
 **Verifiable on-chain reputation for AI forecasters on Mantle — every prediction committed before the outcome, CRPS-graded against on-chain truth, and turned into a trustable alpha signal.**
 
 > The Turing Test Hackathon 2026 (Mantle × Bybit × Byreal × BGA) · Track: **AI Alpha & Data** (primary) · also competing for AI x RWA and Best UX / Smoothest Web2 Onboarding; Grand Champion nominated
+>
+> **Live:** [noetrix.vercel.app](https://noetrix.vercel.app) · 19 verified contracts on Mantle Sepolia · 7 AI agents forecasting around the clock
 
-AI agents are starting to make financial recommendations, but protocols have no neutral way to know which agents are actually reliable. Track records are screenshots, reasoning is a black box, and confidence is unfalsifiable. Predictor Index makes AI forecasting **provable**: agents get ERC-8004 reputation passports, commit predictions before outcomes are known, and have every forecast auto-scored on-chain.
+AI agents are starting to make financial recommendations, but protocols have no neutral way to know which agents are actually reliable. Track records are screenshots, reasoning is a black box, and confidence is unfalsifiable. Noetrix makes AI forecasting **provable**: agents get ERC-8004 reputation passports, commit predictions before outcomes are known, and have every forecast auto-scored on-chain.
 
 Each agent is a soulbound **ERC-8004** NFT that accumulates per-category accuracy and calibration reputation. A commit-reveal scheme stops last-minute fitting; a closed-form **CRPS** scorer turns each forecast into a signed score; and the public scorecard shows which agents have been right before, in which category, with which confidence. For the LLM agent, the full reasoning trace is pinned to IPFS and hash-committed on-chain — so the track record is independently verifiable. The hackathon's thesis, made concrete: **every AI decision, on-chain.**
 
-Mantle RWA is the first proof case. Predictor Index forecasts and resolves against mETH staking APR, USDY treasury APY, and Aave-on-Mantle TVL; then turns the top-scored agents into a rank-weighted **composite feed**. Two RWA consumers use that feed: a **YieldAllocator** for dynamic mETH/USDY allocation and a **RiskManager** for confidence-gated risk parameters. The scorecard earns trust first; the post-hackathon revenue target is a gated feed subscription once live resolvers and a longer track record are in place.
+Mantle RWA is the first proof case. Noetrix forecasts and resolves against mETH staking APR, USDY treasury APY, and Aave-on-Mantle TVL; then turns the top-scored agents into a rank-weighted **composite feed**. Two RWA consumers use that feed: a **YieldAllocator** for dynamic mETH/USDY allocation and a **RiskManager** for confidence-gated risk parameters. The scorecard earns trust first; the post-hackathon revenue target is a gated feed subscription once live resolvers and a longer track record are in place.
 
 ## Architecture
 
@@ -19,6 +25,7 @@ flowchart TD
       SDK["agent SDK + forecasters lib"]
       RESOLVERBOT["resolver bot"]
       REFRESH["refresher cron"]
+      KEEPER["sentiment keeper (daily F&G)"]
       IDX["Ponder indexer + REST"]
       FE["Next.js frontend"]
     end
@@ -38,6 +45,7 @@ flowchart TD
 
     AGENTS -->|commit/reveal via SDK| PM
     SDK --> AR
+    KEEPER -->|post F&G| SENT
     SENT -->|fear & greed| AGENTS
     RESOLVERBOT -->|"resolve()"| RE
     PM --> RE --> RES
@@ -113,6 +121,8 @@ cd agents/refresher         && pnpm start      # refreshes CompositeFeed; `--onc
 ```
 > Gotcha: after any contract redeploy, delete `agents/resolver/resolver.state.json` (stale prediction cursor) and each agent's `agent.state.json`.
 
+**Production hosting** — the live pipeline (indexer + 7 forecasters + resolver + refresher + a daily sentiment keeper) runs under **pm2** on a self-hosted server, with the indexer exposed through a **Cloudflare Tunnel** and Postgres on Supabase. Config lives in [`deploy/ecosystem.config.js`](deploy/ecosystem.config.js); full operator runbook in [`docs/SERVER_DEPLOY.md`](docs/SERVER_DEPLOY.md).
+
 ## Deployed addresses (Mantle Sepolia, chainId 5003)
 
 Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/deployments/mantle-sepolia.json). Explorer: `https://sepolia.mantlescan.xyz/address/<addr>`. All 19 contracts are source-verified on the explorer (Etherscan V2).
@@ -154,7 +164,7 @@ Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/de
 ## Submission
 
 - **Track:** AI Alpha & Data (primary) — a verifiable on-chain leaderboard of AI forecasters: every prediction committed before the outcome, CRPS-graded against on-chain truth, surfaced as smart-money-vs-crowd signals, anomaly alerts, and a calibration-weighted composite feed. Secondary **AI x RWA** — a **YieldAllocator** (dynamic mETH/USDY allocation) and **RiskManager** (automated risk state) consume that feed; plus **Best UX / Smoothest Web2 Onboarding** via the wallet-free `/simulation` deposit simulator. Grand Champion nominated for full-stack depth (15 production contracts + a 7-agent AI forecasting swarm + indexer + frontend) and native Mantle composition.
-- Full submission: [`docs/SUBMISSION.md`](docs/SUBMISSION.md) · Pre-flight status: [`docs/PREFLIGHT.md`](docs/PREFLIGHT.md) · Go-live runbook: [`docs/DEPLOY.md`](docs/DEPLOY.md)
+- Full submission: [`docs/SUBMISSION.md`](docs/SUBMISSION.md) · Pre-flight status: [`docs/PREFLIGHT.md`](docs/PREFLIGHT.md) · Go-live runbook: [`docs/DEPLOY.md`](docs/DEPLOY.md) · Server hosting: [`docs/SERVER_DEPLOY.md`](docs/SERVER_DEPLOY.md)
 
 ## Repo layout
 
@@ -164,7 +174,8 @@ indexer/     Ponder — event handlers + REST API
 frontend/    Next.js 16 — cinematic landing + terminal-core app
 agents/      sdk, forecasters, arima-baseline, naive-baseline, deepseek-reasoner,
              swarm-runner, refresher, resolver, market-data, backtest
-docs/        PRD, submission, demo script, pre-flight
+deploy/      pm2 ecosystem config, sentiment keeper, Cloudflare Tunnel example
+docs/        PRD, submission, demo script, pre-flight, deploy + server runbooks
 ```
 
 ## Team
