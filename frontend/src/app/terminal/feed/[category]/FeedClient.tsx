@@ -18,20 +18,18 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { DataTable, type Column } from "@/components/ui/DataTable";
-import {
-  AGENTS,
-  CATEGORIES,
-  type CategoryId,
-  type Agent,
-  makeFeedHistory,
-} from "@/lib/mockData";
+import { CATEGORIES, type CategoryId } from "@/lib/mockData";
 import { fmtBlock, fmtBps, fmtScore, fmtUSDCompact } from "@/lib/format";
 import { friendlyValue } from "@/lib/labels";
 import { cn } from "@/lib/cn";
 import { useRouter } from "next/navigation";
+import { useFeedHistory, useLeaderboard } from "@/lib/hooks";
+import type { LeaderRow } from "@/lib/indexer";
+import { DAY_BLOCKS, feedSourceLabel, findLookbackPoint } from "@/lib/feedView";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type Contributor = {
-  agent: Agent;
+  agent: LeaderRow;
   weight: number; // 0..1
   contribution: number; // category-unit weighted
   rank: number;
@@ -41,22 +39,26 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
   const cat = CATEGORIES[categoryId];
-  const history = React.useMemo(() => makeFeedHistory(categoryId, 120), [categoryId]);
+  const feed = useFeedHistory(categoryId);
+  const board = useLeaderboard(categoryId);
+  // Never draw the curated wave on a page presented as a real feed.
+  const history = feed.source === "mock" ? [] : feed.data;
 
   // Plain-English value: % for yields, compact $ for big USD totals (scannable headlines/axes).
   const scanValue = (v: number) => (cat.unit === "usd" ? fmtUSDCompact(v) : friendlyValue(categoryId, v));
 
   const latest = history[history.length - 1];
-  const yesterday = history[Math.max(0, history.length - 48)];
-  const delta = latest.value - yesterday.value;
-  const deltaPct = (delta / yesterday.value) * 100;
+  const yesterday = findLookbackPoint(history, DAY_BLOCKS);
+  const delta = latest && yesterday ? latest.value - yesterday.value : null;
+  const deltaPct = delta !== null && yesterday?.value ? (delta / yesterday.value) * 100 : null;
 
   const contributors: Contributor[] = React.useMemo(() => {
-    const sorted = [...AGENTS]
+    if (!latest) return [];
+    const sorted = [...board.data]
       .map((a) => ({
         a,
-        s: a.reputation[categoryId].accuracyScore + a.reputation[categoryId].calibrationScore / 4,
-        resolved: a.reputation[categoryId].resolvedCount,
+        s: a.accuracyScore + a.calibrationScore / 4,
+        resolved: a.resolvedCount,
       }))
       .filter((x) => x.resolved >= 10)
       .sort((a, b) => b.s - a.s);
@@ -70,7 +72,7 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
         contribution: latest.value * w * (1 + ((row.s / 1_000_000) * 0.05)),
       };
     });
-  }, [categoryId, latest.value]);
+  }, [board.data, latest]);
 
   const tabs = Object.values(CATEGORIES).map((c) => ({
     id: c.id,
@@ -123,17 +125,17 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
       id: "accuracy",
       header: "Accuracy",
       align: "right",
-      sortValue: (c) => c.agent.reputation[categoryId].accuracyScore,
+      sortValue: (c) => c.agent.accuracyScore,
       cell: (c) => (
         <span
           className={cn(
             "font-mono text-sm tabular",
-            c.agent.reputation[categoryId].accuracyScore >= 0
+            c.agent.accuracyScore >= 0
               ? "text-[var(--color-up)]"
               : "text-[var(--color-down)]",
           )}
         >
-          {fmtScore(c.agent.reputation[categoryId].accuracyScore, 3)}
+          {fmtScore(c.agent.accuracyScore, 3)}
         </span>
       ),
     },
@@ -141,10 +143,10 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
       id: "calibration",
       header: "Calibration",
       align: "right",
-      sortValue: (c) => c.agent.reputation[categoryId].calibrationScore,
+      sortValue: (c) => c.agent.calibrationScore,
       cell: (c) => (
         <span className="font-mono text-sm text-[var(--color-warn)] tabular">
-          {fmtScore(c.agent.reputation[categoryId].calibrationScore, 3)}
+          {fmtScore(c.agent.calibrationScore, 3)}
         </span>
       ),
     },
@@ -183,8 +185,8 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <StatusPill tone="up" dot pulse>
-            Live
+          <StatusPill tone={feed.source === "live" ? "up" : "muted"} dot={feed.source === "live"} pulse={feed.source === "live"}>
+            {feedSourceLabel(feed.source)}
           </StatusPill>
           <StatusPill tone="muted">This round</StatusPill>
         </div>
@@ -205,11 +207,15 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
             current value
           </div>
-          <NumberFlow
-            value={latest.value}
-            format={scanValue}
-            className="mt-2 inline-block font-mono text-3xl text-[var(--color-accent)] tabular"
-          />
+          {latest ? (
+            <NumberFlow
+              value={latest.value}
+              format={scanValue}
+              className="mt-2 inline-block font-mono text-3xl text-[var(--color-accent)] tabular"
+            />
+          ) : (
+            <div className="mt-2 font-mono text-3xl text-[var(--color-text-muted)]">—</div>
+          )}
         </Panel>
         <Panel className="px-5 py-4">
           <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
@@ -218,10 +224,12 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           <div
             className={cn(
               "mt-2 font-mono text-3xl tabular",
-              delta >= 0 ? "text-[var(--color-up)]" : "text-[var(--color-down)]",
+              (delta ?? 0) >= 0 ? "text-[var(--color-up)]" : "text-[var(--color-down)]",
             )}
           >
-            {delta >= 0 ? "▲" : "▼"} {Math.abs(deltaPct).toFixed(2)}%
+            {deltaPct === null || delta === null
+              ? "—"
+              : `${delta >= 0 ? "▲" : "▼"} ${Math.abs(deltaPct).toFixed(2)}%`}
           </div>
         </Panel>
         <Panel className="px-5 py-4">
@@ -229,14 +237,14 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
             confidence
           </div>
           <div className="mt-2 font-mono text-3xl tabular text-[var(--color-text-dim)]">
-            {fmtBps(latest.confidence, 1)}
+            {latest ? fmtBps(latest.confidence, 1) : "—"}
           </div>
         </Panel>
         <Panel className="px-5 py-4">
           <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
             contributors
           </div>
-          <div className="mt-2 font-mono text-3xl tabular">{latest.contributors}</div>
+          <div className="mt-2 font-mono text-3xl tabular">{latest?.contributors ?? "—"}</div>
         </Panel>
       </div>
 
@@ -246,12 +254,12 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           title="Weighted value history"
           right={
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-              120 ticks · ~75 blocks/tick
+              {history.length > 0 ? `${history.length} on-chain updates` : "history unavailable"}
             </span>
           }
         />
         <PanelBody className="pb-3 pt-2">
-          <div className="h-[320px] w-full">
+          {history.length > 0 ? <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={history}
@@ -299,18 +307,20 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
                   labelFormatter={(v) => `block #${fmtBlock(Number(v))}`}
                   formatter={(v) => [scanValue(Number(v)), "feed"]}
                 />
-                <ReferenceLine
-                  y={yesterday.value}
-                  stroke="var(--color-border-strong)"
-                  strokeDasharray="3 3"
-                  label={{
-                    value: "24h ago",
-                    fill: "var(--color-text-muted)",
-                    fontSize: 9,
-                    fontFamily: "var(--font-mono)",
-                    position: "insideTopRight",
-                  }}
-                />
+                {yesterday && (
+                  <ReferenceLine
+                    y={yesterday.value}
+                    stroke="var(--color-border-strong)"
+                    strokeDasharray="3 3"
+                    label={{
+                      value: "24h ago",
+                      fill: "var(--color-text-muted)",
+                      fontSize: 9,
+                      fontFamily: "var(--font-mono)",
+                      position: "insideTopRight",
+                    }}
+                  />
+                )}
                 <Area
                   type="monotone"
                   dataKey="value"
@@ -321,7 +331,12 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
                 />
               </AreaChart>
             </ResponsiveContainer>
-          </div>
+          </div> : (
+            <EmptyState
+              title="Live feed history unavailable"
+              body="The indexer is not connected, so Noetrix will not draw a made-up chart. The on-chain feed can still be read from Try."
+            />
+          )}
         </PanelBody>
       </Panel>
 

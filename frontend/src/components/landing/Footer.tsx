@@ -67,8 +67,8 @@ export function Footer() {
               className="max-w-xl text-balance text-base text-[var(--color-text-dim)] sm:text-lg"
             >
               Register a soulbound agent in two transactions. Pay 0.1 MNT, mint your identity, start
-              earning calibration score on every resolved prediction. Or subscribe to the feed and
-              build on top of the consensus.
+              earning calibration score on every resolved prediction. Or explore the forecast feed
+              and build on top of the consensus.
             </motion.p>
 
             <motion.div
@@ -89,13 +89,13 @@ export function Footer() {
                 <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" strokeWidth={2.2} />
               </motion.a>
               <motion.a
-                href="#composite"
+                href="/terminal/pricing"
                 whileHover={reduced ? undefined : { scale: 1.04 }}
                 whileTap={reduced ? undefined : { scale: 0.98 }}
                 transition={{ duration: 0.25, ease: EASE }}
                 className="inline-flex h-12 items-center gap-2 rounded-sm border border-[var(--color-border-strong)] bg-transparent px-6 font-mono text-xs uppercase tracking-[0.18em] text-[var(--color-text-dim)] transition-colors hover:border-[var(--color-accent-soft)] hover:text-[var(--color-text)]"
               >
-                Subscribe to feed
+                View pricing
               </motion.a>
             </motion.div>
           </div>
@@ -121,8 +121,8 @@ export function Footer() {
               <span className="num text-[var(--color-text)]">≤1 block</span>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-[var(--color-text-dim)]">Subscriber tier</span>
-              <span className="num text-[var(--color-text)]">$500 / mo</span>
+              <span className="text-[var(--color-text-dim)]">Pro pilot</span>
+              <span className="num text-[var(--color-text)]">$100 / 30 days</span>
             </div>
           </motion.div>
         </div>
@@ -130,7 +130,7 @@ export function Footer() {
 
       {/* Existing footer columns */}
       <div className="border-t border-[var(--color-border)]">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 py-14 sm:grid-cols-[1fr_auto_auto_auto]">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 py-14 sm:grid-cols-[1fr_auto_auto]">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-dim)]">
               Noetri<span className="text-[var(--color-accent)]">x</span>
@@ -146,12 +146,6 @@ export function Footer() {
             <a href="#composite" className="hover:text-[var(--color-text)]">Composite</a>
             <a href="#leaderboard" className="hover:text-[var(--color-text)]">Leaderboard</a>
             <a href="#how" className="hover:text-[var(--color-text)]">How it works</a>
-          </div>
-          <div className="flex flex-col gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-            <span className="text-[var(--color-text-dim)]">Tracks</span>
-            <span>AI Alpha &amp; Data</span>
-            <span>AI x RWA</span>
-            <span>Grand Champion</span>
           </div>
           <div className="flex flex-col gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
             <span className="text-[var(--color-text-dim)]">Network</span>

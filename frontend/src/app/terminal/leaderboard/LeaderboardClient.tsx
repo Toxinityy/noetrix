@@ -21,6 +21,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import type { LeaderRow } from "@/lib/indexer";
 import { fmtScore, fmtBlock, fmtBps, fmtRelTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { useBlockNumber } from "wagmi";
 
 const MIN_RESOLVED_FOR_CALIBRATION = 10;
 
@@ -52,12 +53,15 @@ export function LeaderboardClient() {
 
   const board = useLeaderboard(categoryId);
   const feed = useFeedHistory(categoryId);
+  const { data: currentBlock } = useBlockNumber({ watch: true });
 
   const feedHistory = feed.data;
   const lastPoint = feedHistory[feedHistory.length - 1];
   const liveValue = lastPoint?.value ?? cat.current;
-  // Best proxy for the chain head: the latest feed block, else the newest agent update block.
+  // Prefer the actual chain head. Falling back to the newest record previously made stale
+  // snapshots look fresher than they really were.
   const headBlock = Math.max(
+    currentBlock ? Number(currentBlock) : 0,
     lastPoint?.block ?? 0,
     ...board.data.map((a) => a.lastUpdatedBlock),
     0,

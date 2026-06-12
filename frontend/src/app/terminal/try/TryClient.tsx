@@ -19,6 +19,7 @@ import { derivePanelState } from "@/lib/tryState";
 import { friendlyValue } from "@/lib/labels";
 import { fmtUSDCompact } from "@/lib/format";
 import type { CategoryId } from "@/lib/mockData";
+import { formatRawFeedFields } from "@/lib/feedView";
 
 const CATEGORY_OPTIONS = [
   { id: "METH_APR_24H", name: "mETH staking APR" },
@@ -62,7 +63,6 @@ function decodeFeed(data: unknown): FeedRead | null {
 
 export function TryClient() {
   const [selected, setSelected] = React.useState<CatId>("METH_APR_24H");
-  const [preview, setPreview] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [txHash, setTxHash] = React.useState<`0x${string}` | undefined>(undefined);
   const [beforeBlock, setBeforeBlock] = React.useState<number | null>(null);
@@ -79,9 +79,6 @@ export function TryClient() {
     () => true,
     () => false,
   );
-  const hasInjectedWallet =
-    mounted && typeof window !== "undefined" && Boolean((window as { ethereum?: unknown }).ethereum);
-
   const read = useReadContract({
     address: env.addresses.compositeFeed as `0x${string}`,
     abi: compositeFeedAbi,
@@ -144,6 +141,15 @@ export function TryClient() {
   };
 
   const catName = CATEGORY_OPTIONS.find((c) => c.id === selected)!.name;
+  const rawFields = feed
+    ? formatRawFeedFields(
+        selected as CategoryId,
+        feed.value,
+        feed.confidence,
+        feed.contributors,
+        feed.block,
+      )
+    : null;
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-12" data-tour="try-refresh">
@@ -222,24 +228,24 @@ export function TryClient() {
             </div>
             <details className="mt-3">
               <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)] hover:text-[var(--color-text-dim)]">
-                Show on-chain values
+                Show contract details
               </summary>
               <div className="mt-2 grid grid-cols-2 gap-2 font-mono text-xs text-[var(--color-text-dim)] sm:grid-cols-4">
                 <div>
-                  <div className="text-[var(--color-text-muted)]">value</div>
-                  <div>{feed.value.toString()}</div>
+                  <div className="text-[var(--color-text-muted)]">stored forecast</div>
+                  <div>{rawFields?.value}</div>
                 </div>
                 <div>
-                  <div className="text-[var(--color-text-muted)]">confidence (bps)</div>
-                  <div>{feed.confidence}</div>
+                  <div className="text-[var(--color-text-muted)]">stored confidence</div>
+                  <div>{rawFields?.confidence}</div>
                 </div>
                 <div>
-                  <div className="text-[var(--color-text-muted)]">contributors</div>
-                  <div>{feed.contributors}</div>
+                  <div className="text-[var(--color-text-muted)]">included forecasts</div>
+                  <div>{rawFields?.contributors}</div>
                 </div>
                 <div>
-                  <div className="text-[var(--color-text-muted)]">lastUpdatedBlock</div>
-                  <div>{feed.block}</div>
+                  <div className="text-[var(--color-text-muted)]">last update block</div>
+                  <div>{rawFields?.lastUpdatedBlock}</div>
                 </div>
               </div>
             </details>
@@ -253,30 +259,12 @@ export function TryClient() {
       <div className="mt-4 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-bg)] p-5">
         {!mounted ? (
           <p className="text-sm text-[var(--color-text-dim)]">Loading wallet…</p>
-        ) : preview || (!hasInjectedWallet && state === "disconnected") ? (
-          <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-warn)]">
-              Preview, not an on-chain transaction
-            </div>
-            <p className="mt-2 text-sm text-[var(--color-text-dim)]">
-              A real refresh re-aggregates the top-20 agents&apos; latest forecasts into a fresh consensus value and
-              updates the block above.{" "}
-              {hasInjectedWallet ? "" : "No wallet detected. Install MetaMask to do it for real."}
-            </p>
-            {hasInjectedWallet && (
-              <button
-                type="button"
-                onClick={() => setPreview(false)}
-                className="mt-4 rounded border border-[var(--color-accent)] px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)]"
-              >
-                Do it for real
-              </button>
-            )}
-          </div>
         ) : state === "disconnected" ? (
           <div>
-            <p className="text-sm text-[var(--color-text-dim)]">Step 1: connect your wallet to interact on-chain.</p>
-            <div className="mt-4 flex gap-3">
+            <p className="text-sm text-[var(--color-text-dim)]">
+              Connect a wallet to request a real composite refresh on Mantle Sepolia.
+            </p>
+            <div className="mt-4">
               <button
                 type="button"
                 onClick={handleConnect}
@@ -284,13 +272,6 @@ export function TryClient() {
                 className="rounded border border-[var(--color-accent)] px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)] disabled:opacity-60"
               >
                 {connecting ? "Connecting…" : "Connect wallet"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setPreview(true)}
-                className="rounded border border-[var(--color-border)] px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-text-dim)] hover:text-[var(--color-text)]"
-              >
-                Preview (no wallet)
               </button>
             </div>
           </div>

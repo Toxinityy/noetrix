@@ -4,7 +4,7 @@ import { DemoConsumerClient } from "./DemoConsumerClient";
 export const metadata: Metadata = {
   title: "For protocols · Noetrix",
   description:
-    "Live mock of a downstream Mantle protocol reading the Noetrix composite feed: verifiable values, on-chain.",
+    "Downstream Mantle protocol demo reading the Noetrix composite feed, with its data source clearly identified.",
 };
 
 export default function DemoConsumerPage() {

@@ -208,7 +208,7 @@ export function AppHeader() {
 
 function ConnectButton() {
   const { address, isConnected } = useAccount();
-  const { connect, connectors, isPending } = useConnect();
+  const { connect, connectors, isPending, error } = useConnect();
   const { disconnect } = useDisconnect();
   // Wallet state is client-only; render a stable placeholder until mounted to avoid hydration drift.
   // Hydration-safe "client mounted" flag — store never changes, so subscribe is intentionally a no-op.
@@ -220,6 +220,8 @@ function ConnectButton() {
 
   const base =
     "inline-flex items-center gap-2 rounded-sm border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.16em] transition-colors";
+  const hasInjectedWallet =
+    mounted && typeof window !== "undefined" && Boolean((window as { ethereum?: unknown }).ethereum);
 
   if (!mounted) {
     return (
@@ -248,20 +250,32 @@ function ConnectButton() {
     );
   }
 
-  const connector = connectors[0];
+  const connector = connectors.find((candidate) => candidate.type === "injected") ?? connectors[0];
   return (
     <button
       type="button"
-      disabled={!connector || isPending}
-      onClick={() => connector && connect({ connector })}
-      title={connector ? "Connect an injected wallet (e.g. MetaMask)" : "No injected wallet detected"}
+      disabled={isPending}
+      onClick={() => {
+        if (connector && hasInjectedWallet) {
+          connect({ connector });
+          return;
+        }
+        window.open("https://metamask.io/download/", "_blank", "noopener,noreferrer");
+      }}
+      title={
+        error
+          ? error.message
+          : hasInjectedWallet
+            ? "Connect your browser wallet"
+            : "Install a browser wallet"
+      }
       className={cn(
         base,
         "border-[var(--color-accent-soft)] bg-[var(--color-accent-glow)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-black",
-        (!connector || isPending) && "opacity-70",
+        isPending && "opacity-70",
       )}
     >
-      {isPending ? "Connecting…" : "Connect"}
+      {isPending ? "Connecting…" : hasInjectedWallet ? "Connect" : "Install wallet"}
     </button>
   );
 }

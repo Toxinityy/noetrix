@@ -61,7 +61,7 @@ export function DepositSimulator({ sim }: { sim: SimInputs }) {
           step={100}
           value={amount}
           onChange={(e) => setAmount(Math.max(0, Number(e.target.value)))}
-          className="num w-36 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-2)] px-3 py-1.5 text-lg text-[var(--color-text)] outline-none focus-visible:border-[var(--color-accent)]/60"
+          className="num number-input-no-spinner w-36 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-2)] px-3 py-1.5 text-lg text-[var(--color-text)] outline-none focus-visible:border-[var(--color-accent)]/60"
         />
       </div>
       <input
