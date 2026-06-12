@@ -123,6 +123,13 @@ If a future session is tempted to add any of these, push back to the user first.
 
 ## 6. Session history
 
+### 2026-06-12 — Docs navbar link (GitBook) + README run instructions (branch `master`)
+**Type:** Build (frontend nav + docs). Spec: `docs/superpowers/specs/2026-06-12-docs-navbar-readme-design.md`. User asked for a Documentation button in the navbar → GitBook `https://noetrix.gitbook.io/product-docs/`, plus README run instructions for judges/builders.
+- **AppHeader** (`frontend/src/components/app/AppHeader.tsx`): nav arrays typed as `NavItem { href, label, external? }`; `moreNav` += Docs (external, after About). Both render sites (More dropdown + mobile `allNav` menu) render external items as `<a target="_blank" rel="noopener noreferrer">` + 13px lucide `ExternalLink` icon; internal items unchanged `<Link>`. `moreActive` safe (an `https://` href never `startsWith`-matches a pathname).
+- **Landing Nav** (`frontend/src/components/landing/Nav.tsx`): "Docs" entry between FAQ and For builders; map detects `href.startsWith("http")` → target/rel + icon.
+- **README:** new "Run it in 60 seconds (judges start here)" section (live URL + zero-env local frontend run); GitBook link after the mermaid caption + in Live links; frontend test/e2e commands; agents block fixed — added naive-baseline, swarm-runner (has `register` — verified in package.json), resolver + refresher framed as pipeline bots with the delete-state-files-on-redeploy gotcha.
+- **Verification:** lint 0 · tsc 0 · vitest **65** (suite grew) · e2e **16/16** (suite grew; no e2e asserts nav counts — grepped). Earlier same session: judge pitch-deck/demo-day flow delivered (chat-only, no files).
+
 ### 2026-06-11 — Architecture docs sync (README mermaid + gitbook architecture)
 **Type:** Docs (sync to deployed reality). Spec: `docs/superpowers/specs/2026-06-11-architecture-docs-sync-design.md`. User asked to modify architecture on root README + gitbook Architecture; chose "sync to current reality" via AskUserQuestion.
 - **README.md:** mermaid rewritten — 7 agents (3 named pkgs + swarm-runner's 4 strategies), SDK+forecasters lib, resolver bot → `resolve()`, UsdyApy added to resolvers node, consumers node (DemoFeedConsumer/YieldAllocator/RiskManager), SentimentOracle → sentiment agent + MarketStressMonitor. Caption + repo layout: "14 production + 3 mocks (17 deployed)" → "15 production + 4 mock instances (19 deployed)"; agents line += swarm-runner, forecasters, market-data, backtest.

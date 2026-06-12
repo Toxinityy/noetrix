@@ -3,6 +3,7 @@
 import { motion, useScroll, useTransform } from "motion/react";
 import Link from "next/link";
 import Image from "next/image";
+import { ExternalLink } from "lucide-react";
 
 export function Nav() {
   const { scrollY } = useScroll();
@@ -40,16 +41,22 @@ export function Nav() {
             ["Categories", "#categories"],
             ["How it works", "#how"],
             ["FAQ", "#faq"],
+            ["Docs", "https://noetrix.gitbook.io/product-docs/"],
             ["For builders", "/terminal/demo-consumer"],
-          ].map(([label, href]) => (
-            <a
-              key={label}
-              href={href}
-              className="font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] transition-colors hover:text-[var(--color-text)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
-            >
-              {label}
-            </a>
-          ))}
+          ].map(([label, href]) => {
+            const external = href.startsWith("http");
+            return (
+              <a
+                key={label}
+                href={href}
+                {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] transition-colors hover:text-[var(--color-text)] focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[var(--color-accent)]"
+              >
+                {label}
+                {external && <ExternalLink size={13} aria-hidden />}
+              </a>
+            );
+          })}
         </div>
 
         <a

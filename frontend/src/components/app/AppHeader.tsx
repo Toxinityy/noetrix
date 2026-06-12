@@ -6,27 +6,30 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, ExternalLink, Menu } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { cn } from "@/lib/cn";
 
 // Primary nav follows the pitch priority: Alpha & Data (Insights/Leaderboard) +
 // the Best-Web2-UX surface (Simulator) + the live write demo (Try). Pricing (open
 // in v1) and the niche/utility routes live under More.
-const primaryNav = [
+type NavItem = { href: string; label: string; external?: boolean };
+
+const primaryNav: NavItem[] = [
   { href: "/terminal/dashboard", label: "Dashboard" },
   { href: "/terminal/insights", label: "Insights" },
   { href: "/terminal/leaderboard", label: "Leaderboard" },
   { href: "/terminal/simulation", label: "Simulator" },
   { href: "/terminal/try", label: "Try" },
 ];
-const moreNav = [
+const moreNav: NavItem[] = [
   { href: "/terminal/pricing", label: "Pricing" },
   { href: "/terminal/feed/meth-apr-24h", label: "Feed" },
   { href: "/terminal/demo-consumer", label: "For protocols" },
   { href: "/terminal/submit", label: "Submit" },
   { href: "/terminal/agents", label: "For agents" },
   { href: "/terminal/about", label: "About" },
+  { href: "https://noetrix.gitbook.io/product-docs/", label: "Docs", external: true },
 ];
 const allNav = [...primaryNav, ...moreNav];
 const isActiveNavItem = (pathname: string, href: string) =>
@@ -103,21 +106,34 @@ export function AppHeader() {
                   sideOffset={8}
                   className="z-50 min-w-[160px] rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-1)] p-1 shadow-xl"
                 >
-                  {moreNav.map((item) => (
-                    <DropdownMenu.Item key={item.href} asChild>
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          "block cursor-pointer rounded px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] outline-none transition-colors hover:text-[var(--color-text)] focus:text-[var(--color-accent)] data-[highlighted]:text-[var(--color-accent)]",
-                          isActiveNavItem(pathname, item.href)
-                            ? "text-[var(--color-accent)]"
-                            : "text-[var(--color-text-dim)]",
+                  {moreNav.map((item) => {
+                    const itemClass = cn(
+                      "block cursor-pointer rounded px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] outline-none transition-colors hover:text-[var(--color-text)] focus:text-[var(--color-accent)] data-[highlighted]:text-[var(--color-accent)]",
+                      isActiveNavItem(pathname, item.href)
+                        ? "text-[var(--color-accent)]"
+                        : "text-[var(--color-text-dim)]",
+                    );
+                    return (
+                      <DropdownMenu.Item key={item.href} asChild>
+                        {item.external ? (
+                          <a
+                            href={item.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={itemClass}
+                          >
+                            <span className="inline-flex items-center gap-1.5">
+                              {item.label} <ExternalLink size={13} aria-hidden />
+                            </span>
+                          </a>
+                        ) : (
+                          <Link href={item.href} className={itemClass}>
+                            {item.label}
+                          </Link>
                         )}
-                      >
-                        {item.label}
-                      </Link>
-                    </DropdownMenu.Item>
-                  ))}
+                      </DropdownMenu.Item>
+                    );
+                  })}
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
@@ -158,12 +174,25 @@ export function AppHeader() {
                   </DropdownMenu.Item>
                   {allNav.map((item) => (
                     <DropdownMenu.Item key={item.href} asChild>
-                      <Link
-                        href={item.href}
-                        className="block cursor-pointer rounded px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
-                      >
-                        {item.label}
-                      </Link>
+                      {item.external ? (
+                        <a
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block cursor-pointer rounded px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
+                        >
+                          <span className="inline-flex items-center gap-1.5">
+                            {item.label} <ExternalLink size={13} aria-hidden />
+                          </span>
+                        </a>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className="block cursor-pointer rounded px-3 py-2 font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-text-dim)] outline-none transition-colors data-[highlighted]:text-[var(--color-accent)]"
+                        >
+                          {item.label}
+                        </Link>
+                      )}
                     </DropdownMenu.Item>
                   ))}
                 </DropdownMenu.Content>

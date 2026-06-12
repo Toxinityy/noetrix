@@ -52,9 +52,22 @@ flowchart TD
     chain --> IDX --> FE
 ```
 
-Full spec in [`docs/PRD.md`](docs/PRD.md). Contract count: 15 production + 4 mock instances (19 deployed addresses).
+Full spec in [`docs/PRD.md`](docs/PRD.md) · product docs on [GitBook](https://noetrix.gitbook.io/product-docs/). Contract count: 15 production + 4 mock instances (19 deployed addresses).
 
-## Quick start
+## Run it in 60 seconds (judges start here)
+
+**Zero setup:** the app is live at **[noetrix.vercel.app](https://noetrix.vercel.app)** against the deployed Mantle Sepolia contracts — nothing to install.
+
+**Run locally** (no chain, no keys, no env — the frontend renders demo/snapshot data out of the box):
+
+```bash
+pnpm install
+cd frontend && pnpm dev      # → http://localhost:3000
+```
+
+To run against live on-chain data instead, set the env described under **Frontend** below.
+
+## Quick start (full stack)
 
 Prereqs: Node 22+, pnpm 10+, Foundry. From the repo root:
 
@@ -82,14 +95,23 @@ cd indexer && pnpm dev          # REST at http://localhost:42069
 **Frontend** (Next.js) — copy `frontend/.env.example` → `.env.local` (set `NEXT_PUBLIC_INDEXER_URL` + addresses, or leave unset to run on mock data):
 ```bash
 cd frontend && pnpm dev         # http://localhost:3000
+pnpm --filter frontend test     # vitest unit suite
+pnpm --filter frontend test:e2e # Playwright smoke (needs a dev server / chromium)
 ```
 
-**Agents** — each has its own `.env.example` (controller key, RPC, indexer URL, `OPENROUTER_API_KEY` for the reasoner). Register once, then run:
+**Agents & bots** — each has its own `.env.example` (controller key, RPC, indexer URL, `OPENROUTER_API_KEY` for the reasoner). Register forecasters once, then run them; the resolver + refresher bots keep the pipeline turning (predictions don't score and the feed doesn't update without them):
 ```bash
+# forecasters (register mints the ERC-8004 identity; needs a funded controller key)
 cd agents/arima-baseline    && pnpm register && pnpm start
+cd agents/naive-baseline    && pnpm register && pnpm start
 cd agents/deepseek-reasoner && pnpm register && pnpm start
-cd agents/refresher         && pnpm start      # or `--once` for cron platforms
+cd agents/swarm-runner      && pnpm register && pnpm start   # 4-strategy swarm
+
+# pipeline bots (separate small hot wallets, not agent keys)
+cd agents/resolver          && pnpm start      # scores matured predictions
+cd agents/refresher         && pnpm start      # refreshes CompositeFeed; `--once` for cron platforms
 ```
+> Gotcha: after any contract redeploy, delete `agents/resolver/resolver.state.json` (stale prediction cursor) and each agent's `agent.state.json`.
 
 ## Deployed addresses (Mantle Sepolia, chainId 5003)
 
@@ -125,6 +147,7 @@ Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/de
 ## Live links
 
 - **Frontend:** [https://noetrix.vercel.app](https://noetrix.vercel.app)
+- **Docs (GitBook):** [https://noetrix.gitbook.io/product-docs/](https://noetrix.gitbook.io/product-docs/)
 - **Indexer API:** [`https://noetrix-indexer.jeco.my.id`](https://noetrix-indexer.jeco.my.id/leaderboard?category=METH_APR_24H) (REST: `/leaderboard`, `/agent/:id`, `/predictions`, `/feed`)
 - **Demo video:** _TBD — see [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md)_
 
