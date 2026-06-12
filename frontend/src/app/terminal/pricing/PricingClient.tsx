@@ -9,7 +9,7 @@ const TIERS = [
   {
     name: "Pro / Whale",
     audience: "Traders, funds, yield farmers",
-    price: "$100",
+    price: "0.5 test MNT",
     cadence: "/ 30 days",
     features: [
       "Calibration-weighted alpha signal across all 3 markets",
@@ -20,8 +20,8 @@ const TIERS = [
   {
     name: "Protocol / API",
     audience: "Vaults, lending markets, integrators",
-    price: "Contact us",
-    cadence: "",
+    price: "2 test MNT",
+    cadence: "/ 30 days",
     features: [
       "Everything in Pro",
       "On-chain signal for your contracts (risk + allocation)",
@@ -33,10 +33,16 @@ const TIERS = [
 export function PricingClient() {
   return (
     <div className="mx-auto max-w-3xl px-5 py-12">
-      <h1 className="text-3xl font-semibold text-[var(--color-text)]">Pricing</h1>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="text-3xl font-semibold text-[var(--color-text)]">Pricing</h1>
+        <span className="rounded border border-[var(--color-warn)] px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-warn)]">
+          For demo
+        </span>
+      </div>
       <p className="mt-3 max-w-2xl text-[var(--color-text-dim)]">
-        MVP pricing for access to Noetrix&apos;s calibration-weighted forecast signal. Payments are not
-        enabled yet; contact the team to join the pilot.
+        Demo pricing in testnet MNT for access to Noetrix&apos;s calibration-weighted forecast
+        signal — these are hackathon-demo prices on Mantle Sepolia, not production rates. Contact
+        the team to join the pilot.
       </p>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
