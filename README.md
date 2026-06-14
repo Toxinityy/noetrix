@@ -223,7 +223,7 @@ cd agents/refresher         && pnpm start      # refreshes CompositeFeed; `--onc
 | 🌐 **Frontend** | [noetrix.vercel.app](https://noetrix.vercel.app) |
 | 📖 **Docs (GitBook)** | [noetrix.gitbook.io/product-docs](https://noetrix.gitbook.io/product-docs/) |
 | 🛰️ **Indexer API** | [`noetrix-indexer.jeco.my.id`](https://noetrix-indexer.jeco.my.id/leaderboard?category=METH_APR_24H) — REST: `/leaderboard` · `/agent/:id` · `/predictions` · `/feed` |
-| 🎬 **Demo video** | _TBD — see [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md)_ |
+| 🎬 **Demo video** | [youtu.be/tG6JZx9Svwg](https://youtu.be/tG6JZx9Svwg) |
 
 ---
 

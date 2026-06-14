@@ -38,6 +38,16 @@ The novel angle for the track: the alpha is **competitive and reputation-weighte
 
 Mantle RWA is the first proof case for the feed. Predictor Index forecasts and resolves against **mETH** staking APR and **USDY** (Ondo's tokenized US-Treasury stablecoin) APY — both named in the AI x RWA track — and two reference consumers turn the composite feed into applications: a **YieldAllocator** (confidence-weighted mETH/USDY allocation — the dynamic yield strategy) and a **RiskManager** (collateral factors, deposit caps, and a Normal/Caution/Frozen state from forecast confidence + freshness — the automated risk management). Both are advisory/read-only — a real vault or lending market embeds them — a deliberate no-custody scope choice for the hackathon.
 
+## Compliance posture (AI x RWA)
+
+RWA work lives or dies on regulatory coherence, so the design is deliberate, not an afterthought:
+
+- **No custody, no transfer — outside the regulated perimeter by design.** Noetrix never holds, mints, or moves USDY/mETH. The YieldAllocator and RiskManager are **advisory, read-only** views over the composite feed; the consuming vault or lending market is the entity that takes custody and executes. That keeps Noetrix off the regulated money-transmission/transfer surface for a restricted security like USDY.
+- **KYC/AML enforced at the deposit boundary.** USDY (Ondo) is a transfer-restricted, KYC-gated tokenized US-Treasury instrument. A protocol embedding our feed enforces holder allow-listing, accredited-investor checks, and jurisdiction rules **at its own deposit edge** — exactly where the asset's transfer restrictions already bind — while consuming our signal for allocation/risk. Our composite reads do not bypass any of that.
+- **AI-assisted compliance is the natural roadmap.** The same commit-reveal + scoring + anomaly engine that grades forecasts can flag sanctioned-address interaction, abnormal flow, and feed-manipulation attempts — turning the data product into a compliance signal (transaction-monitoring / market-abuse detection) for the vaults that consume it.
+
+This is a hackathon-scope posture (testnet, mock RWA oracles, no live KYC integration), stated honestly — but the architecture is compliance-aware rather than compliance-blind.
+
 ## Second award — Best UX / Smoothest Web2 Onboarding
 
 The `/simulation` page is a deliberately Web2-friendly surface: **no wallet, no login, no MetaMask** — ever. A traditional user types a deposit amount and instantly sees projected annual yield, the AI's auto-balanced allocation, and a plain-language safety check, computed client-side from the live feed. Crypto jargon is translated throughout (bps → %, "composite feed" → "AI consensus forecast", risk enum → "Looking healthy / Cautious / Paused"). It's grounded in an accessible-by-design system (WCAG contrast, SVG-not-emoji icons, reduced-motion, keyboard, 375px) and is the conversion bridge from curious Web2 users to the on-chain product.
@@ -63,9 +73,11 @@ The Grand Champion nomination is justified by full-stack depth (15 production co
 | | |
 |---|---|
 | GitHub | https://github.com/Toxinityy/noetrix |
-| Live frontend | _TBD — Vercel deploy pending_ |
-| Demo video | _TBD — record from `docs/DEMO_SCRIPT.md`_ |
-| Deployed addresses | 17 contracts live — full table in [`README.md`](../README.md#deployed-addresses-mantle-sepolia-chainid-5003); source: `contracts/deployments/mantle-sepolia.json`. Headline: CompositeFeed `0xc962011f…`, YieldAllocator `0x3dde2344…`, RiskManager `0x2bFC2561…`, DemoFeedConsumer `0x85F0cb23…` |
+| Live frontend | https://noetrix.vercel.app |
+| Docs (GitBook) | https://noetrix.gitbook.io/product-docs/ |
+| Indexer API | https://noetrix-indexer.jeco.my.id/leaderboard?category=METH_APR_24H |
+| Demo video | https://youtu.be/tG6JZx9Svwg |
+| Deployed addresses | 19 contracts (15 production + 4 mocks) — full table in [`README.md`](../README.md#-deployed-contracts); source: `contracts/deployments/mantle-sepolia.json`. Headline: CompositeFeed `0x695aC142…`, YieldAllocator `0xD68ABfAD…`, RiskManager `0xEfE0edF0…`, DemoFeedConsumer `0x7434CA16…` |
 | Network | Mantle Sepolia (testnet), chainId 5003 |
 
 ## Team

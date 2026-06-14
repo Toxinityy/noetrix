@@ -98,5 +98,19 @@ module.exports = {
       cron_restart: "0 9 * * *",
       time: true,
     },
+
+    // ─── Real-rate keeper (refresh real mETH/USDY data + re-seed oracles, daily 10:00) ──
+    // Separate app from `keeper` on purpose: a seed failure here never endangers the
+    // Fear&Greed / stress-poke path above. Needs the ORACLE OWNER key (setSynthetic is
+    // onlyOwner) — set ORACLE_OWNER_KEY (or PRIVATE_KEY) in deploy/keeper.env.
+    {
+      name: "seed-rates",
+      cwd: __dirname,
+      script: "./seed-rates.sh",
+      interpreter: "bash",
+      autorestart: false,
+      cron_restart: "0 10 * * *",
+      time: true,
+    },
   ],
 };
