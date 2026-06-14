@@ -407,7 +407,7 @@ contract LeveragedVault {
           <DecisionCard
             label="shouldAllowDeposits()"
             value={allowDeposits}
-            rule={`mETH APR forecast > ${DEMO_THRESHOLDS.methAprDepositBps} bps (4%)`}
+            rule={`mETH APR forecast > ${DEMO_THRESHOLDS.methAprDepositBps} bps (1.5%)`}
             trueLabel="DEPOSITS ENABLED"
             falseLabel="DEPOSITS PAUSED"
             goodWhenTrue
@@ -415,7 +415,7 @@ contract LeveragedVault {
           <DecisionCard
             label="shouldThrottleRisk()"
             value={throttleRisk}
-            rule="Aave-Mantle TVL forecast < $500M"
+            rule="Aave-Mantle TVL forecast < $100M"
             trueLabel="RISK THROTTLED"
             falseLabel="RISK NORMAL"
             goodWhenTrue={false}

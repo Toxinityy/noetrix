@@ -80,8 +80,8 @@ export const demoConsumerAbi = [
 /// Mirrors DemoFeedConsumer's on-chain thresholds so the UI can show the same decision when the
 /// contract isn't deployed (derived client-side from the feed value).
 export const DEMO_THRESHOLDS = {
-  methAprDepositBps: 400,
-  aaveTvlThrottle: 500_000_000 * 1e8, // $500M in USD 8-dec
+  methAprDepositBps: 150, // 1.5% APR floor — calibrated to real mETH staking yield (~2.5%)
+  aaveTvlThrottle: 100_000_000 * 1e8, // $100M in USD 8-dec — below live Mantle-scale TVL (~$136M)
 } as const;
 
 /// YieldAllocator — confidence-weighted dynamic allocation across mETH + USDY.

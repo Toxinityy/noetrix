@@ -20,10 +20,13 @@ contract DemoFeedConsumer {
     bytes32 public constant METH_APR_24H = keccak256("METH_APR_24H");
     bytes32 public constant AAVE_MANTLE_TVL_24H = keccak256("AAVE_MANTLE_TVL_24H");
 
-    /// Allow deposits when forecast mETH APR exceeds this (bps). 400 bps = 4% APR.
-    uint256 public constant METH_APR_DEPOSIT_THRESHOLD_BPS = 400;
-    /// Throttle risk when forecast Aave-Mantle TVL is below this. USD 8-dec: $500M = 500e6 * 1e8.
-    uint256 public constant AAVE_TVL_THROTTLE_THRESHOLD = 500_000_000 * 1e8;
+    /// Allow deposits when forecast mETH APR exceeds this (bps). 150 bps = 1.5% APR — a
+    /// minimum-attractiveness floor calibrated to real mETH staking yield (~2.5%), so the gate
+    /// reads sensibly against the live real-rate feed rather than the old synthetic ~30% regime.
+    uint256 public constant METH_APR_DEPOSIT_THRESHOLD_BPS = 150;
+    /// Throttle risk when forecast Aave-Mantle TVL is below this. USD 8-dec: $100M = 100e6 * 1e8 —
+    /// a systemic floor below live Mantle-scale TVL (~$136M) so a healthy market doesn't read throttled.
+    uint256 public constant AAVE_TVL_THROTTLE_THRESHOLD = 100_000_000 * 1e8;
 
     ICompositeFeed public immutable feed;
 

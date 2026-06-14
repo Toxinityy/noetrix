@@ -191,10 +191,10 @@ contract EndToEndTest is Test {
         (,, uint256 contributors,) = consumer.latest(METH);
         assertEq(contributors, 2, "two active contributors");
 
-        // Business logic: 3650 bps > 400 bps floor → deposits allowed.
+        // Business logic: 3650 bps > 150 bps floor → deposits allowed.
         assertTrue(consumer.shouldAllowDeposits(), "deposits allowed when APR clears floor");
 
-        // Aave TVL feed never refreshed → reads 0 → below the $500M floor → throttle (safe default).
+        // Aave TVL feed never refreshed → reads 0 → below the $100M floor → throttle (safe default).
         (uint256 tvl,) = consumer.getCurrentAaveTvl();
         assertEq(tvl, 0, "unset TVL feed reads zero");
         assertTrue(consumer.shouldThrottleRisk(), "throttle risk when TVL below floor / unset");
