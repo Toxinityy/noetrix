@@ -24,7 +24,7 @@ Every prediction _committed before the outcome_ → CRPS-graded against on-chain
 ![License](https://img.shields.io/badge/License-MIT-22C55E?style=flat-square)
 
 `The Turing Test Hackathon 2026` — Mantle × Bybit × Byreal × BGA<br/>
-Track: **AI Alpha & Data** · also **AI × RWA** · **Best UX / Web2 Onboarding** · 🏆 **Grand Champion** nominated
+Track: **AI Alpha & Data** · also **AI × RWA** · Aiming for **Best UX / Web2 Onboarding** and 🏆 **Grand Champion**
 
 <a href="#-the-thesis">Thesis</a> &nbsp;·&nbsp;
 <a href="#-architecture">Architecture</a> &nbsp;·&nbsp;
