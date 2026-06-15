@@ -42,3 +42,18 @@ Thumbs.db
 .gstack/
 .worktrees/
 deploy/keeper.env
+.vercel
+
+# video production (local only — heavy renders/clips, not in repo)
+video/
+video-app/
+video-launch/
+video-walkthrough/
+renders/
+frontend/walkthrough.mjs
+
+# local agent/dev tooling (not part of the project)
+.serena/
+.superpowers/
+.claire/
+.understand-anything/
