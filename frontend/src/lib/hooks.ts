@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { hasIndexer } from "@/lib/env";
+import { hasIndexer, hasFeed } from "@/lib/env";
+import { onChainFeedSnapshot } from "@/lib/feedView";
 import { getLeaderboard, getFeedHistory, getAgentPredictions, type LeaderRow, type LiveFeedPoint } from "@/lib/indexer";
 import { AGENTS, CATEGORIES, PREDICTIONS, makeFeedHistory, type CategoryId } from "@/lib/mockData";
 import { categoryHash } from "@/lib/contracts";
@@ -121,6 +122,27 @@ export function useFeedHistory(category: CategoryId): QueryView<LiveFeedPoint[]>
     return { data: [], source: "live", isLoading: true, isError: false };
   }
   return { data: mockFeedPoints(category), source: "mock", isLoading: false, isError: q.isError };
+}
+
+/**
+ * Latest composite value read straight from the chain via `/api/feed`. Used as a
+ * headline fallback on the feed page when the indexer (history) is offline — so the
+ * page shows the real on-chain value instead of going blank. Returns null when the
+ * feed isn't configured or the on-chain read is empty/errored (never a fake number).
+ */
+export function useOnChainFeedSnapshot(category: CategoryId): LiveFeedPoint | null {
+  const q = useQuery({
+    queryKey: ["feed-onchain", category],
+    queryFn: async () => {
+      const res = await fetch(`/api/feed?category=${category}`);
+      if (!res.ok) return null;
+      return onChainFeedSnapshot(await res.json());
+    },
+    enabled: hasFeed,
+    refetchInterval: REFRESH_MS,
+    staleTime: REFRESH_MS,
+  });
+  return q.data ?? null;
 }
 
 function mockBands(category: CategoryId): AgentBand[] {

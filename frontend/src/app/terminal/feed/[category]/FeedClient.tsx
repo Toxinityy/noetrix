@@ -23,7 +23,7 @@ import { fmtBlock, fmtBps, fmtScore, fmtUSDCompact } from "@/lib/format";
 import { friendlyValue } from "@/lib/labels";
 import { cn } from "@/lib/cn";
 import { useRouter } from "next/navigation";
-import { useFeedHistory, useLeaderboard } from "@/lib/hooks";
+import { useFeedHistory, useLeaderboard, useOnChainFeedSnapshot } from "@/lib/hooks";
 import type { LeaderRow } from "@/lib/indexer";
 import { DAY_BLOCKS, feedSourceLabel, findLookbackPoint } from "@/lib/feedView";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -51,6 +51,13 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
   const yesterday = findLookbackPoint(history, DAY_BLOCKS);
   const delta = latest && yesterday ? latest.value - yesterday.value : null;
   const deltaPct = delta !== null && yesterday?.value ? (delta / yesterday.value) * 100 : null;
+
+  // When the indexer (history) is offline we still read the live composite value straight
+  // from the chain, so the headline KPIs show real data instead of going blank. The chart,
+  // 24h change, and contributor table stay indexer-only (no made-up series).
+  const onChain = useOnChainFeedSnapshot(categoryId);
+  const headline = latest ?? onChain;
+  const usingOnChainFallback = !latest && !!onChain;
 
   const contributors: Contributor[] = React.useMemo(() => {
     if (!latest) return [];
@@ -185,8 +192,12 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <StatusPill tone={feed.source === "live" ? "up" : "muted"} dot={feed.source === "live"} pulse={feed.source === "live"}>
-            {feedSourceLabel(feed.source)}
+          <StatusPill
+            tone={feed.source === "live" || usingOnChainFallback ? "up" : "muted"}
+            dot={feed.source === "live" || usingOnChainFallback}
+            pulse={feed.source === "live"}
+          >
+            {usingOnChainFallback ? "On-chain (live read)" : feedSourceLabel(feed.source)}
           </StatusPill>
           <StatusPill tone="muted">This round</StatusPill>
         </div>
@@ -207,9 +218,9 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
             current value
           </div>
-          {latest ? (
+          {headline ? (
             <NumberFlow
-              value={latest.value}
+              value={headline.value}
               format={scanValue}
               className="mt-2 inline-block font-mono text-3xl text-[var(--color-accent)] tabular"
             />
@@ -237,14 +248,14 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
             confidence
           </div>
           <div className="mt-2 font-mono text-3xl tabular text-[var(--color-text-dim)]">
-            {latest ? fmtBps(latest.confidence, 1) : "—"}
+            {headline ? fmtBps(headline.confidence, 1) : "—"}
           </div>
         </Panel>
         <Panel className="px-5 py-4">
           <div className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
             contributors
           </div>
-          <div className="mt-2 font-mono text-3xl tabular">{latest?.contributors ?? "—"}</div>
+          <div className="mt-2 font-mono text-3xl tabular">{headline?.contributors ?? "—"}</div>
         </Panel>
       </div>
 
@@ -334,7 +345,11 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           </div> : (
             <EmptyState
               title="Live feed history unavailable"
-              body="The indexer is not connected, so Noetrix will not draw a made-up chart. The on-chain feed can still be read from Try."
+              body={
+                usingOnChainFallback
+                  ? "Showing the latest value read straight from the on-chain feed above. The history chart needs the indexer, which is currently offline."
+                  : "The indexer is not connected, so Noetrix will not draw a made-up chart. The on-chain feed can still be read from Try."
+              }
             />
           )}
         </PanelBody>

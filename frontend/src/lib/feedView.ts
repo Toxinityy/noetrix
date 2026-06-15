@@ -28,6 +28,36 @@ export function feedSourceLabel(source: DataSource): string {
   return "Demo data";
 }
 
+/** Shape returned by `GET /api/feed` — a live on-chain `CompositeFeed.read`. */
+export interface OnChainFeedResponse {
+  source?: string;
+  value?: string;
+  confidenceBps?: number;
+  contributingAgents?: number;
+  lastUpdatedBlock?: number;
+}
+
+/**
+ * Map the on-chain `/api/feed` read into a single feed point usable as a headline
+ * fallback when the indexer (history) is offline. Returns null unless it's a real
+ * on-chain value with at least one contributor — so a zeroed/empty/errored feed
+ * never masquerades as live data.
+ */
+export function onChainFeedSnapshot(
+  json: OnChainFeedResponse | null | undefined,
+): LiveFeedPoint | null {
+  if (!json || json.source !== "chain") return null;
+  const value = Number(json.value);
+  const contributors = Number(json.contributingAgents ?? 0);
+  if (!Number.isFinite(value) || contributors <= 0) return null;
+  return {
+    block: Number(json.lastUpdatedBlock ?? 0),
+    value,
+    confidence: Number(json.confidenceBps ?? 0),
+    contributors,
+  };
+}
+
 export function formatRawFeedFields(
   category: CategoryId,
   value: bigint,

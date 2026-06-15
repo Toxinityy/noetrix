@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findLookbackPoint, feedSourceLabel, formatRawFeedFields } from "./feedView";
+import { findLookbackPoint, feedSourceLabel, formatRawFeedFields, onChainFeedSnapshot } from "./feedView";
 
 describe("findLookbackPoint", () => {
   it("selects the point closest to a 24-hour block lookback", () => {
@@ -31,9 +31,36 @@ describe("feedSourceLabel", () => {
   });
 });
 
+describe("onChainFeedSnapshot", () => {
+  it("maps a real on-chain /api/feed read into a single feed point", () => {
+    expect(
+      onChainFeedSnapshot({
+        source: "chain",
+        value: "245",
+        confidenceBps: 5060,
+        contributingAgents: 7,
+        lastUpdatedBlock: 39_919_665,
+      }),
+    ).toEqual({ block: 39_919_665, value: 245, confidence: 5060, contributors: 7 });
+  });
+
+  it("returns null for an empty feed (no contributors) so zeros never look live", () => {
+    expect(
+      onChainFeedSnapshot({ source: "chain", value: "0", confidenceBps: 0, contributingAgents: 0, lastUpdatedBlock: 0 }),
+    ).toBeNull();
+  });
+
+  it("returns null for error/non-chain responses or missing data", () => {
+    expect(onChainFeedSnapshot(null)).toBeNull();
+    expect(onChainFeedSnapshot(undefined)).toBeNull();
+    expect(onChainFeedSnapshot({ error: "on-chain read failed" } as never)).toBeNull();
+    expect(onChainFeedSnapshot({ source: "chain", value: "not-a-number", contributingAgents: 3 })).toBeNull();
+  });
+});
+
 describe("formatRawFeedFields", () => {
   it("explains basis-point values in human units", () => {
-    expect(formatRawFeedFields("METH_APR_24H", 899n, 3531, 2, 39_868_877)).toEqual({
+    expect(formatRawFeedFields("METH_APR_24H", BigInt(899), 3531, 2, 39_868_877)).toEqual({
       value: "899 bps = 8.99%",
       confidence: "3,531 bps = 35.31%",
       contributors: "2 agents",
