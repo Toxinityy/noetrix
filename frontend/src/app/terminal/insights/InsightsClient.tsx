@@ -17,6 +17,7 @@ import { ProofStrip } from "./ProofStrip";
 import { ReplayCard } from "./ReplayCard";
 import { DisagreementCallout } from "./DisagreementCallout";
 import { AnomalyFeed } from "./AnomalyFeed";
+import { SubscriptionGateCard } from "./SubscriptionGateCard";
 import { YourMoveStrip } from "./YourMoveStrip";
 import { BacktestPanel } from "./BacktestPanel";
 
@@ -175,9 +176,14 @@ export function InsightsClient() {
             <TopPerformersCard rows={data.board} />
           </div>
 
-          {/* Anomaly watch: full-width but visually quiet, below the fold. */}
+          {/* Anomaly watch: premium signal — gated behind a real on-chain subscription. */}
           <div className="mt-4">
-            <AnomalyFeed categoryId={categoryId} history={data.feed} category={data.category} />
+            <SubscriptionGateCard
+              title={`Anomaly watch: ${FRIENDLY_CATEGORY[categoryId]}`}
+              caption="Live anomaly + market-stress alerts are part of the paid data feed."
+            >
+              <AnomalyFeed categoryId={categoryId} history={data.feed} category={data.category} />
+            </SubscriptionGateCard>
           </div>
         </>
       )}
