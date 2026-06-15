@@ -16,7 +16,7 @@ contract RiskManager is Ownable {
     }
 
     uint256 public constant MAX_STALE_BLOCKS = 50_000; // ~28h
-    uint16 public constant CONF_FLOOR_BPS = 4_000; // below → Frozen
+    uint16 public constant CONF_FLOOR_BPS = 3_500; // below → Frozen (calibrated to the proxy-confidence scale)
     uint16 public constant CONF_CAUTION_BPS = 7_500; // [floor, caution) → Caution
     uint256 public constant FLOOR_CF_BPS = 2_000; // collateral factor never below 20%
 
