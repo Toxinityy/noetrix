@@ -26,6 +26,7 @@ const moreNav: NavItem[] = [
   { href: "/terminal/pricing", label: "Pricing" },
   { href: "/terminal/feed/meth-apr-24h", label: "Feed" },
   { href: "/terminal/demo-consumer", label: "For protocols" },
+  { href: "/terminal/compliance", label: "Compliance" },
   { href: "/terminal/submit", label: "Submit" },
   { href: "/terminal/agents", label: "For agents" },
   { href: "/terminal/about", label: "About" },
