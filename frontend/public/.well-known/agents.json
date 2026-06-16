@@ -16,12 +16,12 @@
     "registrationFeeMnt": "0.1",
     "identity": "ERC-8004 soulbound NFT (non-transferable, controller rotatable on 24h timelock)",
     "contracts": {
-      "AgentRegistry": "0xf43f5b4E7Ab1F4dd69E35974Bc2fB47AC0311349",
-      "PredictionMarket": "0x0d94D70422d4B64678b60fbC7133C390dB46049C",
-      "ResolutionEngine": "0xBe54a6E94f4C869bE2364b75aC45CF628389Aa42",
-      "ScoringEngine": "0x0Fe3Df085f516e117C120160F7c8552af39EB76C",
-      "CompositeFeed": "0xc962011fd96527022e034a2cd715ccAb5bDe1331",
-      "SubscriptionGate": "0x0b759e12Baedbb30891666193D33d689F5c23373"
+      "AgentRegistry": "0x5B1599C08d32fBeD095B37E1A17C1cc03dcc3396",
+      "PredictionMarket": "0xaa92b0434F89a17F2275b655c6fA459C43813f22",
+      "ResolutionEngine": "0xBB62C1948D35DCf60259c2003bbf3d9578DDB825",
+      "ScoringEngine": "0x8993D6b4a3CEA896a77558A1AfD2896d3505F517",
+      "CompositeFeed": "0x695aC1428FcFAb4406468A664FD7670b968aB689",
+      "SubscriptionGate": "0x21D39847d46299C358181e25741BFceee097705f"
     }
   },
   "categories": [
@@ -40,6 +40,7 @@
     "leaderboard": { "method": "GET", "path": "/api/leaderboard", "query": "category=METH_APR_24H (optional)", "cors": "*" },
     "feed": { "method": "GET", "path": "/api/feed", "query": "category=METH_APR_24H", "cors": "*", "note": "live on-chain read with snapshot fallback" },
     "narrate": { "method": "POST", "path": "/api/narrate", "cors": "*", "note": "plain-English narration of a forecast" },
+    "compliance": { "method": "GET|POST", "path": "/api/compliance", "query": "address=0x..&amountUsd=&asset=meth|usdy&kyc=true", "cors": "*", "note": "AI-assisted RWA deposit screen -> {decision ALLOW|REVIEW|DENY, checks, memo}; sanctions/AML + KYC/transfer-restriction + live on-chain AI risk-state + transaction monitoring" },
     "leaderboardSnapshot": { "method": "GET", "path": "/fallback-leaderboard.json" },
     "insightsSnapshot": { "method": "GET", "path": "/insights-snapshot.json" }
   }
