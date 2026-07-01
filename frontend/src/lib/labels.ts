@@ -18,6 +18,7 @@ export const FRIENDLY_CATEGORY: Record<CategoryId, string> = {
   METH_APR_24H: "mETH staking yield",
   USDY_APY_24H: "USDY yield",
   AAVE_MANTLE_TVL_24H: "Aave-on-Mantle deposits",
+  MNT_USD_SPOT: "MNT/USD spot price",
 };
 
 /** Web2 glossary for tooltips/disclosure copy. */

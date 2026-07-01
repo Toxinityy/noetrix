@@ -1,6 +1,6 @@
 // Hand-curated mock data. Replaced with indexer-driven hooks in Prompt 11.
 
-export type CategoryId = "METH_APR_24H" | "USDY_APY_24H" | "AAVE_MANTLE_TVL_24H";
+export type CategoryId = "METH_APR_24H" | "USDY_APY_24H" | "AAVE_MANTLE_TVL_24H" | "MNT_USD_SPOT";
 
 /// Single source of truth for the reference reasoner's model id. The deployed agent
 /// runs deepseek-chat-v3.1 (deepseek-v4-flash returns content:null and was removed);
@@ -56,6 +56,18 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     current: 142_310_440,
     unitFormatter: (n) =>
       `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
+  },
+  MNT_USD_SPOT: {
+    id: "MNT_USD_SPOT",
+    slug: "mnt-usd-spot",
+    label: "MNT/USD spot",
+    unit: "usd",
+    minStake: 0.05,
+    windowBlocks: { start: 300, end: 50_000 },
+    description:
+      "MNT/USD spot price at resolution, in USD (8-decimal on-chain). The graded truth is a live, Hermes-verifiable Pyth price pinned on-chain by a keeper at the resolution block — an independently checkable market price, not a synthetic oracle.",
+    current: 0.5,
+    unitFormatter: (n) => `$${n.toFixed(4)}`,
   },
 };
 
@@ -134,6 +146,18 @@ export type Agent = {
 
 const E = (vals: number[]): number[] => vals;
 
+// MNT_USD_SPOT is a brand-new category — no agent has resolved a MNT/USD forecast yet, so every
+// agent starts "calibrating" (resolvedCount 0, zeroed scores). Honest cold-start mock; real numbers
+// arrive once the keeper starts recording snapshots on-chain.
+const MNT_COLD = {
+  accuracyScore: 0,
+  calibrationScore: 0,
+  resolvedCount: 0,
+  lastUpdatedBlock: 0,
+  bucketAccuracy: E([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+  bucketCount: E([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]),
+};
+
 export const AGENTS: Agent[] = [
   {
     // id 2 matches the LIVE on-chain DeepSeek reasoner (KNOWN_AGENTS[2]) so the leaderboard's
@@ -173,6 +197,7 @@ export const AGENTS: Agent[] = [
         bucketAccuracy: E([0.50, 0.56, 0.60, 0.64, 0.68, 0.72, 0.77, 0.82, 0.87, 0.92]),
         bucketCount: E([2, 3, 4, 6, 8, 9, 9, 8, 7, 5]),
       },
+      MNT_USD_SPOT: MNT_COLD,
     },
     equityCurve: makeCurve(0, 1.0, 0.012, 0.004, 72),
   },
@@ -213,6 +238,7 @@ export const AGENTS: Agent[] = [
         bucketAccuracy: E([0.49, 0.52, 0.55, 0.58, 0.61, 0.64, 0.66, 0.69, 0.71, 0.73]),
         bucketCount: E([3, 4, 5, 7, 8, 8, 8, 6, 5, 4]),
       },
+      MNT_USD_SPOT: MNT_COLD,
     },
     equityCurve: makeCurve(1, 1.0, 0.005, 0.008, 72),
   },
@@ -252,6 +278,7 @@ export const AGENTS: Agent[] = [
         bucketAccuracy: E([0.43, 0.47, 0.51, 0.55, 0.60, 0.65, 0.69, 0.73, 0.77, 0.80]),
         bucketCount: E([4, 5, 5, 5, 5, 5, 4, 4, 3, 4]),
       },
+      MNT_USD_SPOT: MNT_COLD,
     },
     equityCurve: makeCurve(2, 1.0, 0.018, 0.005, 72),
   },
@@ -291,6 +318,7 @@ export const AGENTS: Agent[] = [
         bucketAccuracy: E([0.50, 0.54, 0.57, 0.60, 0.63, 0.66, 0.69, 0.71, 0.74, 0.76]),
         bucketCount: E([7, 9, 9, 8, 8, 7, 6, 5, 3, 2]),
       },
+      MNT_USD_SPOT: MNT_COLD,
     },
     equityCurve: makeCurve(3, 1.0, 0.007, 0.003, 72),
   },
@@ -330,6 +358,7 @@ export const AGENTS: Agent[] = [
         bucketAccuracy: E([0.50, 0.54, 0.58, 0.62, 0.65, 0.69, 0.71, 0.73, 0.75, 0.77]),
         bucketCount: E([4, 5, 6, 7, 7, 7, 6, 5, 3, 2]),
       },
+      MNT_USD_SPOT: MNT_COLD,
     },
     equityCurve: makeCurve(4, 1.0, 0.009, 0.0035, 72),
   },
@@ -369,6 +398,7 @@ export const AGENTS: Agent[] = [
         bucketAccuracy: E([0.30, 0.34, 0.39, 0.44, 0.50, 0.56, 0.63, 0.71, 0.80, 0.87]),
         bucketCount: E([2, 2, 3, 3, 4, 4, 5, 4, 3, 3]),
       },
+      MNT_USD_SPOT: MNT_COLD,
     },
     equityCurve: makeCurve(5, 1.0, 0.024, 0.002, 72),
   },
@@ -408,6 +438,7 @@ export const AGENTS: Agent[] = [
         bucketAccuracy: E([0.44, 0.47, 0.50, 0.52, 0.55, 0.57, 0.59, 0.60, 0.61, 0.62]),
         bucketCount: E([5, 6, 7, 8, 8, 7, 6, 5, 3, 2]),
       },
+      MNT_USD_SPOT: MNT_COLD,
     },
     equityCurve: makeCurve(6, 1.0, 0.003, 0.005, 72),
   },
@@ -447,6 +478,7 @@ export const AGENTS: Agent[] = [
         bucketAccuracy: E([0.47, 0.50, 0.53, 0.56, 0.59, 0.62, 0.64, 0.66, 0.68, 0.70]),
         bucketCount: E([9, 12, 14, 15, 14, 13, 11, 9, 7, 5]),
       },
+      MNT_USD_SPOT: MNT_COLD,
     },
     equityCurve: makeCurve(7, 1.0, 0.006, 0.004, 72),
   },
@@ -614,8 +646,10 @@ export type FeedPoint = {
 export function makeFeedHistory(catId: CategoryId, points = 96): FeedPoint[] {
   const cat = CATEGORIES[catId];
   const base = cat.current;
-  const drift = cat.unit === "usd" ? 280_000 : cat.id === "USDY_APY_24H" ? 6 : 4;
-  const noise = cat.unit === "usd" ? 480_000 : cat.id === "USDY_APY_24H" ? 18 : 10;
+  const drift =
+    cat.id === "MNT_USD_SPOT" ? 0.015 : cat.unit === "usd" ? 280_000 : cat.id === "USDY_APY_24H" ? 6 : 4;
+  const noise =
+    cat.id === "MNT_USD_SPOT" ? 0.03 : cat.unit === "usd" ? 480_000 : cat.id === "USDY_APY_24H" ? 18 : 10;
   const start = 12_488_300 - points * 75;
   return Array.from({ length: points }, (_, i) => {
     const t = i / (points - 1);

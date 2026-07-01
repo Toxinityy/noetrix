@@ -23,6 +23,7 @@ const USD_8DEC: Record<CategoryId, boolean> = {
   METH_APR_24H: false,
   USDY_APY_24H: false,
   AAVE_MANTLE_TVL_24H: true,
+  MNT_USD_SPOT: true, // spot price in 8-dec USD
 };
 const scaleFor = (c: CategoryId) => (USD_8DEC[c] ? 1e8 : 1);
 
@@ -30,6 +31,7 @@ const RESOLVER_KEY: Record<CategoryId, string> = {
   METH_APR_24H: "MethAprResolver",
   USDY_APY_24H: "UsdyApyResolver",
   AAVE_MANTLE_TVL_24H: "AaveMantleTvlResolver",
+  MNT_USD_SPOT: "PythSpotResolver",
 };
 
 const catHash = (label: string): Hex => keccak256(toBytes(label));

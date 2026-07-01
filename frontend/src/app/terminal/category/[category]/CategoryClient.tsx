@@ -41,6 +41,13 @@ const DOMAIN: Record<
     resolver: "AaveMantleTvlResolver",
     cadence: "~24h · 43,200 blocks",
   },
+  MNT_USD_SPOT: {
+    friendlyRange: "$0 to $5 per MNT",
+    range: "$0 – $5 (5e8, USD 8-dec)",
+    bucket: "$0.05 × 100 buckets",
+    resolver: "PythSpotResolver (Pyth keeper-snapshot)",
+    cadence: "short-horizon · ~1h",
+  },
 };
 
 export function CategoryClient({ categoryId }: { categoryId: CategoryId }) {
