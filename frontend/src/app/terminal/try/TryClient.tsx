@@ -68,7 +68,7 @@ export function TryClient() {
   const [beforeBlock, setBeforeBlock] = React.useState<number | null>(null);
 
   const { address, isConnected, chainId } = useAccount();
-  const { connect, connectors, isPending: connecting } = useConnect();
+  const { connect, connectors, isPending: connecting, error: connectError } = useConnect();
   const { switchChain, isPending: switching } = useSwitchChain();
   const { data: balance } = useBalance({ address, query: { enabled: !!address } });
   const { writeContractAsync, isPending: writing } = useWriteContract();
@@ -109,9 +109,19 @@ export function TryClient() {
     ? derivePanelState({ isConnected, chainId, expectedChainId: env.chainId, balanceWei: balance?.value })
     : "disconnected";
 
+  // EIP-6963 discovery can register several injected connectors; pick the injected one explicitly
+  // rather than connectors[0] (which is whichever wallet was discovered first). No extension present
+  // → send the user to install one instead of firing a connect that throws and silently resets.
+  const hasInjectedWallet =
+    mounted && typeof window !== "undefined" && Boolean((window as { ethereum?: unknown }).ethereum);
+
   const handleConnect = () => {
-    const connector = connectors[0];
-    if (connector) connect({ connector });
+    const connector = connectors.find((c) => c.type === "injected") ?? connectors[0];
+    if (connector && hasInjectedWallet) {
+      connect({ connector });
+      return;
+    }
+    window.open("https://metamask.io/download/", "_blank", "noopener,noreferrer");
   };
 
   const handleRefresh = async () => {
@@ -262,18 +272,28 @@ export function TryClient() {
         ) : state === "disconnected" ? (
           <div>
             <p className="text-sm text-[var(--color-text-dim)]">
-              Connect a wallet to request a real composite refresh on Mantle Sepolia.
+              {hasInjectedWallet
+                ? "Connect a wallet to request a real composite refresh on Mantle Sepolia."
+                : "No browser wallet detected. Install one (e.g. MetaMask) or open this page in your wallet's browser."}
             </p>
             <div className="mt-4">
               <button
                 type="button"
                 onClick={handleConnect}
-                disabled={connecting || !connectors[0]}
+                disabled={connecting}
+                title={connectError ? connectError.message : undefined}
                 className="rounded border border-[var(--color-accent)] px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-[var(--color-accent)] disabled:opacity-60"
               >
-                {connecting ? "Connecting…" : "Connect wallet"}
+                {connecting ? "Connecting…" : hasInjectedWallet ? "Connect wallet" : "Install a wallet"}
               </button>
             </div>
+            {connectError && (
+              <p className="mt-3 text-sm text-[var(--color-warn)]">
+                {/rejected|denied|4001/i.test(connectError.message)
+                  ? "Connection request was rejected in your wallet."
+                  : connectError.message}
+              </p>
+            )}
           </div>
         ) : state === "wrong-network" ? (
           <div>

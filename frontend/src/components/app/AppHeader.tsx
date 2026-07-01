@@ -10,21 +10,22 @@ import { ChevronDown, ExternalLink, Menu } from "lucide-react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { cn } from "@/lib/cn";
 
-// Primary nav follows the pitch priority: Alpha & Data (Insights/Leaderboard) +
-// the Best-Web2-UX surface (Simulator) + the live write demo (Try). Pricing (open
-// in v1) and the niche/utility routes live under More.
+// Primary nav is ordered as the demo narrative — the un-fakeable benchmark story
+// told left to right: Leaderboard (the league) -> Insights (the pre-committed proof)
+// -> Feed (the product protocols consume) -> Try (do it live). Dashboard, the RWA
+// Simulator, and the utility routes live under More.
 type NavItem = { href: string; label: string; external?: boolean };
 
 const primaryNav: NavItem[] = [
-  { href: "/terminal/dashboard", label: "Dashboard" },
-  { href: "/terminal/insights", label: "Insights" },
   { href: "/terminal/leaderboard", label: "Leaderboard" },
-  { href: "/terminal/simulation", label: "Simulator" },
+  { href: "/terminal/insights", label: "Insights" },
+  { href: "/terminal/feed/meth-apr-24h", label: "Feed" },
   { href: "/terminal/try", label: "Try" },
 ];
 const moreNav: NavItem[] = [
+  { href: "/terminal/dashboard", label: "Dashboard" },
+  { href: "/terminal/simulation", label: "Simulator" },
   { href: "/terminal/pricing", label: "Pricing" },
-  { href: "/terminal/feed/meth-apr-24h", label: "Feed" },
   { href: "/terminal/demo-consumer", label: "For protocols" },
   { href: "/terminal/compliance", label: "Compliance" },
   { href: "/terminal/submit", label: "Submit" },
