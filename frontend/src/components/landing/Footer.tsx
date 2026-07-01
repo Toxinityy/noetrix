@@ -121,8 +121,8 @@ export function Footer() {
               <span className="num text-[var(--color-text)]">≤1 block</span>
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-[var(--color-text-dim)]">Pro pilot</span>
-              <span className="num text-[var(--color-text)]">$100 / 30 days</span>
+              <span className="text-[var(--color-text-dim)]">Pro pilot (testnet)</span>
+              <span className="num text-[var(--color-text)]">0.5 MNT / 30 days</span>
             </div>
           </motion.div>
         </div>

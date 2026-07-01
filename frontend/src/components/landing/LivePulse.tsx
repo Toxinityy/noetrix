@@ -196,7 +196,7 @@ export function LivePulse() {
           <div className="flex flex-col border-l border-[var(--color-border)]">
             <Stat label="Composite" value={<motion.span>{displayValue}</motion.span>} unit="bps" emphasized />
             <Stat label="Confidence" value="84.2" unit="%" />
-            <Stat label="Agents" value="14 / 20" unit="contributing" />
+            <Stat label="Agents" value="7 / 20" unit="contributing" />
             <Stat label="Last refresh" value="2m 14s" unit="ago" muted />
             <button className="group mt-auto border-t border-[var(--color-border)] px-5 py-4 text-left font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)] hover:text-black">
               Subscribe to feed

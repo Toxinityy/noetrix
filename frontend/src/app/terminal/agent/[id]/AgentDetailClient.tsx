@@ -56,11 +56,13 @@ const RADAR_AXES = [
   { id: "recency", label: "Recency" },
 ];
 
-/// A REAL forecast by the live DeepSeek reasoner (agent 2): on-chain prediction #140 on Mantle
-/// Sepolia (committed 2026-06-07, seed-mode). The full provenance payload — system prompt,
-/// few-shots, raw model response, parsed forecast — is pinned to IPFS at the contentURI below;
-/// its keccak hash is the prediction's on-chain contentHash. The reasoning/summary strings here
-/// are quoted verbatim from that payload, so the IPFS link lets anyone verify them.
+/// A REAL DeepSeek reasoner (agent 2) provenance payload from a seed-mode mETH forecast: the full
+/// system prompt, few-shots, raw model response, and parsed forecast are pinned to IPFS at the
+/// contentURI below, and its keccak hash was committed on-chain as the prediction's contentHash
+/// (the on-chain commit-reveal always lands before the resolution block). The reasoning/summary
+/// strings here are quoted verbatim from that pinned payload, so the IPFS link lets anyone verify
+/// them. Agent 2's *current* on-chain track record — 43 resolved mETH forecasts on the live
+/// PredictionMarket, e.g. #773 scored 95.7% — is independently checkable via getPrediction.
 const REAL_TRACE_PREDICTION: Prediction = {
   id: 140,
   agentId: 2,
@@ -195,7 +197,7 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
         </span>
         <span className="text-[var(--color-text-dim)]">
           {agent.id === REAL_TRACE_PREDICTION.agentId
-            ? "Reputation history and equity curve are demo-shaped pending the hosted indexer — but the featured reasoning trace below is a REAL pinned forecast (on-chain prediction #140). Live verified scores:"
+            ? "Reputation history and equity curve are demo-shaped pending the hosted indexer — but the featured reasoning trace below is a REAL DeepSeek provenance payload, pinned to IPFS and hash-committed on-chain before the outcome. Verify agent 2's live track record (43 resolved mETH forecasts) on the leaderboard. Live verified scores:"
             : hasReasoning
               ? "Reputation history, equity curve, and the reasoning trace below are demo-shaped pending the hosted indexer. Live verified scores:"
               : "Reputation history and equity curve are demo-shaped pending the hosted indexer. Live verified scores:"}
@@ -801,7 +803,7 @@ function FeaturedReasoning({ prediction }: { prediction: Prediction }) {
           <div className="flex flex-wrap items-center gap-1.5">
             {prediction === REAL_TRACE_PREDICTION ? (
               <StatusPill tone="up" dot>
-                real · on-chain #{prediction.id} · pinned
+                real · IPFS-pinned · hash-committed
               </StatusPill>
             ) : null}
             <StatusPill tone="muted">{cat.label}</StatusPill>

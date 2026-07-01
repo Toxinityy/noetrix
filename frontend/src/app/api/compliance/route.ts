@@ -61,11 +61,12 @@ async function screen(address: string, amountUsd: number, asset: ComplianceAsset
     kycVerified,
   };
   const result = evaluateCompliance(input);
-  const memo = process.env.OPENROUTER_API_KEY
+  const aiConfigured = !!process.env.OPENROUTER_API_KEY;
+  const memo = aiConfigured
     ? await assessWith(input, result, openRouterFetcher())
     : fallbackMemo(input, result);
   return {
-    source: "ai-assisted",
+    source: aiConfigured ? "ai-assisted" : "rule-based",
     chainId: env.chainId,
     address,
     asset,

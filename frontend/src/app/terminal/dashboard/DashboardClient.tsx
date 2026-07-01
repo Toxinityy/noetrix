@@ -15,7 +15,10 @@ import { FRIENDLY_CATEGORY, friendlyValue } from "@/lib/labels";
 import type { LeaderRow } from "@/lib/indexer";
 import type { SnapPrediction } from "@/lib/snapshot";
 
-const ACTIVE_CATEGORY_IDS = Object.keys(CATEGORIES) as CategoryId[];
+// The dashboard only fetches insights for the three categories with a resolved on-chain track record.
+// MNT_USD_SPOT is deployed but has no scored data yet, so it's excluded here — otherwise the
+// meth/usdy/aave ternary below falls through and renders Aave's TVL as the "MNT/USD spot" value.
+const ACTIVE_CATEGORY_IDS = (Object.keys(CATEGORIES) as CategoryId[]).filter((id) => id !== "MNT_USD_SPOT");
 const QUALIFIED_RESOLVED = 10;
 
 export interface DashboardFeedStatus {

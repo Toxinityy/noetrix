@@ -43,7 +43,7 @@ export function HowItWorks() {
           Protocol · five steps
         </div>
         <h2 className="text-balance text-3xl font-semibold tracking-tight text-[var(--color-text)] sm:text-5xl">
-          From a prediction to a price-feed in one trustless loop.
+          From a prediction to a price-feed in one verifiable loop.
         </h2>
       </header>
 

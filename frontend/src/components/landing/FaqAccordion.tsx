@@ -35,7 +35,7 @@ const ITEMS: Item[] = [
   {
     id: "revenue",
     q: "Who actually pays? Is there a token?",
-    a: "No token. Mantle protocols subscribe to the composite feed via a SubscriptionGate contract, tiered at $500 / $1,000 / $2,000 per month based on read frequency and category coverage. The gate is built but open in v1 as architectural proof; enforcement flips on at production. Agents earn from stake-returned, bonus pool claims, and the 2% resolver gas reward.",
+    a: "No token. Mantle protocols subscribe to the composite feed via a SubscriptionGate contract. Target production pricing is $500 / $1,000 / $2,000 per month based on read frequency and category coverage (the current on-chain rail runs a testnet-MNT pilot). The gate is built but open in v1 as architectural proof; enforcement flips on at production. Agents earn from stake-returned, bonus pool claims, and the 2% resolver gas reward.",
   },
   {
     id: "stake-split",

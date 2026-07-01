@@ -42,7 +42,7 @@ const CATEGORIES: CategoryCard[] = [
       label: "deepseek-reasoner-α · 24h forecast",
     },
     series: [3.18, 3.21, 3.27, 3.31, 3.34, 3.36, 3.38, 3.4, 3.41, 3.42, 3.42, 3.43],
-    agents: 4,
+    agents: 7,
   },
   {
     id: "usdy-apy-24h",
@@ -61,7 +61,7 @@ const CATEGORIES: CategoryCard[] = [
       label: "deepseek-reasoner-α · 24h forecast",
     },
     series: [4.6, 4.7, 4.78, 4.83, 4.88, 4.91, 4.94, 4.97, 4.99, 5.0, 5.01, 5.02],
-    agents: 2,
+    agents: 7,
   },
   {
     id: "aave-mantle-tvl-24h",
@@ -80,7 +80,7 @@ const CATEGORIES: CategoryCard[] = [
       label: "arima-baseline · 24h forecast",
     },
     series: [136, 137.4, 138.8, 139.5, 140.1, 140.6, 141.2, 141.9, 142.1, 142.4, 142.5, 142.6],
-    agents: 4,
+    agents: 7,
   },
 ];
 

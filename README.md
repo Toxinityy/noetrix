@@ -15,8 +15,8 @@ Every prediction _committed before the outcome_ → CRPS-graded against on-chain
 [![Docs](https://img.shields.io/badge/Docs-GitBook-3884FF?style=for-the-badge&logo=gitbook&logoColor=white)](https://noetrix.gitbook.io/product-docs/)
 
 ![Solidity](https://img.shields.io/badge/Solidity-0.8.24-363636?style=flat-square&logo=solidity&logoColor=white)
-![Foundry](https://img.shields.io/badge/Foundry-191_tests_passing-2EA043?style=flat-square)
-![Contracts](https://img.shields.io/badge/Contracts-19_verified-65B3AE?style=flat-square&logo=ethereum&logoColor=white)
+![Foundry](https://img.shields.io/badge/Foundry-224_tests_passing-2EA043?style=flat-square)
+![Contracts](https://img.shields.io/badge/Contracts-20_deployed-65B3AE?style=flat-square&logo=ethereum&logoColor=white)
 ![ERC-8004](https://img.shields.io/badge/Identity-ERC--8004-F6851B?style=flat-square)
 ![Agents](https://img.shields.io/badge/Swarm-7_AI_agents_live-9B5DE5?style=flat-square)
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white)
@@ -97,7 +97,7 @@ flowchart TD
     chain --> IDX --> FE
 ```
 
-> **15 production contracts + 4 mock instances = 19 deployed addresses.** Full spec in [`docs/PRD.md`](docs/PRD.md) · product docs on [GitBook](https://noetrix.gitbook.io/product-docs/).
+> **18 production contracts + 2 mock instances = 20 deployed addresses.** Full spec in [`docs/PRD.md`](docs/PRD.md) · product docs on [GitBook](https://noetrix.gitbook.io/product-docs/).
 
 ---
 
@@ -132,7 +132,7 @@ pnpm install          # installs all workspace packages
 ```bash
 cd contracts
 forge build
-forge test                                   # 191 tests
+forge test                                   # 224 tests
 
 # deploy (needs a funded key):
 forge script script/Deploy.s.sol:Deploy --rpc-url $MANTLE_SEPOLIA_RPC \
@@ -190,7 +190,7 @@ cd agents/refresher         && pnpm start      # refreshes CompositeFeed; `--onc
 
 ## 📜 Deployed contracts
 
-> **Mantle Sepolia · chainId `5003`.** All 19 contracts are source-verified on the explorer (Etherscan V2). Addresses link straight to Mantlescan. Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/deployments/mantle-sepolia.json).
+> **Mantle Sepolia · chainId `5003`.** 20 contracts deployed; the core protocol contracts are source-verified on the explorer (Etherscan V2) — PythSpotResolver (the newest resolver) verification is pending. Addresses link straight to Mantlescan. Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/deployments/mantle-sepolia.json).
 
 | Layer | Contract | Address |
 |-------|----------|---------|
@@ -202,9 +202,10 @@ cd agents/refresher         && pnpm start      # refreshes CompositeFeed; `--onc
 | | BonusDistributor | [`0xD4Aa72f2628797a99b98dC06e0772b995691E9B0`](https://sepolia.mantlescan.xyz/address/0xD4Aa72f2628797a99b98dC06e0772b995691E9B0) |
 | 📡 **Feed / consumer** | CompositeFeed | [`0x695aC1428FcFAb4406468A664FD7670b968aB689`](https://sepolia.mantlescan.xyz/address/0x695aC1428FcFAb4406468A664FD7670b968aB689) |
 | | SubscriptionGate | [`0x21D39847d46299C358181e25741BFceee097705f`](https://sepolia.mantlescan.xyz/address/0x21D39847d46299C358181e25741BFceee097705f) |
-| | DemoFeedConsumer | [`0x7434CA16d6d497F070B36dDB0D036ab91903A742`](https://sepolia.mantlescan.xyz/address/0x7434CA16d6d497F070B36dDB0D036ab91903A742) |
+| | DemoFeedConsumer | [`0xAe56da72838a3c5F833bE9B840f316dF02bB5175`](https://sepolia.mantlescan.xyz/address/0xAe56da72838a3c5F833bE9B840f316dF02bB5175) |
+| 🔮 **Live Pyth** | PythSpotResolver | [`0x5CEa3D924c3f0Ac02BA4F17526c087D381bC5fF4`](https://sepolia.mantlescan.xyz/address/0x5CEa3D924c3f0Ac02BA4F17526c087D381bC5fF4) |
 | 💎 **AI × RWA** | YieldAllocator | [`0xD68ABfAD2f7429A71ae98dEc0203c4F0032b447d`](https://sepolia.mantlescan.xyz/address/0xD68ABfAD2f7429A71ae98dEc0203c4F0032b447d) |
-| | RiskManager | [`0xEfE0edF058f364D9BdF65eD206c58019CD1Cb21B`](https://sepolia.mantlescan.xyz/address/0xEfE0edF058f364D9BdF65eD206c58019CD1Cb21B) |
+| | RiskManager | [`0xbe7e481DfD3FffFC5c6cBd4e2c24ACb503A05317`](https://sepolia.mantlescan.xyz/address/0xbe7e481DfD3FffFC5c6cBd4e2c24ACb503A05317) |
 | 🌪️ **Swarm / stress** | SentimentOracle | [`0x43F573B43C6AD990FAFA388E1E34710c535b1e46`](https://sepolia.mantlescan.xyz/address/0x43F573B43C6AD990FAFA388E1E34710c535b1e46) |
 | | MarketStressMonitor | [`0xF8a5122f0167c06BFAa57B6203eF962Ab7750eB6`](https://sepolia.mantlescan.xyz/address/0xF8a5122f0167c06BFAa57B6203eF962Ab7750eB6) |
 | 🔮 **Resolvers & oracles** | MethAprResolver | [`0x5c42FcFA0fC9D7fc556993eC6072cE029808E39b`](https://sepolia.mantlescan.xyz/address/0x5c42FcFA0fC9D7fc556993eC6072cE029808E39b) |
@@ -233,7 +234,7 @@ cd agents/refresher         && pnpm start      # refreshes CompositeFeed; `--onc
 
 - 💎 **AI × RWA** (secondary) — a **YieldAllocator** (dynamic mETH/USDY allocation) and **RiskManager** (automated risk state) consume that feed.
 - ✨ **Best UX / Smoothest Web2 Onboarding** — the wallet-free `/simulation` deposit simulator.
-- 🏆 **Grand Champion** nominated for full-stack depth (15 production contracts + a 7-agent AI forecasting swarm + indexer + frontend) and native Mantle composition.
+- 🏆 **Grand Champion** nominated for full-stack depth (18 production contracts + a 7-agent AI forecasting swarm + indexer + frontend) and native Mantle composition.
 
 Full submission: [`docs/SUBMISSION.md`](docs/SUBMISSION.md) · Pre-flight: [`docs/PREFLIGHT.md`](docs/PREFLIGHT.md) · Go-live runbook: [`docs/DEPLOY.md`](docs/DEPLOY.md) · Server hosting: [`docs/SERVER_DEPLOY.md`](docs/SERVER_DEPLOY.md)
 
@@ -242,7 +243,7 @@ Full submission: [`docs/SUBMISSION.md`](docs/SUBMISSION.md) · Pre-flight: [`doc
 ## 📂 Repo layout
 
 ```text
-contracts/   Foundry — 15 production contracts + 4 mocks, deploy/smoke/e2e
+contracts/   Foundry — 18 production contracts + 2 mocks, deploy/smoke/e2e
 indexer/     Ponder — event handlers + REST API
 frontend/    Next.js 16 — cinematic landing + terminal-core app
 agents/      sdk, forecasters, arima-baseline, naive-baseline, deepseek-reasoner,

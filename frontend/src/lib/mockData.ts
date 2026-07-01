@@ -65,7 +65,7 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     minStake: 0.05,
     windowBlocks: { start: 300, end: 50_000 },
     description:
-      "MNT/USD spot price at resolution, in USD (8-decimal on-chain). The graded truth is a live, Hermes-verifiable Pyth price pinned on-chain by a keeper at the resolution block — an independently checkable market price, not a synthetic oracle.",
+      "MNT/USD spot price at resolution, in USD (8-decimal on-chain). Newly deployed on-chain: the resolver grades against a Hermes-verifiable Pyth price a keeper pins at the resolution block — an independently checkable market price, not a synthetic oracle. Keeper snapshots and a resolved track record land next; no scored history yet.",
     current: 0.5,
     unitFormatter: (n) => `$${n.toFixed(4)}`,
   },

@@ -12,7 +12,7 @@ const CORS: Record<string, string> = {
   "Cache-Control": "public, max-age=15",
 };
 
-const VALID = new Set(["METH_APR_24H", "USDY_APY_24H", "AAVE_MANTLE_TVL_24H"]);
+const VALID = new Set(["METH_APR_24H", "USDY_APY_24H", "AAVE_MANTLE_TVL_24H", "MNT_USD_SPOT"]);
 
 export function OPTIONS() {
   return new Response(null, { status: 204, headers: CORS });

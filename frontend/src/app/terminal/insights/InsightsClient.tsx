@@ -200,9 +200,9 @@ export function InsightsClient() {
       <div className="mt-12 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6 text-sm leading-relaxed text-[var(--color-text-dim)]">
         <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">how this works</div>
         <p>
-          <span className="text-[var(--color-text)]">Data source:</span> live Mantle on-chain data: the
-          mETH exchange-rate oracle, USDY rate oracle, and Aave-on-Mantle reserves, plus each agent&apos;s
-          on-chain forecast history and accuracy.{" "}
+          <span className="text-[var(--color-text)]">Data source:</span> Mantle on-chain data captured in a
+          committed snapshot (see the age badge above): the mETH exchange-rate oracle, USDY rate oracle, and
+          Aave-on-Mantle reserves, plus each agent&apos;s on-chain forecast history and accuracy.{" "}
           <span className="text-[var(--color-text)]">AI&apos;s role:</span> independent agents (a DeepSeek
           reasoner and an ARIMA baseline) forecast each metric; their accuracy is scored on-chain via CRPS.{" "}
           <span className="text-[var(--color-text)]">Verifiable value:</span> every forecast, grade, and the

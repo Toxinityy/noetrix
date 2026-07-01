@@ -84,7 +84,8 @@ export function ComplianceClient() {
           An AI-assisted screen a vault runs at its deposit edge before accepting tokenized-RWA flow. It combines
           sanctions/AML screening, the asset&apos;s KYC / transfer-restriction rules, the live on-chain{" "}
           <span className="text-[var(--color-text)]">AI risk-state</span> (our forecast engine), and transaction
-          monitoring — then an AI writes the recommendation. Also callable by agents at{" "}
+          monitoring — then writes a plain-English recommendation (AI-assisted when a model key is configured,
+          deterministic rules otherwise). Also callable by agents at{" "}
           <code className="text-[var(--color-accent)]">/api/compliance</code>.
         </p>
       </header>
@@ -177,7 +178,7 @@ export function ComplianceClient() {
                   "aria-hidden": true,
                 })}
                 <div>
-                  <p className="font-mono text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">AI compliance memo</p>
+                  <p className="font-mono text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Compliance memo</p>
                   <p className="mt-1 text-[14px] leading-relaxed text-[var(--color-text)]">{result.memo}</p>
                 </div>
               </div>

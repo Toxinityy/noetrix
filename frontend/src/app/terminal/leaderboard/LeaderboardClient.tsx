@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowUpRight, Crown, Activity, Layers, Coins, Users, Info, RefreshCw } from "lucide-react";
+import { ArrowUpRight, Crown, Activity, Layers, Users, Info, RefreshCw } from "lucide-react";
 import { Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
 import { Stat } from "@/components/ui/Stat";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -15,7 +15,7 @@ import { NumberFlow } from "@/components/ui/NumberFlow";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { RwaStrategyPanel } from "@/components/app/RwaStrategyPanel";
-import { CATEGORIES, KIND_COLOR, KIND_GLYPH, type CategoryId, type AgentKind, RECENT_EPOCHS } from "@/lib/mockData";
+import { CATEGORIES, KIND_COLOR, KIND_GLYPH, type CategoryId, type AgentKind } from "@/lib/mockData";
 import { useLeaderboard, useFeedHistory } from "@/lib/hooks";
 import { ErrorState } from "@/components/ui/ErrorState";
 import type { LeaderRow } from "@/lib/indexer";
@@ -76,7 +76,6 @@ export function LeaderboardClient() {
   );
   const topAgent = sortedByAccuracy[0];
   const totalResolved = board.data.reduce((sum, a) => sum + a.resolvedCount, 0);
-  const recentEpoch = RECENT_EPOCHS[0];
 
   const columns: Column<LeaderRow>[] = [
     {
@@ -216,7 +215,6 @@ export function LeaderboardClient() {
                   ? "Cached"
                   : "Demo data"}
           </StatusPill>
-          <StatusPill tone="muted">Epoch {recentEpoch.id}</StatusPill>
         </div>
       </div>
 
@@ -290,7 +288,7 @@ export function LeaderboardClient() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-6 border-t border-[var(--color-border)] pt-5 sm:grid-cols-4">
+            <div className="mt-6 grid grid-cols-2 gap-6 border-t border-[var(--color-border)] pt-5 sm:grid-cols-3">
               <Stat
                 label="contributors"
                 value={lastPoint?.contributors ?? 0}
@@ -305,11 +303,6 @@ export function LeaderboardClient() {
                 label="block"
                 value={lastPoint ? `#${fmtBlock(lastPoint.block)}` : "n/a"}
                 sub="last refresh"
-              />
-              <Stat
-                label="bonus pool"
-                value={`${recentEpoch.totalPool.toFixed(3)} MNT`}
-                sub={`epoch ${recentEpoch.id}`}
               />
             </div>
           </PanelBody>
@@ -415,7 +408,7 @@ export function LeaderboardClient() {
       </div>
 
       {/* KPIs */}
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-3 sm:grid-cols-3">
         <KpiCard icon={<Crown size={14} />} label="lead agent">
           <span className="font-mono text-lg text-[var(--color-accent)]">{topAgent?.name ?? "n/a"}</span>
         </KpiCard>
@@ -424,9 +417,6 @@ export function LeaderboardClient() {
         </KpiCard>
         <KpiCard icon={<Users size={14} />} label="ranked agents">
           <span className="font-mono text-lg tabular">{board.data.length}</span>
-        </KpiCard>
-        <KpiCard icon={<Coins size={14} />} label="open bonus pool">
-          <span className="font-mono text-lg tabular">{recentEpoch.totalPool.toFixed(3)} MNT</span>
         </KpiCard>
       </div>
 

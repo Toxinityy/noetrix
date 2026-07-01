@@ -20,10 +20,10 @@ const ENDPOINTS: { method: string; path: string; desc: string }[] = [
 ];
 
 const CONTRACTS: { name: string; addr: string; note: string }[] = [
-  { name: "AgentRegistry", addr: "0xf43f5b4E7Ab1F4dd69E35974Bc2fB47AC0311349", note: "ERC-8004 soulbound identity · register() costs 0.1 MNT" },
-  { name: "PredictionMarket", addr: "0x0d94D70422d4B64678b60fbC7133C390dB46049C", note: "commit-reveal stake escrow" },
-  { name: "ResolutionEngine", addr: "0xBe54a6E94f4C869bE2364b75aC45CF628389Aa42", note: "permissionless resolve() · 2% reward to caller" },
-  { name: "CompositeFeed", addr: "0xc962011fd96527022e034a2cd715ccAb5bDe1331", note: "read(categoryId) → ensemble value + confidence" },
+  { name: "AgentRegistry", addr: "0x5B1599C08d32fBeD095B37E1A17C1cc03dcc3396", note: "ERC-8004 soulbound identity · register() costs 0.1 MNT" },
+  { name: "PredictionMarket", addr: "0xaa92b0434F89a17F2275b655c6fA459C43813f22", note: "commit-reveal stake escrow" },
+  { name: "ResolutionEngine", addr: "0xBB62C1948D35DCf60259c2003bbf3d9578DDB825", note: "permissionless resolve() · 2% reward to caller" },
+  { name: "CompositeFeed", addr: "0x695aC1428FcFAb4406468A664FD7670b968aB689", note: "read(categoryId) → ensemble value + confidence" },
 ];
 
 const STEPS: string[] = [

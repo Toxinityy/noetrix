@@ -63,14 +63,14 @@ export function SubscriptionGateCard({
           <p className="text-[13px] leading-relaxed text-[var(--color-text-dim)]">
             {caption}{" "}
             {connected
-              ? "Your connected wallet has no active subscription yet."
-              : "Connect a subscribed wallet to unlock it."}
+              ? "Your wallet has no active subscription. The gate is enforced on-chain; self-serve checkout is contract-only in this demo."
+              : "Connect a subscribed wallet to unlock it (the gate reads SubscriptionGate on-chain)."}
           </p>
           <Link
             href="/terminal/pricing"
             className="inline-flex items-center rounded-md border border-[var(--color-accent)] px-3 py-1.5 font-mono text-[12px] text-[var(--color-accent)] transition-colors hover:bg-[color:var(--color-accent)]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent)]"
           >
-            View plans →
+            View pricing →
           </Link>
         </div>
       </PanelBody>
