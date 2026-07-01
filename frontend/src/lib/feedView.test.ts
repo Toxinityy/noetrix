@@ -20,6 +20,28 @@ describe("findLookbackPoint", () => {
 
     expect(findLookbackPoint(history, 43_200)).toBeNull();
   });
+
+  it("returns null when the nearest point sits across a data gap (not a real 24h-ago point)", () => {
+    // Old cluster far below the 24h target, then a jump to recent — the closest point (the latest,
+    // 43_200 off the target) is outside tolerance, so it's not a genuine 24h change.
+    const history = [
+      { block: 10_000, value: 300, confidence: 8000, contributors: 3 },
+      { block: 143_200, value: 380, confidence: 8200, contributors: 5 },
+    ];
+
+    expect(findLookbackPoint(history, 43_200)).toBeNull();
+  });
+
+  it("accepts a point within tolerance of the 24h target (≈24h ago counts)", () => {
+    // Target = 100_000; nearest real point at 95_000 is 5k off (< 21.6k tolerance) and older than
+    // the target, so it's a genuine ≈24h-ago point.
+    const history = [
+      { block: 95_000, value: 355, confidence: 8000, contributors: 3 },
+      { block: 143_200, value: 380, confidence: 8200, contributors: 5 },
+    ];
+
+    expect(findLookbackPoint(history, 43_200)?.block).toBe(95_000);
+  });
 });
 
 describe("feedSourceLabel", () => {

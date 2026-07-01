@@ -33,7 +33,8 @@ export interface MarketResult {
   riskState: RiskState; // worst (highest) of the two assets, like RwaClient's headline badge
   methConfBps: number;
   usdyConfBps: number;
-  blendedApyPct: number; // allocation-weighted blended yearly return
+  blendedApyPct: number; // nominal target blend (allocation-weighted raw yields, pre-risk)
+  effectiveApyPct: number; // RISK-ADJUSTED: nominal blend haircut by per-asset confidence (on-chain eff)
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
@@ -69,7 +70,23 @@ export function simulateMarket(stress: number, base: MarketBase): MarketResult {
   const blendedApyPct =
     (allocMethBps / 10_000) * base.methApyPct + (allocUsdyBps / 10_000) * base.usdyApyPct;
 
-  return { allocMethBps, allocUsdyBps, riskState, methConfBps, usdyConfBps, blendedApyPct };
+  // Risk-adjusted return: haircut each asset's yield by its confidence (the on-chain eff = yield×conf/1e4),
+  // THEN blend. As stress rises, both confidences fall → this falls monotonically. This is why a stressed
+  // market pays LESS: the nominal blend can drift up when rotating to a higher-nominal-yield asset, but the
+  // AI's *expected* (uncertainty-discounted) return drops — the number a depositor should actually read.
+  const effMethPct = base.methApyPct * (methConfBps / 10_000);
+  const effUsdyPct = base.usdyApyPct * (usdyConfBps / 10_000);
+  const effectiveApyPct = (allocMethBps / 10_000) * effMethPct + (allocUsdyBps / 10_000) * effUsdyPct;
+
+  return {
+    allocMethBps,
+    allocUsdyBps,
+    riskState,
+    methConfBps,
+    usdyConfBps,
+    blendedApyPct,
+    effectiveApyPct,
+  };
 }
 
 /// Stress-level classification — mirrors the 3-source logic in MarketStressMonitor on-chain

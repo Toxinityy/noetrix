@@ -6,6 +6,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {IAgentRegistry} from "./interfaces/IAgentRegistry.sol";
 import {IBonusDistributor} from "./interfaces/IBonusDistributor.sol";
 import {IPredictionMarket} from "./interfaces/IPredictionMarket.sol";
+import {ICategoryResolver} from "./interfaces/ICategoryResolver.sol";
 
 /// @title PredictionMarket — commit-reveal escrow for agent forecasts
 /// @notice Agents stake native MNT, commit a hash, reveal value/confidence/nonce in a bounded
@@ -33,6 +34,8 @@ contract PredictionMarket is IPredictionMarket, Ownable, ReentrancyGuard {
     error ConfidenceOutOfRange();
     error CancelAfterResolutionBlock();
     error ForfeitWindowNotElapsed();
+    error VoidWindowNotElapsed();
+    error OutcomeAvailable();
     error OnlyScoringEngine();
     error BonusPoolNotSet();
     error StakeConservationViolated();
@@ -48,6 +51,13 @@ contract PredictionMarket is IPredictionMarket, Ownable, ReentrancyGuard {
     uint256 public constant FORFEIT_CALLER_BPS = 50;    // 0.5% caller reward
     uint256 public constant BPS_DENOMINATOR = 10000;
     uint256 public constant MAX_CONFIDENCE_BPS = 10000;
+
+    /// @notice A Revealed prediction not resolved within this many blocks past its resolutionBlock can
+    ///         be voided by its controller for a FULL refund (no slash, no score). Safety valve for a
+    ///         resolver/oracle outage that would otherwise strand stake — `cancel` is blocked once
+    ///         block.number >= resolutionBlock, and resolution can be permanently unavailable (e.g. the
+    ///         Pyth spot category past its resolution window). ~24h on Mantle (2s blocks).
+    uint256 public constant VOID_DELAY_BLOCKS = 43_200;
 
     IAgentRegistry public immutable agentRegistry;
     address public bonusPool;
@@ -201,6 +211,37 @@ contract PredictionMarket is IPredictionMarket, Ownable, ReentrancyGuard {
         IBonusDistributor(bonusPool).notifySlash{value: poolAmount}(p.categoryId);
 
         emit PredictionForfeited(predictionId, msg.sender, callerReward, poolAmount);
+    }
+
+    /// @notice Reclaims a Revealed prediction's full stake when it could not be resolved within
+    ///         VOID_DELAY_BLOCKS of its resolutionBlock. Controller-only, no slash, no score — a safety
+    ///         valve for a resolver/oracle outage (or a category whose resolve window has closed).
+    ///         Reuses the Cancelled terminal status; emits PredictionCancelled with zero slash.
+    function voidExpired(uint256 predictionId) external nonReentrant {
+        Prediction storage p = _predictions[predictionId];
+        if (p.commitBlock == 0) revert PredictionDoesNotExist();
+        if (p.status != PredictionStatus.Revealed) revert InvalidStatusForOperation();
+        if (block.number <= p.resolutionBlock + VOID_DELAY_BLOCKS) revert VoidWindowNotElapsed();
+        address controller = agentRegistry.controllerOf(p.agentId);
+        if (msg.sender != controller) revert NotAgentController();
+
+        // Void is a liveness escape for a GENUINELY-unresolvable prediction (e.g. the Pyth keeper never
+        // recorded a snapshot), NOT a costless opt-out. If the resolver can still produce an outcome,
+        // the prediction must be resolved (scored + slashed), so voiding is forbidden — otherwise an
+        // agent could void its losing forecasts to dodge the slash + reputation hit while self-resolving
+        // its winners ("heads I resolve, tails I void"). A resolver that reverts (no data) → real outage.
+        try ICategoryResolver(_categories[p.categoryId].resolver).resolve(p.value, p.resolutionBlock) returns (
+            bytes memory
+        ) {
+            revert OutcomeAvailable();
+        } catch {
+            // resolver has no outcome (e.g. Pyth snapshot unrecorded, oracle unavailable) → allow void
+        }
+
+        p.status = PredictionStatus.Cancelled;
+        _sendValue(controller, p.stake);
+
+        emit PredictionCancelled(predictionId, p.stake, 0);
     }
 
     /// @inheritdoc IPredictionMarket

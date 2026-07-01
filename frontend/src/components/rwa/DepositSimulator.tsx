@@ -34,9 +34,20 @@ export function DepositSimulator({ sim }: { sim: SimInputs }) {
   };
   const market = simulateMarket(stress, base);
   const stressLevel: StressLevel = simulateStress(stress);
-  const projectedYear = (amount * market.blendedApyPct) / 100;
   const reason = riskReason(market);
   const stressWord = stress < 34 ? "Calm" : stress < 67 ? "Volatile" : "Stressed";
+
+  // Lead with the AI's protective ACTION, not a forward $ return. The model only re-weights the
+  // allocation under stress (it does NOT model a yield collapse), so a projected-return number would
+  // misleadingly RISE as the market stresses. Instead show the allocation of the user's actual dollars
+  // (honest: mix applied to the amount) + a plain-English stability-tradeoff caption; keep the blended
+  // rate only as a clearly-labelled supporting figure.
+  const methDollars = (amount * market.allocMethBps) / 10_000;
+  const usdyDollars = amount - methDollars;
+  const actionCaption =
+    stress < 34
+      ? "In calm markets the AI leans into mETH staking for the higher yield."
+      : "As markets stress, the AI rotates you toward USDY treasuries — trading mETH's upside for stability.";
 
   const stressPillColor =
     stressLevel === "Stressed"
@@ -129,13 +140,37 @@ export function DepositSimulator({ sim }: { sim: SimInputs }) {
         {reason}
       </p>
 
-      {/* 5. Outcome , the single largest number on the surface */}
-      <div className="mt-6 grid gap-1">
-        <div className="text-sm text-[var(--color-text-dim)]">Projected yield in a year</div>
-        <div className="num text-4xl font-semibold text-[var(--color-accent)]">
-          ${projectedYear.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+      {/* 5. Outcome — lead with what the AI DOES with the money (its protective action), not a forward
+          return. The dollar split is honest: the live allocation applied to the entered amount. */}
+      <div className="mt-6 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-bg-elev-2)] p-4">
+        <div className="text-sm text-[var(--color-text-dim)]">
+          What the AI does with your ${amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
         </div>
-        <div className="num text-sm text-[var(--color-text-muted)]">≈ {market.blendedApyPct.toFixed(2)}% blended yearly return</div>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <div>
+            <div className="num text-2xl font-semibold text-[var(--color-accent)]">
+              ${methDollars.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </div>
+            <div className="mt-0.5 text-xs text-[var(--color-text-muted)]">into mETH staking</div>
+          </div>
+          <div>
+            <div className="num text-2xl font-semibold text-[var(--color-text)]">
+              ${usdyDollars.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </div>
+            <div className="mt-0.5 text-xs text-[var(--color-text-muted)]">into USDY treasuries</div>
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-[var(--color-text-dim)]">{actionCaption}</p>
+        <div className="num mt-2 flex flex-wrap items-baseline gap-x-2 text-xs text-[var(--color-text-muted)]">
+          <span>
+            AI risk-adjusted return ≈{" "}
+            <span className="text-[var(--color-text-dim)]">{market.effectiveApyPct.toFixed(2)}%/yr</span>
+          </span>
+          <span className="opacity-70">
+            — the {market.blendedApyPct.toFixed(2)}% mix, discounted by AI confidence, so it falls as the
+            market stresses.
+          </span>
+        </div>
       </div>
 
       <p className="mt-5 text-xs text-[var(--color-text-muted)]">

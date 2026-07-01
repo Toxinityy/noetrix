@@ -69,14 +69,20 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
       }))
       .filter((x) => x.resolved >= 10)
       .sort((a, b) => b.s - a.s);
-    const totalRank = sorted.reduce((s, _, i) => s + 1 / (i + 1), 0) || 1;
-    return sorted.map((row, i) => {
+    // Reconcile with the on-chain composite: it aggregated `latest.contributors` agents this refresh,
+    // so weight over exactly that many. Otherwise the table row-count contradicts the "contributors N"
+    // KPI (e.g. KPI says 7, table lists all qualifiers). Fall back to all qualifiers if the count is 0.
+    const n =
+      latest.contributors > 0 ? Math.min(latest.contributors, sorted.length) : sorted.length;
+    const top = sorted.slice(0, n);
+    const totalRank = top.reduce((s, _, i) => s + 1 / (i + 1), 0) || 1;
+    return top.map((row, i) => {
       const w = 1 / (i + 1) / totalRank;
       return {
         agent: row.a,
         weight: w,
         rank: i + 1,
-        contribution: latest.value * w * (1 + ((row.s / 1_000_000) * 0.05)),
+        contribution: latest.value * w * (1 + (row.s / 1_000_000) * 0.05),
       };
     });
   }, [board.data, latest]);
@@ -289,6 +295,12 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
                 />
                 <XAxis
                   dataKey="block"
+                  // Numeric (not category) axis: points are spaced by real block height, so a gap
+                  // in the on-chain history renders as an actual gap instead of collapsing into a
+                  // vertical cliff. Honest until the dense short-horizon feed backfills it.
+                  type="number"
+                  scale="linear"
+                  domain={["dataMin", "dataMax"]}
                   tick={{
                     fill: "var(--color-text-muted)",
                     fontSize: 10,
@@ -362,11 +374,22 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
         transition={{ duration: 0.4 }}
         className="mt-8"
       >
-        <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
-          <span>contributors</span>
+        <div className="mb-1 flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-[var(--color-text-muted)]">
+          <span>feed weighting</span>
           <span className="text-[var(--color-accent)]">/</span>
-          <span>top-20 qualifying</span>
+          <span>qualifying agents</span>
         </div>
+        <p className="mb-3 max-w-2xl text-xs text-[var(--color-text-dim)]">
+          The rank-weights the composite feed used to blend forecasts this round, over the top
+          qualifying agents (resolved ≥ 10)
+          {contributors.length > 0
+            ? ` — ${contributors.length} shown${
+                contributors.length === headline?.contributors
+                  ? ", matching the Contributors count above"
+                  : ""
+              }.`
+            : "."}
+        </p>
         <DataTable
           columns={columns}
           rows={contributors}

@@ -46,6 +46,21 @@ describe("simulateMarket — allocation invariant", () => {
       expect(r.blendedApyPct).toBeLessThanOrEqual(BASE.usdyApyPct + 1e-9);
     }
   });
+
+  it("risk-adjusted (effective) APY falls monotonically as the market stresses", () => {
+    // The fix for "stressed pays more": the confidence haircut makes the AI's expected return DROP
+    // under stress, even though the nominal blend can drift up when rotating to the higher-yield asset.
+    let prev = Infinity;
+    for (let s = 0; s <= 100; s += 5) {
+      const r = simulateMarket(s, BASE);
+      expect(r.effectiveApyPct).toBeLessThanOrEqual(prev + 1e-9);
+      expect(r.effectiveApyPct).toBeLessThanOrEqual(r.blendedApyPct + 1e-9); // haircut ≤ nominal
+      expect(r.effectiveApyPct).toBeGreaterThanOrEqual(0);
+      prev = r.effectiveApyPct;
+    }
+    // Stressed extreme is strictly worse than calm.
+    expect(simulateMarket(100, BASE).effectiveApyPct).toBeLessThan(simulateMarket(0, BASE).effectiveApyPct);
+  });
 });
 
 describe("simulateMarket — flight-to-safety direction", () => {
