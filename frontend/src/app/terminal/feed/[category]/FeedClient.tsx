@@ -44,6 +44,21 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
   // Never draw the curated wave on a page presented as a real feed.
   const history = feed.source === "mock" ? [] : feed.data;
 
+  // Chart the most-recent contiguous run. If the refresher was stopped for a stretch (a multi-day
+  // gap between consecutive on-chain updates — refresh cadence is ~150 blocks, so >1 day is an
+  // outage, not a cadence), the older points sit behind a dead zone that would flatten the whole
+  // view. Slice from just after the last such gap: every point is still real, we just window to
+  // "since the feed resumed" instead of spanning a stopped-bot hole. No gap → nothing trimmed.
+  const chartHistory = React.useMemo(() => {
+    if (history.length < 2) return history;
+    let start = 0;
+    for (let i = 1; i < history.length; i++) {
+      if (history[i].block - history[i - 1].block > DAY_BLOCKS) start = i;
+    }
+    return history.slice(start);
+  }, [history]);
+  const trimmed = chartHistory.length < history.length;
+
   // Plain-English value: % for yields, compact $ for big USD totals (scannable headlines/axes).
   const scanValue = (v: number) => (cat.unit === "usd" ? fmtUSDCompact(v) : friendlyValue(categoryId, v));
 
@@ -271,7 +286,11 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           title="Weighted value history"
           right={
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-              {history.length > 0 ? `${history.length} on-chain updates` : "history unavailable"}
+              {history.length > 0
+                ? trimmed
+                  ? `${chartHistory.length} updates · since feed resumed`
+                  : `${history.length} on-chain updates`
+                : "history unavailable"}
             </span>
           }
         />
@@ -279,7 +298,7 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           {history.length > 0 ? <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
-                data={history}
+                data={chartHistory}
                 margin={{ top: 10, right: 8, left: 4, bottom: 8 }}
               >
                 <defs>

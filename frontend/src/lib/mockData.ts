@@ -485,7 +485,15 @@ export const AGENTS: Agent[] = [
 ];
 
 export function getAgentById(id: number): Agent | undefined {
-  return AGENTS.find((a) => a.id === id);
+  const a = AGENTS.find((x) => x.id === id);
+  if (!a) return undefined;
+  // The mock AGENTS array predates the real on-chain agent ids, so ids 3–7 carried stale fictional
+  // names. Reconcile identity (name + kind) to the same KNOWN_AGENTS registry the leaderboard links
+  // from, so clicking an agent always lands on THAT agent. Reputation/equity/reasoning stay
+  // demo-shaped (disclosed on the page); only the identity is made authoritative.
+  const known = KNOWN_AGENTS[id];
+  if (!known) return a;
+  return { ...a, name: known, kind: inferKind(known) };
 }
 
 export type Prediction = {

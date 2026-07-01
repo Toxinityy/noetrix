@@ -130,13 +130,18 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
   // Most recent prediction that carries a reasoning trace: surfaced as the page's visual peak.
   // Agent 2 (the live DeepSeek reasoner) features its REAL pinned trace — verifiable end to end —
   // instead of a mock; everyone else falls back to the demo-shaped trace.
+  // Only reasoning-model agents feature a trace. The live DeepSeek reasoner (id 2) shows its REAL
+  // pinned trace; other CLAUDE-kind agents show a demo trace. QUANT/ARIMA strategies are formulas,
+  // not LLMs — showing them an LLM trace (even a "demo-shaped" one) would misrepresent what they are.
   const featuredReasoning =
     agent.id === REAL_TRACE_PREDICTION.agentId
       ? REAL_TRACE_PREDICTION
-      : (predictions.find((p) => p.reasoning) ??
-        PREDICTIONS.filter((p) => p.agentId === agent.id && p.reasoning).sort(
-          (a, b) => b.commitBlock - a.commitBlock,
-        )[0]);
+      : agent.kind === "CLAUDE"
+        ? (predictions.find((p) => p.reasoning) ??
+          PREDICTIONS.filter((p) => p.agentId === agent.id && p.reasoning).sort(
+            (a, b) => b.commitBlock - a.commitBlock,
+          )[0])
+        : undefined;
   const hasReasoning = !!featuredReasoning?.reasoning;
 
   const equity = agent.equityCurve;
@@ -191,7 +196,9 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
         <span className="text-[var(--color-text-dim)]">
           {agent.id === REAL_TRACE_PREDICTION.agentId
             ? "Reputation history and equity curve are demo-shaped pending the hosted indexer — but the featured reasoning trace below is a REAL pinned forecast (on-chain prediction #140). Live verified scores:"
-            : "Reputation history, equity curve, and the reasoning trace below are demo-shaped pending the hosted indexer. Live verified scores:"}
+            : hasReasoning
+              ? "Reputation history, equity curve, and the reasoning trace below are demo-shaped pending the hosted indexer. Live verified scores:"
+              : "Reputation history and equity curve are demo-shaped pending the hosted indexer. Live verified scores:"}
         </span>
         <Link href="/terminal/leaderboard" className="text-[var(--color-accent)] hover:underline">
           leaderboard
