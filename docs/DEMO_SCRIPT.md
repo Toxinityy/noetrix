@@ -1,5 +1,9 @@
 # Demo video script — Predictor Index
 
+> **For the live pitch-deck presentation, use [`DEMO_WORKFLOW.md`](./DEMO_WORKFLOW.md)** — the sharpened,
+> fact-checked live-demo runbook (benchmark-league framing, live-Pyth money moment, per-beat fallbacks,
+> Q&A, honesty ledger). This file remains the shorter 2-min *recorded video* script.
+
 **Target: 2:00 · hard cap 2:30.** Record with OBS or Loom at 1920×1080, 30fps. Cursor visible.
 Speak in short, confident sentences. Pre-load every tab before recording so nothing waits on a spinner.
 
