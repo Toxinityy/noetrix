@@ -134,9 +134,9 @@ const FlowArt: React.FC<FlowArtProps> = ({
                 points[0] ?? 0,
               );
             },
-            duration: { min: 0.15, max: 0.5 },
+            duration: { min: 0.1, max: 0.28 },
             delay: 0, // snap the instant scrolling stops, no pause
-            ease: "power1.inOut",
+            ease: "power2.out", // quick, decisive settle
             directional: false, // settle to the closest section, not the scroll direction
           },
         }),
