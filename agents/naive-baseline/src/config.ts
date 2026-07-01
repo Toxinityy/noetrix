@@ -49,6 +49,7 @@ export function loadConfig(): NaiveConfig {
       { label: "METH_APR_24H", syntheticCenter: 350, syntheticDriftPpm: 800 }, // ~3.5% APR bps (domain [0,2000]; oracle resolves ≈350)
       { label: "AAVE_MANTLE_TVL_24H", syntheticCenter: 1.4e16, syntheticDriftPpm: 500 }, // ~$140M, 8-dec
       { label: "USDY_APY_24H", syntheticCenter: 500, syntheticDriftPpm: 300 }, // ~5% APY bps
+      { label: "MNT_USD_SPOT", syntheticCenter: 50_000_000, syntheticDriftPpm: 1500 }, // MNT/USD ≈ $0.50, 8-dec USD (domain [0,5e8])
     ],
     normalOffsetBlocks: 43_200n, // ~24h
     seedOffsetBlocks: 350n, // ~12 min, > 200 cutoff + 100 reveal window

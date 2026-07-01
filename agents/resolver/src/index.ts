@@ -65,9 +65,110 @@ const resolutionEngineAbi = [
   { type: "error", name: "CategoryNotRegistered", inputs: [] },
 ] as const;
 
+// PythSpotResolver: keeper records the real Pyth print once per resolutionBlock, then anyone resolves.
+const pythResolverAbi = [
+  {
+    type: "function",
+    name: "record",
+    stateMutability: "payable",
+    inputs: [
+      { name: "resolutionBlock", type: "uint256" },
+      { name: "updateData", type: "bytes[]" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "recorded",
+    stateMutability: "view",
+    inputs: [{ name: "resolutionBlock", type: "uint256" }],
+    outputs: [{ type: "bool" }],
+  },
+  { type: "error", name: "BadPrice", inputs: [] },
+  { type: "error", name: "LowConfidence", inputs: [] },
+  { type: "error", name: "HorizonNotReached", inputs: [] },
+  { type: "error", name: "AlreadyRecorded", inputs: [] },
+  { type: "error", name: "NotKeeper", inputs: [] },
+  { type: "error", name: "InsufficientFee", inputs: [] },
+] as const;
+
+const pythAbi = [
+  {
+    type: "function",
+    name: "getUpdateFee",
+    stateMutability: "view",
+    inputs: [{ name: "updateData", type: "bytes[]" }],
+    outputs: [{ type: "uint256" }],
+  },
+] as const;
+
 interface Prediction {
   status: number;
   resolutionBlock: bigint;
+  categoryId: Hex;
+}
+
+/// Fetch a signed price update from Hermes for `feedId` (hex VAAs, 0x-prefixed for viem).
+async function fetchHermesUpdate(hermesUrl: string, feedId: Hex): Promise<Hex[]> {
+  const id = feedId.startsWith("0x") ? feedId.slice(2) : feedId;
+  const url = `${hermesUrl}/v2/updates/price/latest?ids[]=${id}&encoding=hex`;
+  const res = await fetch(url, { headers: { accept: "application/json" } });
+  if (!res.ok) throw new Error(`hermes ${res.status}`);
+  const json = (await res.json()) as { binary?: { data?: string[] } };
+  const data = json.binary?.data ?? [];
+  if (data.length === 0) throw new Error("hermes returned no update data");
+  return data.map((d) => (d.startsWith("0x") ? d : `0x${d}`) as Hex);
+}
+
+/// Keeper step for the Pyth spot category: pin the real Pyth price for `rb` once (first write wins).
+/// Returns true if the snapshot is (now or already) recorded; false if it couldn't be recorded this
+/// tick (stale/low-conf/RPC) — the caller then skips resolve (which would revert NotRecorded) and
+/// retries next tick. A permanent failure is handled by PredictionMarket.voidExpired.
+async function recordPythSnapshot(
+  publicClient: PublicClient,
+  walletClient: WalletClient,
+  cfg: ResolverConfig,
+  rb: bigint,
+): Promise<boolean> {
+  const pyth = cfg.pyth!;
+  try {
+    const already = (await publicClient.readContract({
+      address: pyth.resolver,
+      abi: pythResolverAbi,
+      functionName: "recorded",
+      args: [rb],
+    })) as boolean;
+    if (already) return true;
+
+    const updateData = await fetchHermesUpdate(pyth.hermesUrl, pyth.feedId);
+    const fee = (await publicClient.readContract({
+      address: pyth.pythAddress,
+      abi: pythAbi,
+      functionName: "getUpdateFee",
+      args: [updateData],
+    })) as bigint;
+
+    const txHash = await walletClient.writeContract({
+      address: pyth.resolver,
+      abi: pythResolverAbi,
+      functionName: "record",
+      args: [rb, updateData],
+      value: fee,
+      account: walletClient.account!,
+      chain: walletClient.chain,
+      gas: 3_000_000n,
+    });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+    if (receipt.status !== "success") {
+      console.error(`[resolver] pyth record block ${rb}: tx reverted (${txHash.slice(0, 10)})`);
+      return false;
+    }
+    console.log(`[resolver] recorded Pyth snapshot for block ${rb} (${txHash.slice(0, 10)})`);
+    return true;
+  } catch (err) {
+    console.error(`[resolver] pyth record block ${rb} failed:`, ((err as Error)?.message ?? "").split("\n")[0]);
+    return false;
+  }
 }
 
 async function resolveOne(
@@ -157,7 +258,11 @@ async function tick(
         functionName: "getPrediction",
         args: [BigInt(id)],
       })) as Prediction;
-      p = { status: Number(raw.status), resolutionBlock: BigInt(raw.resolutionBlock) };
+      p = {
+        status: Number(raw.status),
+        resolutionBlock: BigInt(raw.resolutionBlock),
+        categoryId: raw.categoryId,
+      };
     } catch (err) {
       console.error(`[resolver] prediction ${id}: read failed:`, (err as Error).message);
       continue;
@@ -165,6 +270,11 @@ async function tick(
     statuses.set(id, p.status);
 
     if (p.status === REVEALED && currentBlock >= p.resolutionBlock) {
+      // Pyth spot category: pin the real Pyth snapshot before resolving (keeper-snapshot design).
+      if (cfg.pyth && p.categoryId.toLowerCase() === cfg.pyth.categoryId.toLowerCase()) {
+        const pinned = await recordPythSnapshot(publicClient, walletClient, cfg, p.resolutionBlock);
+        if (!pinned) continue; // resolve would revert NotRecorded; retry next tick
+      }
       const ok = await resolveOne(publicClient, walletClient, cfg, BigInt(id));
       if (ok) {
         statuses.set(id, 2); // now Resolved
@@ -198,6 +308,11 @@ async function main(): Promise<void> {
   console.log(
     `[resolver] starting — market=${cfg.predictionMarket} engine=${cfg.resolutionEngine} caller=${account.address} interval=${Math.round(cfg.intervalMs / 1000)}s`,
   );
+  if (cfg.pyth) {
+    console.log(
+      `[resolver] pyth keeper mode ON — resolver=${cfg.pyth.resolver} feed=${cfg.pyth.feedId.slice(0, 10)}… hermes=${cfg.pyth.hermesUrl}`,
+    );
+  }
 
   const oneShot = process.argv.includes("--once") || process.env.RESOLVE_ONCE === "true";
 

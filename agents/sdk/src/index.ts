@@ -10,6 +10,7 @@ export {
   METH_APR_24H,
   AAVE_MANTLE_TVL_24H,
   USDY_APY_24H,
+  MNT_USD_SPOT,
 } from "./categories.js";
 export { agentRegistryAbi, predictionMarketAbi } from "./abis.js";
 export {

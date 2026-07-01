@@ -75,6 +75,15 @@ export function loadConfig(): ReasonerConfig {
         newsCurrencies: ["USDY", "ONDO", "MNT"],
         seedCenter: 500, // ~5% APY bps
       },
+      {
+        label: "MNT_USD_SPOT",
+        description:
+          "MNT/USD spot price at resolution, in USD with 8 decimals (value = USD × 1e8). Domain [0, 5e8] " +
+          "($0–$5). Truth is a live, Hermes-verifiable Pyth price pinned on-chain by a keeper at the " +
+          "resolution block — an independently-checkable market price, not a synthetic oracle.",
+        newsCurrencies: ["MNT", "ETH", "BTC"],
+        seedCenter: 50_000_000, // MNT/USD ≈ $0.50, 8-dec USD
+      },
     ],
     normalOffsetBlocks: 43_200n, // ~24h
     seedOffsetBlocks: 350n, // ~12 min

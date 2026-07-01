@@ -33,10 +33,19 @@ export const USDY_APY_24H: CategoryConfig = {
   bucketCount: 100,
 };
 
+export const MNT_USD_SPOT: CategoryConfig = {
+  id: categoryId("MNT_USD_SPOT"),
+  label: "MNT_USD_SPOT",
+  domainMin: 0n,
+  domainMax: 500_000_000n, // MNT/USD spot in 8-dec USD ($0–$5), bucket width $0.05
+  bucketCount: 100,
+};
+
 export const CATEGORIES: Record<string, CategoryConfig> = {
   METH_APR_24H,
   AAVE_MANTLE_TVL_24H,
   USDY_APY_24H,
+  MNT_USD_SPOT,
 };
 
 /// Resolve a CategoryConfig from a label, a known constant, or a raw bytes32 id.
