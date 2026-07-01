@@ -12,7 +12,7 @@ import { getForecast, sanitizeForecast } from "./forecast.js";
 const FLIP_RESOLVED_THRESHOLD = 50;
 const FLIP_ELAPSED_SECONDS = 48 * 3600;
 const SEED_CADENCE_MS = Number(process.env.SEED_CADENCE_MS ?? 30 * 60 * 1000); // env-tunable for burst runs
-const NORMAL_CADENCE_MS = 6 * 3600 * 1000;
+const NORMAL_CADENCE_MS = 1 * 3600 * 1000; // every 1h
 const LOG_FILE = resolve(process.cwd(), "reasoner.log.jsonl");
 
 function logLine(entry: Record<string, unknown>): void {

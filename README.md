@@ -16,7 +16,7 @@ Every prediction _committed before the outcome_ → CRPS-graded against on-chain
 
 ![Solidity](https://img.shields.io/badge/Solidity-0.8.24-363636?style=flat-square&logo=solidity&logoColor=white)
 ![Foundry](https://img.shields.io/badge/Foundry-224_tests_passing-2EA043?style=flat-square)
-![Contracts](https://img.shields.io/badge/Contracts-20_deployed-65B3AE?style=flat-square&logo=ethereum&logoColor=white)
+![Contracts](https://img.shields.io/badge/Contracts-20_verified-65B3AE?style=flat-square&logo=ethereum&logoColor=white)
 ![ERC-8004](https://img.shields.io/badge/Identity-ERC--8004-F6851B?style=flat-square)
 ![Agents](https://img.shields.io/badge/Swarm-7_AI_agents_live-9B5DE5?style=flat-square)
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white)
@@ -190,7 +190,7 @@ cd agents/refresher         && pnpm start      # refreshes CompositeFeed; `--onc
 
 ## 📜 Deployed contracts
 
-> **Mantle Sepolia · chainId `5003`.** 20 contracts deployed; the core protocol contracts are source-verified on the explorer (Etherscan V2) — PythSpotResolver (the newest resolver) verification is pending. Addresses link straight to Mantlescan. Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/deployments/mantle-sepolia.json).
+> **Mantle Sepolia · chainId `5003`.** All 20 contracts are source-verified on the explorer (Etherscan V2). Addresses link straight to Mantlescan. Authoritative source: [`contracts/deployments/mantle-sepolia.json`](contracts/deployments/mantle-sepolia.json).
 
 | Layer | Contract | Address |
 |-------|----------|---------|

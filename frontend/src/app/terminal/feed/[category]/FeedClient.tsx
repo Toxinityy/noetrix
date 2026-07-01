@@ -4,8 +4,8 @@ import * as React from "react";
 import Link from "next/link";
 import {
   ResponsiveContainer,
-  AreaChart,
-  Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -24,7 +24,7 @@ import { friendlyValue } from "@/lib/labels";
 import { cn } from "@/lib/cn";
 import { useRouter } from "next/navigation";
 import { useFeedHistory, useLeaderboard, useOnChainFeedSnapshot } from "@/lib/hooks";
-import type { LeaderRow } from "@/lib/indexer";
+import type { LeaderRow, LiveFeedPoint } from "@/lib/indexer";
 import { DAY_BLOCKS, feedSourceLabel, findLookbackPoint } from "@/lib/feedView";
 import { EmptyState } from "@/components/ui/EmptyState";
 
@@ -58,6 +58,21 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
     return history.slice(start);
   }, [history]);
   const trimmed = chartHistory.length < history.length;
+
+  // The feed re-publishes every ~few minutes but the ensemble only moves when an agent posts a new
+  // forecast — so the raw series is long held-flat runs punctuated by jumps (the staircase). Collapse
+  // each run to the block where the value actually changed: those points ARE the real forecast moves
+  // (kept as dots), and a smoothed line spans the held gaps between them. Always keep the latest point
+  // so the line reaches "now". Every dot is still a real on-chain value at its real block.
+  const predictionPoints = React.useMemo(() => {
+    const pts: LiveFeedPoint[] = [];
+    for (let i = 0; i < chartHistory.length; i++) {
+      if (i === 0 || chartHistory[i].value !== pts[pts.length - 1].value) pts.push(chartHistory[i]);
+    }
+    const last = chartHistory[chartHistory.length - 1];
+    if (last && pts[pts.length - 1] !== last) pts.push(last);
+    return pts;
+  }, [chartHistory]);
 
   // Plain-English value: % for yields, compact $ for big USD totals (scannable headlines/axes).
   const scanValue = (v: number) => (cat.unit === "usd" ? fmtUSDCompact(v) : friendlyValue(categoryId, v));
@@ -288,8 +303,8 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
             <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
               {history.length > 0
                 ? trimmed
-                  ? `${chartHistory.length} updates · since feed resumed`
-                  : `${history.length} on-chain updates`
+                  ? `${predictionPoints.length} forecast moves · since feed resumed`
+                  : `${predictionPoints.length} forecast moves`
                 : "history unavailable"}
             </span>
           }
@@ -297,16 +312,10 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
         <PanelBody className="pb-3 pt-2">
           {history.length > 0 ? <div className="h-[320px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={chartHistory}
+              <LineChart
+                data={predictionPoints}
                 margin={{ top: 10, right: 8, left: 4, bottom: 8 }}
               >
-                <defs>
-                  <linearGradient id="feedGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.32} />
-                    <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid
                   stroke="var(--color-border)"
                   strokeDasharray="2 2"
@@ -363,15 +372,16 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
                     }}
                   />
                 )}
-                <Area
+                <Line
                   type="monotone"
                   dataKey="value"
                   stroke="var(--color-accent)"
                   strokeWidth={1.6}
-                  fill="url(#feedGrad)"
+                  dot={{ r: 2.5, fill: "var(--color-accent)", stroke: "var(--color-bg)", strokeWidth: 1 }}
+                  activeDot={{ r: 4 }}
                   isAnimationActive={!reducedMotion}
                 />
-              </AreaChart>
+              </LineChart>
             </ResponsiveContainer>
           </div> : (
             <EmptyState

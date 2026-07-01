@@ -8,7 +8,7 @@ import { countResolved, fetchHistory } from "./indexer.js";
 const FLIP_RESOLVED_THRESHOLD = 50;
 const FLIP_ELAPSED_SECONDS = 48 * 3600;
 const SEED_CADENCE_MS = Number(process.env.SEED_CADENCE_MS ?? 30 * 60 * 1000); // every 30 min (env-tunable for burst runs)
-const NORMAL_CADENCE_MS = 6 * 3600 * 1000; // every 6h
+const NORMAL_CADENCE_MS = 1 * 3600 * 1000; // every 1h
 
 /// Synthetic seed series (~15 points) for the first run when <10 real observations exist.
 function syntheticSeries(seed: CategorySeed): number[] {
