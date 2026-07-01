@@ -76,6 +76,10 @@ const FlowArt: React.FC<FlowArtProps> = ({
       if (sections.length === 0) return;
 
       const triggers: ScrollTrigger[] = [];
+      // Pin triggers, in section order. Each one's `start` (px) is exactly the scroll position
+      // where that section fully fills the viewport — i.e. its "settled" position — so they double
+      // as the snap targets below.
+      const pins: ScrollTrigger[] = [];
 
       sections.forEach((section, i) => {
         gsap.set(section, { zIndex: i + 1 });
@@ -99,17 +103,44 @@ const FlowArt: React.FC<FlowArtProps> = ({
         }
 
         if (i < sections.length - 1) {
-          triggers.push(
-            ScrollTrigger.create({
-              trigger: section,
-              start: "bottom bottom",
-              end: "bottom top",
-              pin: true,
-              pinSpacing: false,
-            }),
-          );
+          const pin = ScrollTrigger.create({
+            trigger: section,
+            start: "bottom bottom",
+            end: "bottom top",
+            pin: true,
+            pinSpacing: false,
+          });
+          triggers.push(pin);
+          pins.push(pin);
         }
       });
+
+      // Snap to the nearest section on scroll-release, so you never rest mid-rotation between two
+      // sections. One page-level ScrollTrigger owns the snap; targets are each section's settled
+      // scroll position (the pin starts) plus the very bottom for the last, un-pinned section.
+      // Read live inside snapTo so it survives resizes without recomputing an array.
+      triggers.push(
+        ScrollTrigger.create({
+          start: 0,
+          end: "max",
+          snap: {
+            snapTo: (progress) => {
+              const max = ScrollTrigger.maxScroll(window) || 1;
+              const points = pins.map((p) => p.start / max);
+              points.push(1); // last section settles at the bottom of the page
+              return points.reduce(
+                (nearest, p) =>
+                  Math.abs(p - progress) < Math.abs(nearest - progress) ? p : nearest,
+                points[0] ?? 0,
+              );
+            },
+            duration: { min: 0.15, max: 0.5 },
+            delay: 0.05,
+            ease: "power1.inOut",
+            directional: false, // settle to the closest section, not the scroll direction
+          },
+        }),
+      );
 
       ScrollTrigger.refresh();
 
