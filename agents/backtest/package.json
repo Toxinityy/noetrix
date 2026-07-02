@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "run:backtest": "tsx scripts/run-backtest.ts",
+    "gen:strategy": "tsx scripts/gen-strategy-backtest.ts",
     "gen:deepseek": "tsx scripts/gen-deepseek-cache.ts"
   },
   "dependencies": {
