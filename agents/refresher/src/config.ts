@@ -11,7 +11,8 @@ export interface RefresherConfig {
   compositeFeed: Hex;
   /// Category ids to refresh each tick.
   categories: { label: string; id: Hex }[];
-  /// Refresh cadence (ms). Default 5 min ≈ 150 blocks on Mantle 2s blocks.
+  /// Refresh cadence (ms). Default 1h — sustainable: with daily forecasts the composite only moves
+  /// daily, so hourly keeps consumers fresh (well under the staleness/freeze gate) at ~1/12th the gas.
   intervalMs: number;
 }
 
@@ -58,6 +59,6 @@ export function loadConfig(): RefresherConfig {
       { label: "AAVE_MANTLE_TVL_24H", id: categoryId("AAVE_MANTLE_TVL_24H") },
       { label: "USDY_APY_24H", id: categoryId("USDY_APY_24H") },
     ],
-    intervalMs: Number(process.env.REFRESH_INTERVAL_MS ?? 5 * 60 * 1000),
+    intervalMs: Number(process.env.REFRESH_INTERVAL_MS ?? 60 * 60 * 1000),
   };
 }

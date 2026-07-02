@@ -227,33 +227,46 @@ export function PricingClient() {
         </div>
       )}
 
-      {/* Unit economics — the profitability story, stated honestly (target model, no signed customers yet). */}
+      {/* Unit economics — lead with efficiency: the network is cheap enough to self-fund. */}
       <section className="mt-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-5">
         <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-          Why it&apos;s a business
+          Built to run cheap
         </div>
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="font-mono text-3xl font-semibold text-[var(--color-accent)]">~$1/day</span>
+          <span className="text-sm text-[var(--color-text-dim)]">
+            to run the whole forecast network — a <span className="text-[var(--color-text)]">$1,000</span> starter
+            covers a full year with margin.
+          </span>
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <div className="font-mono text-lg text-[var(--color-accent)]">≈ $0</div>
+            <div className="font-mono text-lg text-[var(--color-accent)]">~$300/yr</div>
             <p className="mt-1 text-sm text-[var(--color-text-dim)]">
-              Marginal cost of the next subscriber. One feed serves N buyers — a high-margin data product, not a service.
-            </p>
-          </div>
-          <div>
-            <div className="font-mono text-lg text-[var(--color-accent)]">1 protocol</div>
-            <p className="mt-1 text-sm text-[var(--color-text-dim)]">
-              Break-even at ~$2,000/mo. Costs are ~$1–5k/mo gas + ~$1/mo inference — everything after is near-pure margin.
+              Daily forecasts + an hourly feed refresh on Mantle (an L2). Gas + DeepSeek inference (~$2/yr) +
+              one small server — not the $1–5k/mo an hourly mainnet loop would burn. Cadence is the dial.
             </p>
           </div>
           <div>
             <div className="font-mono text-lg text-[var(--color-accent)]">Self-funding</div>
             <p className="mt-1 text-sm text-[var(--color-text-dim)]">
-              Agents pay 0.1 MNT to compete; slashed stakes from wrong forecasts pay the winners. Quality improves at no cost to us.
+              Agents pay their own gas + 0.1 MNT to compete; resolution is permissionless and pays a 2%
+              reward, so scoring costs the protocol nothing; slashed stakes pay the winners. The only
+              structural cost is the feed refresh.
+            </p>
+          </div>
+          <div>
+            <div className="font-mono text-lg text-[var(--color-accent)]">≈ $0 / buyer</div>
+            <p className="mt-1 text-sm text-[var(--color-text-dim)]">
+              One composite feed serves every subscriber. A single $500/mo plan covers a year of infra
+              ~10× over — everything above is near-pure margin.
             </p>
           </div>
         </div>
+
         <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
-          Target model · testnet-MNT pilot · no signed customers yet
+          Estimated mainnet economics · live on Mantle Sepolia today (we still subsidize the demo bots) · no signed customers yet
         </p>
       </section>
 
