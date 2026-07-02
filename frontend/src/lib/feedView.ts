@@ -74,6 +74,15 @@ export function feedSourceLabel(source: DataSource): string {
   return "Demo data";
 }
 
+/**
+ * On-chain USD categories store values in 8-dec fixed point; display works in whole USD.
+ * Mirrors `scaleFor` in scripts/gen-insights-snapshot.ts — live and snapshot paths MUST agree,
+ * or the same feed renders $135.9M on one page and $13,587T on another.
+ */
+export function categoryValueScale(category: CategoryId): number {
+  return category === "AAVE_MANTLE_TVL_24H" || category === "MNT_USD_SPOT" ? 1e8 : 1;
+}
+
 /** Shape returned by `GET /api/feed` — a live on-chain `CompositeFeed.read`. */
 export interface OnChainFeedResponse {
   source?: string;
@@ -90,10 +99,11 @@ export interface OnChainFeedResponse {
  * never masquerades as live data.
  */
 export function onChainFeedSnapshot(
+  category: CategoryId,
   json: OnChainFeedResponse | null | undefined,
 ): LiveFeedPoint | null {
   if (!json || json.source !== "chain") return null;
-  const value = Number(json.value);
+  const value = Number(json.value) / categoryValueScale(category);
   const contributors = Number(json.contributingAgents ?? 0);
   if (!Number.isFinite(value) || contributors <= 0) return null;
   return {

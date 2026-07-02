@@ -1,6 +1,7 @@
 import { decodeAbiParameters, type Hex } from "viem";
 import { env } from "@/lib/env";
 import { agentDisplayName, inferKind, type AgentKind, type CategoryId } from "@/lib/mockData";
+import { categoryValueScale } from "@/lib/feedView";
 
 const RANGE_ABI = [{ type: "uint256" }, { type: "uint256" }] as const;
 
@@ -158,10 +159,12 @@ interface SnapRow {
 
 export async function getFeedHistory(category: CategoryId, limit = 96): Promise<LiveFeedPoint[]> {
   const json = await get<{ history: SnapRow[] }>(`/feed/${category}/history?limit=${limit}`);
+  // USD categories are stored 8-dec on-chain; display works in whole USD (see categoryValueScale).
+  const scale = categoryValueScale(category);
   return (json.history ?? [])
     .map((s) => ({
       block: num(s.snapshotBlock),
-      value: num(s.value),
+      value: num(s.value) / scale,
       confidence: s.confidence,
       contributors: num(s.contributingAgents),
     }))

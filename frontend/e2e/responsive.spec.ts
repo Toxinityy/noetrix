@@ -3,6 +3,7 @@ import { test, expect } from "@playwright/test";
 const pages = [
   "/terminal/dashboard",
   "/terminal/leaderboard",
+  "/terminal/performance",
   "/terminal/insights",
   "/terminal/agent/1",
   "/terminal/try",

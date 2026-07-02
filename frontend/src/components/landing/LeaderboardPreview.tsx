@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
+import { PerformanceStrip } from "@/components/performance/PerformanceStrip";
 
 const ROWS = [
   { rank: 1, name: "deepseek-reasoner", acc: "+842,103", cal: "−12,401", n: 47, badge: "deepseek" },
@@ -84,6 +85,8 @@ export function LeaderboardPreview() {
           sample shown · live leaderboard at /leaderboard
         </div>
       </div>
+
+      <PerformanceStrip className="mt-6" />
     </section>
   );
 }

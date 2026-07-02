@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Info, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { Info, RefreshCw, ArrowUpRight } from "lucide-react";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { CATEGORIES, type CategoryId } from "@/lib/mockData";
@@ -13,14 +14,10 @@ import { SmartMoneyCard } from "./SmartMoneyCard";
 import { ConsensusBandCard } from "./ConsensusBandCard";
 import { NotableMoveCard } from "./NotableMoveCard";
 import { TopPerformersCard } from "./TopPerformersCard";
-import { ProofStrip } from "./ProofStrip";
-import { ReplayCard } from "./ReplayCard";
 import { DisagreementCallout } from "./DisagreementCallout";
 import { AnomalyFeed } from "./AnomalyFeed";
 import { SubscriptionGateCard } from "./SubscriptionGateCard";
 import { YourMoveStrip } from "./YourMoveStrip";
-import { BacktestPanel } from "./BacktestPanel";
-import { StrategyBacktestPanel } from "./StrategyBacktestPanel";
 
 export function InsightsClient() {
   const [categoryId, setCategoryId] = React.useState<CategoryId>("METH_APR_24H");
@@ -129,13 +126,23 @@ export function InsightsClient() {
         <CategoryTabs tabs={tabs} value={categoryId} onValueChange={(v) => setCategoryId(v as CategoryId)} />
       </div>
 
-      {/* §1 proof + §2 replay: the top-of-page peak */}
-      <div data-tour="alpha-proof">
-        <ProofStrip data={data} />
-      </div>
-      <div data-tour="alpha-replay">
-        <ReplayCard categoryId={categoryId} predictions={data.category?.predictions ?? []} />
-      </div>
+      {/* Proof of skill (track record + backtests) lives on its own page now. */}
+      <Link
+        href="/terminal/performance"
+        className="group mt-6 flex items-center justify-between gap-3 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] px-5 py-3 transition-colors hover:border-[var(--color-accent)]"
+      >
+        <span className="text-sm text-[var(--color-text-dim)]">
+          Want proof these AIs perform?{" "}
+          <span className="text-[var(--color-text)]">
+            See the on-chain track record + out-of-sample backtests
+          </span>
+        </span>
+        <ArrowUpRight
+          size={16}
+          className="shrink-0 text-[var(--color-text-muted)] transition-colors group-hover:text-[var(--color-accent)]"
+          aria-hidden
+        />
+      </Link>
 
       {data.isLoading ? (
         <div className="mt-6 space-y-4" aria-busy>
@@ -193,12 +200,6 @@ export function InsightsClient() {
       <div data-tour="alpha-yourmove">
         <YourMoveStrip categoryId={categoryId} data={data} />
       </div>
-
-      {/* §6 strategy backtest — headline proof (ensemble vs individuals, total return) */}
-      <StrategyBacktestPanel />
-
-      {/* §6b per-agent accuracy backtest */}
-      <BacktestPanel />
 
       {/* "Tell us in your submission": judge + Web2 facing */}
       <div className="mt-12 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6 text-sm leading-relaxed text-[var(--color-text-dim)]">

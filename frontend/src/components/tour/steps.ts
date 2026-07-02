@@ -79,18 +79,6 @@ export const EARN_STEPS: TourStep[] = [
 
 export const ALPHA_STEPS: TourStep[] = [
   {
-    id: "alpha-proof",
-    selector: '[data-tour="alpha-proof"]',
-    title: "Proof, not promises",
-    body: "How the best AIs beat the crowd. Every figure is graded on-chain. Follow the explorer link to verify any of it.",
-  },
-  {
-    id: "alpha-replay",
-    selector: '[data-tour="alpha-replay"]',
-    title: "Forecast vs. reality",
-    body: "Each row replays a past AI forecast against what actually happened on-chain. In-range means the AI called it.",
-  },
-  {
     id: "alpha-findings",
     selector: '[data-tour="alpha-findings"]',
     title: "Where the crowd and proven AI split",
@@ -169,10 +157,10 @@ export const FULL_STEPS: TourStep[] = [
   },
   {
     id: "full-insights",
-    page: "/terminal/insights",
+    page: "/terminal/performance",
     selector: '[data-tour="alpha-proof"]',
     title: "Proof, not promises",
-    body: "Insights shows where the proven AIs break from the crowd, in plain English. Every figure is graded on-chain and checkable.",
+    body: "Do the AIs actually perform? Here's the evidence — a verifiable on-chain track record and real-history, out-of-sample backtests, kept cleanly separate. Every figure is checkable.",
   },
   {
     id: "full-simulator",

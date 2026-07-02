@@ -97,7 +97,7 @@ describe("feedSourceLabel", () => {
 describe("onChainFeedSnapshot", () => {
   it("maps a real on-chain /api/feed read into a single feed point", () => {
     expect(
-      onChainFeedSnapshot({
+      onChainFeedSnapshot("METH_APR_24H", {
         source: "chain",
         value: "245",
         confidenceBps: 5060,
@@ -107,17 +107,31 @@ describe("onChainFeedSnapshot", () => {
     ).toEqual({ block: 39_919_665, value: 245, confidence: 5060, contributors: 7 });
   });
 
+  it("scales 8-dec USD categories to whole USD (matching the snapshot path)", () => {
+    // Live regression: raw 8-dec values rendered as "$13,587.9T" TVL / "$43.9M" MNT.
+    expect(
+      onChainFeedSnapshot("AAVE_MANTLE_TVL_24H", {
+        source: "chain", value: "13587911822488898", confidenceBps: 8226, contributingAgents: 7, lastUpdatedBlock: 1,
+      })?.value,
+    ).toBeCloseTo(135_879_118.22, 1);
+    expect(
+      onChainFeedSnapshot("MNT_USD_SPOT", {
+        source: "chain", value: "43940443", confidenceBps: 3378, contributingAgents: 1, lastUpdatedBlock: 1,
+      })?.value,
+    ).toBeCloseTo(0.4394, 4);
+  });
+
   it("returns null for an empty feed (no contributors) so zeros never look live", () => {
     expect(
-      onChainFeedSnapshot({ source: "chain", value: "0", confidenceBps: 0, contributingAgents: 0, lastUpdatedBlock: 0 }),
+      onChainFeedSnapshot("METH_APR_24H", { source: "chain", value: "0", confidenceBps: 0, contributingAgents: 0, lastUpdatedBlock: 0 }),
     ).toBeNull();
   });
 
   it("returns null for error/non-chain responses or missing data", () => {
-    expect(onChainFeedSnapshot(null)).toBeNull();
-    expect(onChainFeedSnapshot(undefined)).toBeNull();
-    expect(onChainFeedSnapshot({ error: "on-chain read failed" } as never)).toBeNull();
-    expect(onChainFeedSnapshot({ source: "chain", value: "not-a-number", contributingAgents: 3 })).toBeNull();
+    expect(onChainFeedSnapshot("METH_APR_24H", null)).toBeNull();
+    expect(onChainFeedSnapshot("METH_APR_24H", undefined)).toBeNull();
+    expect(onChainFeedSnapshot("METH_APR_24H", { error: "on-chain read failed" } as never)).toBeNull();
+    expect(onChainFeedSnapshot("METH_APR_24H", { source: "chain", value: "not-a-number", contributingAgents: 3 })).toBeNull();
   });
 });
 

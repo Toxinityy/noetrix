@@ -13,6 +13,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import { motion, useReducedMotion } from "motion/react";
+import { useBlockNumber } from "wagmi";
 import { Panel, PanelBody, PanelHeader } from "@/components/ui/Panel";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
@@ -71,6 +72,19 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
   const headline = latest ?? onChain;
   const usingOnChainFallback = !latest && !!onChain;
 
+  // Freshness: how old is the newest feed point vs the chain head? "Live" only earns its pulse
+  // when the feed is within ~2× the hourly refresh cadence; older than that renders as stale.
+  const { data: headBlock } = useBlockNumber({ watch: true });
+  const ageBlocks = headline && headBlock ? Number(headBlock) - headline.block : null;
+  const STALE_AFTER_BLOCKS = 2 * 1800; // 2× the hourly refresh cadence on 2s blocks
+  const feedStale = ageBlocks !== null && ageBlocks > STALE_AFTER_BLOCKS;
+  const ageLabel =
+    ageBlocks === null || ageBlocks < 0
+      ? null
+      : ageBlocks < 1800
+        ? `updated ${Math.max(1, Math.round((ageBlocks * 2) / 60))}m ago`
+        : `updated ${((ageBlocks * 2) / 3600).toFixed(1)}h ago`;
+
   const contributors: Contributor[] = React.useMemo(() => {
     if (!latest) return [];
     const sorted = [...board.data]
@@ -102,7 +116,8 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
   const tabs = Object.values(CATEGORIES).map((c) => ({
     id: c.id,
     label: c.label,
-    caption: c.unit === "bps" ? "annual yield %" : "total deposits, US$",
+    caption:
+      c.unit === "bps" ? "annual yield %" : c.id === "MNT_USD_SPOT" ? "spot price, US$" : "total deposits, US$",
   }));
 
   const columns: Column<Contributor>[] = [
@@ -211,13 +226,21 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
         </div>
         <div className="flex items-center gap-2">
           <StatusPill
-            tone={feed.source === "live" || usingOnChainFallback ? "up" : "muted"}
+            tone={feedStale ? "warn" : feed.source === "live" || usingOnChainFallback ? "up" : "muted"}
             dot={feed.source === "live" || usingOnChainFallback}
-            pulse={feed.source === "live"}
+            pulse={feed.source === "live" && !feedStale}
           >
-            {usingOnChainFallback ? "On-chain (live read)" : feedSourceLabel(feed.source)}
+            {usingOnChainFallback
+              ? "On-chain (live read)"
+              : feedStale && feed.source === "live"
+                ? "Live · stale feed"
+                : feedSourceLabel(feed.source)}
           </StatusPill>
-          <StatusPill tone="muted">This round</StatusPill>
+          {ageLabel ? (
+            <StatusPill tone={feedStale ? "warn" : "muted"}>{ageLabel}</StatusPill>
+          ) : (
+            <StatusPill tone="muted">This round</StatusPill>
+          )}
         </div>
       </div>
 

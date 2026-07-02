@@ -18,6 +18,7 @@ type NavItem = { href: string; label: string; external?: boolean };
 
 const primaryNav: NavItem[] = [
   { href: "/terminal/leaderboard", label: "Leaderboard" },
+  { href: "/terminal/performance", label: "Performance" },
   { href: "/terminal/insights", label: "Insights" },
   { href: "/terminal/feed/meth-apr-24h", label: "Feed" },
   { href: "/terminal/try", label: "Try" },

@@ -106,8 +106,8 @@ export function useLeaderboard(category: CategoryId): QueryView<LeaderRow[]> {
 export function useFeedHistory(category: CategoryId): QueryView<LiveFeedPoint[]> {
   const q = useQuery({
     queryKey: ["feed-history", category],
-    // 7-day window: at the ~5-min refresh cadence (~288/day) this covers ≈7 days; the client
-    // windows + collapses it to forecast-move points for display.
+    // Generous window: covers ≈7 days even at the old 5-min cadence; at the current hourly
+    // refresh it reaches much further back. The client windows + collapses to forecast-move points.
     queryFn: () => getFeedHistory(category, 2100),
     enabled: hasIndexer,
     refetchInterval: REFRESH_MS,
@@ -137,7 +137,7 @@ export function useOnChainFeedSnapshot(category: CategoryId): LiveFeedPoint | nu
     queryFn: async () => {
       const res = await fetch(`/api/feed?category=${category}`);
       if (!res.ok) return null;
-      return onChainFeedSnapshot(await res.json());
+      return onChainFeedSnapshot(category, await res.json());
     },
     enabled: hasFeed,
     refetchInterval: REFRESH_MS,

@@ -15,6 +15,7 @@ import { NumberFlow } from "@/components/ui/NumberFlow";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { RwaStrategyPanel } from "@/components/app/RwaStrategyPanel";
+import { PerformanceStrip } from "@/components/performance/PerformanceStrip";
 import { CATEGORIES, KIND_COLOR, KIND_GLYPH, type CategoryId, type AgentKind } from "@/lib/mockData";
 import { useLeaderboard, useFeedHistory } from "@/lib/hooks";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -218,6 +219,9 @@ export function LeaderboardClient() {
           </StatusPill>
         </div>
       </div>
+
+      {/* Proof teaser: leads to the tiered on-chain track record + backtests. */}
+      <PerformanceStrip className="mt-6" />
 
       {/* Cached-data state: indexer unreachable, serving the static snapshot, with a real retry. */}
       {board.source === "cached" ? (
