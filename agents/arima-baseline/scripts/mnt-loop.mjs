@@ -1,19 +1,22 @@
 // Durable MNT_USD_SPOT accrual loop — keeps the Pyth spot category live so its on-chain track
-// record grows on its own (was a one-off; this repeats it forever).
+// record grows on its own, and makes the MNT feed line a REAL ensemble by cycling a roster of
+// agents (arima + naive + two swarm strategies) through commit→reveal→keeper record→resolve.
 //
-// Each cycle: agent commits+reveals a live-priced band → refreshes the feed (captures the Revealed
-// forecast once the agent clears the ≥10-resolved top-agent gate) → waits for the resolution block →
-// keeper pins the real Pyth snapshot (first-write-wins) → resolves (CRPS-scored). ~12 min/cycle.
+// Each ~12-min cycle: every roster agent commits+reveals a live-priced band at the SAME
+// resolution block → refresh the feed while Revealed (the feed line shows every agent that has
+// cleared the ≥10-resolved top-agent gate) → wait for the resolution block → keeper pins the real
+// Pyth snapshot ONCE (first-write-wins) → resolve each prediction (CRPS-scored).
 //
 // Run from the arima package dir so @predictor-index/sdk + viem + dotenv resolve:
 //   cd agents/arima-baseline && nohup node scripts/mnt-loop.mjs > /tmp/mnt-loop.log 2>&1 &
 // arima/.env supplies CONTROLLER_PRIVATE_KEY (agent 1) + ADDR_* + RPC (via dotenv/config, cwd=arima).
-// The keeper key is read from ../resolver/.env (RESOLVER_PRIVATE_KEY) — that wallet is the on-chain
-// keeper, kept separate from the agent so the "referee" isn't the "player".
+// Roster keys are read from the sibling agent packages' env files (server layout); the keeper key
+// comes from ../resolver/.env — that wallet is the on-chain keeper, kept separate from the agents
+// so the "referee" isn't a "player".
 //
-// ponytail: agent 1 + resolver keys are each also used by their own running bots (arima / resolver).
-// Cross-process nonce collisions are possible but rare (cycles are ~350 blocks apart); a failed cycle
-// is caught and retried. Upgrade to a dedicated key only if collisions actually bite.
+// ponytail: roster + resolver keys are each also used by their own running bots. Cross-process
+// nonce collisions are possible but rare (cycles are ~350 blocks apart); a failed agent-cycle is
+// skipped and retried next round. Upgrade to dedicated keys only if collisions actually bite.
 import "dotenv/config";
 import { readFileSync } from "node:fs";
 import { Agent, loadAddresses, resolveCategory } from "@predictor-index/sdk";
@@ -38,7 +41,6 @@ const PYTH = "0x98046Bd286715D3B0BC227Dd7a956b83D8978603";
 const RESOLUTION_ENGINE = "0xBB62C1948D35DCf60259c2003bbf3d9578DDB825";
 const COMPOSITE_FEED = "0x695aC1428FcFAb4406468A664FD7670b968aB689";
 const PREDICTION_MARKET = "0xaa92b0434F89a17F2275b655c6fA459C43813f22";
-const AGENT_ID = BigInt(process.env.AGENT_ID ?? "1");
 const STAKE = parseEther(process.env.MNT_STAKE ?? "0.05");
 const OFFSET = BigInt(process.env.MNT_OFFSET ?? "350"); // blocks; > MIN_RESOLUTION_OFFSET (300)
 
@@ -51,9 +53,18 @@ function envFrom(path, key) {
   return line.slice(key.length + 1).trim().replace(/^["']|["']$/g, "");
 }
 
-const arimaKey = norm(process.env.CONTROLLER_PRIVATE_KEY);
-const keeperKey = norm(envFrom("../../resolver/.env", "RESOLVER_PRIVATE_KEY"));
 if (!process.env.CONTROLLER_PRIVATE_KEY) throw new Error("CONTROLLER_PRIVATE_KEY missing (run from arima dir)");
+const keeperKey = norm(envFrom("../../resolver/.env", "RESOLVER_PRIVATE_KEY"));
+
+// Roster: every cycle advances ALL of these by one resolved MNT prediction, so the composite
+// feed's MNT line becomes a real multi-contributor ensemble (each needs ≥10 resolved to qualify).
+// Spreads/confidence differ per strategy so contributors aren't carbon copies of one band.
+const ROSTER = [
+  { name: "arima", id: BigInt(process.env.AGENT_ID ?? "1"), key: norm(process.env.CONTROLLER_PRIVATE_KEY), spread: 0.04, confidence: 6500 },
+  { name: "naive", id: 3n, key: norm(envFrom("../../naive-baseline/.env", "CONTROLLER_PRIVATE_KEY")), spread: 0.06, confidence: 5000 },
+  { name: "momentum", id: 5n, key: norm(envFrom("../../swarm-runner/.env.momentum.local", "CONTROLLER_PRIVATE_KEY")), spread: 0.03, confidence: 7000 },
+  { name: "ewma-vol", id: 6n, key: norm(envFrom("../../swarm-runner/.env.ewma-vol.local", "CONTROLLER_PRIVATE_KEY")), spread: 0.05, confidence: 6000 },
+];
 
 const chain = defineChain({
   id: CHAIN_ID,
@@ -95,29 +106,44 @@ async function hermesUpdate() {
 }
 
 const MNT = resolveCategory("MNT_USD_SPOT").id;
-const agent = new Agent({
-  agentId: AGENT_ID,
-  controllerPrivateKey: arimaKey,
-  rpcUrl: RPC,
-  contractAddresses: loadAddresses(),
-  chainId: CHAIN_ID,
-});
+const addresses = loadAddresses();
+for (const r of ROSTER) {
+  r.agent = new Agent({
+    agentId: r.id,
+    controllerPrivateKey: r.key,
+    rpcUrl: RPC,
+    contractAddresses: addresses,
+    chainId: CHAIN_ID,
+  });
+}
+
+async function submitOne(n, r, spot, resolutionBlock) {
+  const low = BigInt(Math.round(spot * (1 - r.spread)));
+  const high = BigInt(Math.round(spot * (1 + r.spread)));
+  const contentHash = keccak256(
+    toHex(JSON.stringify({ agent: Number(r.id), strategy: r.name, category: "MNT_USD_SPOT", band: [low.toString(), high.toString()], resolutionBlock: resolutionBlock.toString() })),
+  );
+  const { predictionId } = await r.agent.submitFullCycle("MNT_USD_SPOT", { low, high }, r.confidence, resolutionBlock, contentHash, { stake: STAKE });
+  log(`#${n} ${r.name}(${r.id}) prediction ${predictionId} band=[${(Number(low) / 1e8).toFixed(4)},${(Number(high) / 1e8).toFixed(4)}] committed+revealed`);
+  return predictionId;
+}
 
 async function cycle(n) {
   const { usd8: spot } = await hermesUpdate();
-  const low = BigInt(Math.round(spot * 0.96));
-  const high = BigInt(Math.round(spot * 1.04));
   const head = await pub.getBlockNumber();
   const resolutionBlock = head + OFFSET;
-  const contentHash = keccak256(
-    toHex(JSON.stringify({ agent: Number(AGENT_ID), category: "MNT_USD_SPOT", band: [low.toString(), high.toString()], head: head.toString() })),
-  );
-  log(`#${n} spot=${(spot / 1e8).toFixed(4)} band=[${(Number(low) / 1e8).toFixed(4)},${(Number(high) / 1e8).toFixed(4)}] resBlock=${resolutionBlock} — committing`);
+  log(`#${n} spot=${(spot / 1e8).toFixed(4)} resBlock=${resolutionBlock} — committing ${ROSTER.length} agents`);
 
-  const { predictionId } = await agent.submitFullCycle("MNT_USD_SPOT", { low, high }, 6500, resolutionBlock, contentHash, { stake: STAKE });
-  log(`#${n} prediction ${predictionId} committed+revealed`);
+  // Parallel: each agent has its own key/nonce. A failed agent is skipped this round.
+  const settled = await Promise.allSettled(ROSTER.map((r) => submitOne(n, r, spot, resolutionBlock)));
+  const submitted = [];
+  settled.forEach((s, i) => {
+    if (s.status === "fulfilled") submitted.push({ roster: ROSTER[i], predictionId: s.value });
+    else log(`#${n} ${ROSTER[i].name} submit FAILED: ${String(s.reason?.message ?? s.reason).split("\n")[0]}`);
+  });
+  if (!submitted.length) throw new Error("no agent submitted this cycle");
 
-  // Refresh while Revealed so the feed captures this forecast (once the agent has ≥10 resolved MNT).
+  // Refresh while Revealed so the feed captures every qualified agent's forecast.
   try {
     const ftx = await keeper.writeContract({ address: COMPOSITE_FEED, abi: feedAbi, functionName: "refresh", args: [MNT], gas: 3_000_000n });
     await pub.waitForTransactionReceipt({ hash: ftx });
@@ -133,7 +159,7 @@ async function cycle(n) {
     await sleep(30_000);
   }
 
-  // Keeper pins the real Pyth snapshot (first-write-wins), then resolve → CRPS score.
+  // Keeper pins the real Pyth snapshot ONCE for the shared resolution block (first-write-wins).
   if (!(await pub.readContract({ address: PYTH_RESOLVER, abi: resolverAbi, functionName: "recorded", args: [resolutionBlock] }))) {
     const { data } = await hermesUpdate();
     const fee = await pub.readContract({ address: PYTH, abi: pythAbi, functionName: "getUpdateFee", args: [data] });
@@ -142,18 +168,20 @@ async function cycle(n) {
   }
   const snap = await pub.readContract({ address: PYTH_RESOLVER, abi: resolverAbi, functionName: "snapshotPrice", args: [resolutionBlock] });
 
-  try {
-    const rtx = await keeper.writeContract({ address: RESOLUTION_ENGINE, abi: reAbi, functionName: "resolve", args: [predictionId], gas: 3_000_000n });
-    await pub.waitForTransactionReceipt({ hash: rtx });
-  } catch (e) {
-    // The running resolver bot may have resolved it first (permissionless) — that's fine.
-    log(`#${n} resolve note: ${String(e.message).split("\n")[0]}`);
+  for (const { roster, predictionId } of submitted) {
+    try {
+      const rtx = await keeper.writeContract({ address: RESOLUTION_ENGINE, abi: reAbi, functionName: "resolve", args: [predictionId], gas: 3_000_000n });
+      await pub.waitForTransactionReceipt({ hash: rtx });
+    } catch (e) {
+      // The running resolver bot may have resolved it first (permissionless) — that's fine.
+      log(`#${n} ${roster.name} resolve note: ${String(e.message).split("\n")[0]}`);
+    }
+    const p = await pub.readContract({ address: PREDICTION_MARKET, abi: pmAbi, functionName: "getPrediction", args: [predictionId] });
+    log(`#${n} ${roster.name} DONE prediction ${predictionId}: status=${p.status} (2=Resolved) score=${p.score} snapshot=${(Number(snap) / 1e8).toFixed(4)}`);
   }
-  const p = await pub.readContract({ address: PREDICTION_MARKET, abi: pmAbi, functionName: "getPrediction", args: [predictionId] });
-  log(`#${n} DONE prediction ${predictionId}: status=${p.status} (2=Resolved) score=${p.score} snapshot=${(Number(snap) / 1e8).toFixed(4)}`);
 }
 
-log(`start — agent=${AGENT_ID} keeper=${keeperAcct.address} MNT=${MNT}`);
+log(`start — roster=[${ROSTER.map((r) => `${r.name}:${r.id}`).join(", ")}] keeper=${keeperAcct.address} MNT=${MNT}`);
 let n = 0;
 for (;;) {
   n += 1;
