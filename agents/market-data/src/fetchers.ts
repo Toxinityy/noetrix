@@ -32,3 +32,8 @@ export async function fetchChainTvl(): Promise<unknown> {
 export async function fetchFearGreed(): Promise<unknown> {
   return getJson("https://api.alternative.me/fng/?limit=0&format=json");
 }
+
+/// ETH daily price history (proxy for the mETH price leg). ~400d of daily closes.
+export async function fetchEthChart(): Promise<unknown> {
+  return getJson("https://coins.llama.fi/chart/coingecko:ethereum?period=1d&span=400");
+}

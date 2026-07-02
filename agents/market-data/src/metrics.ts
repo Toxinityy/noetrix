@@ -52,4 +52,13 @@ export const METRICS: Record<MetricKey, MetricConfig> = {
     toDomain: (v) => BigInt(r(v)),
     volMethod: "firstDiff",
   },
+  ETH_PRICE: {
+    // Non-category input series (like FEAR_GREED): drives the total-return backtest's mETH price leg.
+    key: "ETH_PRICE",
+    workingUnit: "usd",
+    domainMin: 0n,
+    domainMax: 100_000_000n, // unused for a non-category series; present so METRICS stays a total Record
+    toDomain: (usd) => BigInt(r(usd)),
+    volMethod: "logReturn",
+  },
 };

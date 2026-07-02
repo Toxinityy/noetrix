@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { parseYieldChart, parseFearGreed, parseProtocolChainTvl, parseChainTvl, pickUsdyPool } from "../src/parsers.js";
+import { parseYieldChart, parseFearGreed, parseProtocolChainTvl, parseChainTvl, pickUsdyPool, parsePriceChart } from "../src/parsers.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fx = (name: string) => JSON.parse(readFileSync(join(here, "fixtures", name), "utf8"));
@@ -31,5 +31,14 @@ describe("parsers", () => {
   });
   it("pickUsdyPool finds the Mantle Ondo USDY pool UUID", () => {
     expect(pickUsdyPool(fx("pools.json"))).toBe("usdy-mantle-uuid");
+  });
+  it("parsePriceChart reads DefiLlama coins chart → sorted {ts,value}", () => {
+    const raw = { coins: { "coingecko:ethereum": { prices: [
+      { timestamp: 1_700_000_000, price: 2000 },
+      { timestamp: 1_699_913_600, price: 1950 },
+    ] } } };
+    const pts = parsePriceChart(raw);
+    expect(pts.map((p) => p.ts)).toEqual([1_699_913_600, 1_700_000_000]);
+    expect(pts[1].value).toBe(2000);
   });
 });

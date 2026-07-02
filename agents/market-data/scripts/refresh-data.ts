@@ -3,9 +3,9 @@
 /// Node's fetch handles the >10MB DefiLlama payloads that the WebFetch tool cannot. Each metric is
 /// independent: a failure on one logs and continues so partial real data still lands.
 import {
-  fetchMethChart, fetchUsdyChart, fetchAaveProtocol, fetchChainTvl, fetchFearGreed,
+  fetchMethChart, fetchUsdyChart, fetchAaveProtocol, fetchChainTvl, fetchFearGreed, fetchEthChart,
 } from "../src/fetchers.js";
-import { buildMethSeries, buildUsdySeries, buildAaveTvlSeries, buildChainTvlSeries, buildFearGreedSeries } from "../src/series.js";
+import { buildMethSeries, buildUsdySeries, buildAaveTvlSeries, buildChainTvlSeries, buildFearGreedSeries, buildEthPriceSeries } from "../src/series.js";
 import { saveSeries } from "../src/cache.js";
 import type { MetricSeries } from "../src/types.js";
 
@@ -36,7 +36,8 @@ async function main() {
     return buildChainTvlSeries(await fetchChainTvl(), stamp);
   })) ? 1 : 0;
   ok += (await tryOne("FEAR_GREED", async () => buildFearGreedSeries(await fetchFearGreed(), stamp))) ? 1 : 0;
-  console.log(`refresh-data: ${ok}/4 metrics written to data/`);
+  ok += (await tryOne("ETH_PRICE", async () => buildEthPriceSeries(await fetchEthChart(), stamp))) ? 1 : 0;
+  console.log(`refresh-data: ${ok}/5 metrics written to data/`);
   if (ok === 0) process.exitCode = 1;
 }
 

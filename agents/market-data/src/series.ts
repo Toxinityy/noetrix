@@ -1,5 +1,5 @@
 import type { MetricSeries } from "./types.js";
-import { parseYieldChart, parseFearGreed, parseProtocolChainTvl, parseChainTvl } from "./parsers.js";
+import { parseYieldChart, parseFearGreed, parseProtocolChainTvl, parseChainTvl, parsePriceChart } from "./parsers.js";
 import { apyPctToBps } from "./normalize.js";
 
 /// Default provenance stamp is empty so unit tests stay time-independent; the refresh script always
@@ -29,4 +29,9 @@ export function buildChainTvlSeries(rawChainTvl: unknown, fetchedAt = NO_STAMP):
 export function buildFearGreedSeries(rawFng: unknown, fetchedAt = NO_STAMP): MetricSeries {
   const pts = parseFearGreed(rawFng);
   return { metric: "FEAR_GREED", unit: "index", fetchedAt, source: "alternative.me/fng", points: pts };
+}
+
+export function buildEthPriceSeries(rawChart: unknown, fetchedAt = NO_STAMP): MetricSeries {
+  const pts = parsePriceChart(rawChart);
+  return { metric: "ETH_PRICE", unit: "usd", fetchedAt, source: "defillama:coins/chart(coingecko:ethereum)", points: pts };
 }

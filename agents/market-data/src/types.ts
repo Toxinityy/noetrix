@@ -5,7 +5,7 @@ export interface DailyPoint {
   value: number;
 }
 
-export type MetricKey = "METH_APR" | "AAVE_TVL" | "USDY_APY" | "FEAR_GREED";
+export type MetricKey = "METH_APR" | "AAVE_TVL" | "USDY_APY" | "FEAR_GREED" | "ETH_PRICE";
 
 export interface MetricSeries {
   metric: MetricKey;

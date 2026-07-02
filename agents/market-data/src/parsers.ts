@@ -18,6 +18,21 @@ export function parseYieldChart(raw: unknown): DailyPoint[] {
   return sortByTs(pts);
 }
 
+/// DefiLlama coins /chart → {ts, value} in USD. Shape: { coins: { "<id>": { prices: [{timestamp, price}] } } }.
+export function parsePriceChart(raw: unknown): DailyPoint[] {
+  const coins = (raw as { coins?: Record<string, { prices?: Array<{ timestamp: number; price: number }> }> }).coins ?? {};
+  const first = Object.values(coins)[0];
+  const prices = first?.prices ?? [];
+  const pts: DailyPoint[] = [];
+  for (const p of prices) {
+    if (typeof p.price !== "number" || !Number.isFinite(p.price)) continue;
+    const ts = Math.floor(Number(p.timestamp));
+    if (!Number.isFinite(ts)) continue;
+    pts.push({ ts, value: p.price });
+  }
+  return sortByTs(pts);
+}
+
 /// alternative.me Fear & Greed → {ts, value} as a 0–100 index.
 export function parseFearGreed(raw: unknown): DailyPoint[] {
   const data = (raw as { data?: Array<{ value: string; timestamp: string }> }).data ?? [];
