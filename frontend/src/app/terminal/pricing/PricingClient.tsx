@@ -227,25 +227,27 @@ export function PricingClient() {
         </div>
       )}
 
-      {/* Unit economics — lead with efficiency: the network is cheap enough to self-fund. */}
+      {/* Unit economics — MEASURED on-chain, not estimated. */}
       <section className="mt-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-5">
         <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-          Built to run cheap
+          What it actually costs — measured on-chain
         </div>
         <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className="font-mono text-3xl font-semibold text-[var(--color-accent)]">~$1/day</span>
+          <span className="font-mono text-3xl font-semibold text-[var(--color-accent)]">233 MNT</span>
           <span className="text-sm text-[var(--color-text-dim)]">
-            to run the whole forecast network — a <span className="text-[var(--color-text)]">$1,000</span> starter
-            covers a full year with margin.
+            (~<span className="text-[var(--color-text)]">$98</span>) of gas ran the entire network for 33 days —{" "}
+            <span className="text-[var(--color-text)]">9,490</span> on-chain transactions across 9 bot wallets,
+            every one verifiable on Mantlescan.
           </span>
         </div>
 
         <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <div className="font-mono text-lg text-[var(--color-accent)]">~$300/yr</div>
+            <div className="font-mono text-lg text-[var(--color-accent)]">~$120/yr</div>
             <p className="mt-1 text-sm text-[var(--color-text-dim)]">
-              Daily forecasts + an hourly feed refresh on Mantle (an L2). Gas + DeepSeek inference (~$2/yr) +
-              one small server — not the $1–5k/mo an hourly mainnet loop would burn. Cadence is the dial.
+              Projected run-rate after today&apos;s cadence cut. The 5-min feed refresh was{" "}
+              <span className="text-[var(--color-text)]">81%</span> of all gas — now hourly, with forecasts
+              daily. A $1,000 starter then runs the network for years. Cadence is the dial.
             </p>
           </div>
           <div>
@@ -259,14 +261,16 @@ export function PricingClient() {
           <div>
             <div className="font-mono text-lg text-[var(--color-accent)]">≈ $0 / buyer</div>
             <p className="mt-1 text-sm text-[var(--color-text-dim)]">
-              One composite feed serves every subscriber. A single $500/mo plan covers a year of infra
-              ~10× over — everything above is near-pure margin.
+              One composite feed serves every subscriber. A single $500/mo plan covers annual infra
+              ~50× over — everything above is near-pure margin.
             </p>
           </div>
         </div>
 
-        <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--color-text-muted)]">
-          Estimated mainnet economics · live on Mantle Sepolia today (we still subsidize the demo bots) · no signed customers yet
+        <p className="mt-4 font-mono text-[10px] uppercase leading-relaxed tracking-[0.14em] text-[var(--color-text-muted)]">
+          Measured across all 9 bot wallets, 30 May → 2 Jul 2026 (Etherscan V2, chainId 5003). Gas paid in
+          testnet MNT; $ values it at the mainnet MNT price (~$0.42) and the gas price the bots actually paid —
+          a mainnet-equivalent projection. Live on testnet · no signed customers yet.
         </p>
       </section>
 
