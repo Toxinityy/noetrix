@@ -25,7 +25,7 @@ const ITEMS: Item[] = [
   {
     id: "sybil",
     q: "What stops an attacker from spinning up 10,000 agents?",
-    a: "Three layers. (1) A 0.1 MNT registration fee on each soulbound ERC-8004 NFT (non-transferable, controller-rotatable on a 24h timelock). (2) Stake-at-risk per prediction (minStake per category, slashed on bad scores). (3) Reputation EMA with α=0.1 means a fresh account is invisible to the composite feed until ≥10 resolved predictions in a category, and rank decay punishes inconsistency.",
+    a: "Three layers. (1) A 0.1 MNT registration fee on each soulbound ERC-8004 NFT (non-transferable, controller-rotatable on a 24h timelock). (2) Stake-at-risk per prediction (minStake per category, slashed on bad scores). (3) Reputation EMA with α=0.1 means a fresh account is invisible to the composite feed until ≥10 resolved predictions in a category, and the accuracy EMA punishes inconsistency.",
   },
   {
     id: "commit-reveal",

@@ -39,9 +39,28 @@ const CATEGORIES: CategoryCard[] = [
       actual: 3.42,
       bandLo: 3.15,
       bandHi: 3.55,
-      label: "deepseek-reasoner-α · 24h forecast",
+      label: "deepseek-reasoner · sample forecast",
     },
     series: [3.18, 3.21, 3.27, 3.31, 3.34, 3.36, 3.38, 3.4, 3.41, 3.42, 3.42, 3.43],
+    agents: 7,
+  },
+  {
+    id: "mnt-usd-spot",
+    href: "/terminal/feed/mnt-usd-spot",
+    slug: "MNT_USD_SPOT",
+    title: "MNT/USD spot",
+    subtitle: "Live Pyth market price, keeper-pinned at the resolution block",
+    domain: "[$0, $5] USD",
+    cadence: "Resolves ~12 min after commit · Pyth snapshot",
+    formula: "outcome = pythPrice(feedId) pinned @ resolutionBlock",
+    unit: "USD",
+    sample: {
+      actual: 0.44,
+      bandLo: 0.42,
+      bandHi: 0.46,
+      label: "arima-baseline · spot forecast",
+    },
+    series: [0.435, 0.437, 0.44, 0.442, 0.441, 0.439, 0.438, 0.44, 0.441, 0.44, 0.439, 0.44],
     agents: 7,
   },
   {
@@ -58,7 +77,7 @@ const CATEGORIES: CategoryCard[] = [
       actual: 5.02,
       bandLo: 4.7,
       bandHi: 5.3,
-      label: "deepseek-reasoner-α · 24h forecast",
+      label: "deepseek-reasoner · sample forecast",
     },
     series: [4.6, 4.7, 4.78, 4.83, 4.88, 4.91, 4.94, 4.97, 4.99, 5.0, 5.01, 5.02],
     agents: 7,
@@ -171,7 +190,7 @@ export function CategoriesShowcase() {
     >
       <header className="mb-12 flex max-w-3xl flex-col gap-2">
         <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--color-accent)]">
-          AI Alpha &amp; Data · three markets scored
+          AI Alpha &amp; Data · four markets scored
         </div>
         <h2 className="text-balance text-3xl font-semibold tracking-tight text-[var(--color-text)] sm:text-5xl">
           Real-world yield, priced by the most calibrated agents.
@@ -179,14 +198,16 @@ export function CategoriesShowcase() {
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--color-text-dim)]">
           Each RWA market bundles its own resolver, scorer and domain config. Agents commit a
           uniform range over the configured bucket grid; CRPS-distance to the realized on-chain
-          outcome decides who gets paid, and whose forecast steers the yield strategy.
+          outcome decides who gets paid, and whose forecast steers the yield strategy. Outcomes
+          resolve against on-chain oracles — v1 yield oracles are seeded reference curves;
+          MNT/USD reads the live Pyth price.
         </p>
       </header>
 
       {/* Asymmetric layout: the flagship mETH market is featured large; USDY + AAVE sit smaller below. */}
       <div className="flex flex-col gap-6">
         <CategoryPanel card={CATEGORIES[0]} index={0} featured reduced={reduced} />
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {CATEGORIES.slice(1).map((c, i) => (
             <CategoryPanel key={c.id} card={c} index={i + 1} reduced={reduced} />
           ))}

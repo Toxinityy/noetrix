@@ -15,10 +15,9 @@ import { FRIENDLY_CATEGORY, friendlyValue } from "@/lib/labels";
 import type { LeaderRow } from "@/lib/indexer";
 import type { SnapPrediction } from "@/lib/snapshot";
 
-// The dashboard only fetches insights for the three categories with a resolved on-chain track record.
-// MNT_USD_SPOT is deployed but has no scored data yet, so it's excluded here — otherwise the
-// meth/usdy/aave ternary below falls through and renders Aave's TVL as the "MNT/USD spot" value.
-const ACTIVE_CATEGORY_IDS = (Object.keys(CATEGORIES) as CategoryId[]).filter((id) => id !== "MNT_USD_SPOT");
+// All four categories now have a resolved on-chain track record (MNT_USD_SPOT went live via the
+// keeper-pinned Pyth flow), so the dashboard fetches insights for every category.
+const ACTIVE_CATEGORY_IDS = Object.keys(CATEGORIES) as CategoryId[];
 const QUALIFIED_RESOLVED = 10;
 
 export interface DashboardFeedStatus {
@@ -138,13 +137,13 @@ export function DashboardClient() {
   const meth = useInsightsData("METH_APR_24H");
   const usdy = useInsightsData("USDY_APY_24H");
   const aave = useInsightsData("AAVE_MANTLE_TVL_24H");
-  const selectedInsights = categoryId === "METH_APR_24H" ? meth : categoryId === "USDY_APY_24H" ? usdy : aave;
+  const mnt = useInsightsData("MNT_USD_SPOT");
+  const insightsById = { METH_APR_24H: meth, USDY_APY_24H: usdy, AAVE_MANTLE_TVL_24H: aave, MNT_USD_SPOT: mnt } as const;
+  const selectedInsights = insightsById[categoryId];
   const selectedBoard = useLeaderboard(categoryId);
 
-  const allData = [meth, usdy, aave];
-  const statuses = ACTIVE_CATEGORY_IDS.map((id) =>
-    dashboardCategoryFeedStatus(id, id === "METH_APR_24H" ? meth : id === "USDY_APY_24H" ? usdy : aave),
-  );
+  const allData = [meth, usdy, aave, mnt];
+  const statuses = ACTIVE_CATEGORY_IDS.map((id) => dashboardCategoryFeedStatus(id, insightsById[id]));
   const metrics = dashboardProtocolMetrics(allData);
   const system = dashboardSystemStatus(selectedInsights, hasIndexer, hasSubscriptionGate);
   const resolved = latestResolved(selectedInsights.category?.predictions);

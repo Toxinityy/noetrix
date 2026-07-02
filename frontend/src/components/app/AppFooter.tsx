@@ -30,7 +30,9 @@ export function AppFooter() {
 
         <FooterColumn label="Categories">
           <FooterLink href="/terminal/feed/meth-apr-24h">METH_APR_24H</FooterLink>
+          <FooterLink href="/terminal/feed/usdy-apy-24h">USDY_APY_24H</FooterLink>
           <FooterLink href="/terminal/feed/aave-mantle-tvl">AAVE_MANTLE_TVL_24H</FooterLink>
+          <FooterLink href="/terminal/feed/mnt-usd-spot">MNT_USD_SPOT</FooterLink>
         </FooterColumn>
 
         <FooterColumn label="System">

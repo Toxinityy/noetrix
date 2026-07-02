@@ -5,26 +5,44 @@ import { useRef } from "react";
 import { DEEPSEEK_MODEL } from "@/lib/mockData";
 
 /**
- * The demo peak: the DeepSeek reasoner's full trace, the forecast it committed
- * before the outcome, and the verdict once the real value landed. This is the
- * one frame that is deliberately styled to not look like the other cards.
+ * The demo peak — built from REAL on-chain data, misses included.
+ *
+ * Tiles: prediction #773 on the live PredictionMarket (agent 2, METH_APR_24H) — band 240–270 bps
+ * committed at block 40,106,259, a full ~24h (43,197 blocks) before resolution block 40,149,456.
+ * The realized value landed at 302 bps (32 bps above the band) and the chain still graded it
+ * +956,667 CRPS (95.7%) — verify via getPrediction(773) on Mantlescan.
+ *
+ * Trace: quoted VERBATIM from the reasoner's pinned IPFS provenance payload (contentURI below),
+ * whose keccak hash was committed on-chain as the prediction's contentHash before the outcome.
  */
+const PROOF = {
+  predictionId: 773,
+  bandLow: 240,
+  bandHigh: 270,
+  commitBlock: "40,106,259",
+  resolutionBlock: "40,149,456",
+  realized: 302,
+  score: "+956,667",
+  scorePct: "95.7%",
+  marketUrl:
+    "https://sepolia.mantlescan.xyz/address/0xaa92b0434F89a17F2275b655c6fA459C43813f22#readContract",
+};
+
+const PINNED_CID = "ipfs://QmREFScRDmHTm82P391LrmSds1BSutPVHDRCHKgJhm3Wvy";
+
+// Verbatim steps from the pinned payload (a cold-start mETH forecast by the same reasoner).
 const TRACE = [
   {
-    h: "Observe",
-    body: "mETH 24h APR ran 384 bps last cycle; staking deposits inflected after the Bybit campaign launched 2026-05-19. Aave-Mantle borrow utilization 71%.",
+    h: "Frame",
+    body: "Forecast the 24h annualized mETH staking APR (bps, domain 0–100,000) on a cold start: no resolved history for this agent in context, no news items returned, composite feed empty.",
   },
   {
-    h: "Hypothesize",
-    body: "Reward cliff at 2026-05-29 should suppress APR by roughly 6% as restaked yield concentrates in fewer validators. Counter-signal: incremental TVL slows the decay.",
+    h: "Infer",
+    body: "No historical data or news available; initial forecast must cover a wide plausible range for mETH APR based on typical staking yields (often 2-4% in calm periods) while acknowledging high uncertainty without any prior information.",
   },
   {
     h: "Forecast",
-    body: "Range 350 to 420 bps over the next 24h. Center near 389. Confidence 68%, wide enough to absorb a mid-cycle inflow shock.",
-  },
-  {
-    h: "Calibration note",
-    body: "I have under-shot APR twice in the last 5 resolutions. Pulling confidence in by 200 bps to compensate. Overconfidence costs my Brier-derived score more than missing the median.",
+    body: "Band 2,500–4,000 bps at 50% stated confidence — wide band, low confidence, consistent with zero prior information.",
   },
 ];
 
@@ -52,7 +70,7 @@ export function ReasoningReveal() {
               The proof, committed on-chain before the outcome
             </div>
             <h2 className="text-balance text-4xl font-semibold tracking-tight text-[var(--color-text)] sm:text-6xl">
-              It called the band. It landed inside it.
+              Committed a day ahead. Graded in public — misses included.
             </h2>
           </div>
           <p className="text-[var(--color-text-dim)] sm:text-lg">
@@ -63,7 +81,7 @@ export function ReasoningReveal() {
         </div>
       </header>
 
-      {/* Hero outcome strip: realized-vs-predicted is the headline number. */}
+      {/* Hero outcome strip: a REAL graded prediction (#773 on the live PredictionMarket). */}
       <motion.div
         style={{ y, opacity }}
         className="mx-auto w-full max-w-7xl"
@@ -74,40 +92,50 @@ export function ReasoningReveal() {
               Predicted band
             </span>
             <span className="num text-3xl text-[var(--color-text)] sm:text-4xl">
-              350 <span className="text-[var(--color-text-muted)]">to</span> 420
+              {PROOF.bandLow} <span className="text-[var(--color-text-muted)]">to</span> {PROOF.bandHigh}
             </span>
             <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-              bps, committed at block #0142
+              bps, committed at block #{PROOF.commitBlock}
             </span>
           </div>
           <div className="flex flex-col gap-2 rounded-md border border-[var(--color-accent-soft)] bg-[var(--color-bg-elev-1)] p-6 lg:rounded-none lg:border-0 lg:bg-[color:var(--color-accent)]/5">
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
               Real value landed at
             </span>
-            <span className="num text-3xl text-[var(--color-accent)] sm:text-5xl">389</span>
-            <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-up)]">
-              inside the band
+            <span className="num text-3xl text-[var(--color-accent)] sm:text-5xl">{PROOF.realized}</span>
+            <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-warn)]">
+              32 bps above the band — a public miss
             </span>
           </div>
           <div className="flex flex-col gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-elev-1)] p-6 lg:rounded-none lg:border-0">
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
               CRPS score
             </span>
-            <span className="num text-3xl text-[var(--color-text)] sm:text-4xl">+412,803</span>
+            <span className="num text-3xl text-[var(--color-text)] sm:text-4xl">{PROOF.score}</span>
             <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-              graded on-chain, no human in the loop
+              {PROOF.scorePct} — graded on-chain, no human in the loop
             </span>
           </div>
         </div>
 
         {/* Plain-English verdict. */}
         <p className="mt-5 text-balance text-lg text-[var(--color-text-dim)] sm:text-xl">
-          <span className="text-[var(--color-text)]">The verdict.</span> The AI locked a 70 bps range
-          a day early, and the truth landed dead center. That is the whole protocol in one prediction.
+          <span className="text-[var(--color-text)]">The verdict.</span> The AI locked a 30 bps band a
+          full day early; the truth landed 32 bps above it. The chain graded the distance — {PROOF.scorePct} —
+          published the score, and moved on. A track record that can&apos;t hide its misses is the only
+          kind worth trusting.{" "}
+          <a
+            href={PROOF.marketUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--color-accent)] underline decoration-[var(--color-accent-soft)] underline-offset-4 hover:decoration-[var(--color-accent)]"
+          >
+            Verify it: getPrediction({PROOF.predictionId}) on Mantlescan ↗
+          </a>
         </p>
       </motion.div>
 
-      {/* Full trace: enlarged body, full-width, no generic card chrome. */}
+      {/* Full trace: quoted verbatim from the reasoner's pinned IPFS payload. */}
       <motion.div
         style={{ opacity }}
         className="mx-auto mt-10 grid w-full max-w-7xl grid-cols-1 gap-px overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-border)] lg:grid-cols-[2fr_1fr]"
@@ -115,7 +143,7 @@ export function ReasoningReveal() {
         <div className="bg-[var(--color-bg)]">
           <div className="flex items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg-elev-1)] px-6 py-3 font-mono text-[11px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
             <span className="text-[var(--color-text-dim)]">agent #002 · {DEEPSEEK_MODEL}</span>
-            <span className="text-[var(--color-accent)]">METH_APR_24H</span>
+            <span className="text-[var(--color-accent)]">verbatim from the pinned payload</span>
           </div>
           <div className="divide-y divide-[var(--color-border)]">
             {TRACE.map((step, i) => (
@@ -138,31 +166,36 @@ export function ReasoningReveal() {
           </div>
         </div>
 
-        {/* parsed forecast block */}
+        {/* parsed forecast block — key fields verbatim from the pinned payload */}
         <div className="flex flex-col gap-5 bg-[var(--color-bg)] p-6 font-mono text-[12px]">
           <div className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-            parsed json forecast
+            parsed json forecast · from the pinned payload
           </div>
-          <pre className="overflow-x-auto whitespace-pre text-[13px] leading-relaxed text-[var(--color-text-dim)]">{`{
+          <pre className="overflow-x-auto whitespace-pre-wrap text-[13px] leading-relaxed text-[var(--color-text-dim)]">{`{
   "predicted_value": {
-    "lower": 350,
-    "upper": 420
+    "lower": 2500,
+    "upper": 4000
   },
-  "confidence": 6800,
-  "model": "${DEEPSEEK_MODEL}"
+  "confidence": 5000,
+  "summary": "I expect mETH staking
+   yield to be between 2.5% and 4%,
+   but I'm not very sure because
+   there's no recent data to go on."
 }`}</pre>
           <div className="mt-auto flex flex-col gap-2 border-t border-[var(--color-border)] pt-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
-                realized
+                anchored on-chain
               </span>
-              <span className="num text-[var(--color-text)]">389 bps</span>
+              <span className="text-[var(--color-text)]">keccak(payload) = contentHash</span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-text-muted)]">
                 provenance
               </span>
-              <span className="text-[var(--color-accent)]">ipfs://bafy…3kx7</span>
+              <span className="truncate text-[var(--color-accent)]" title={PINNED_CID}>
+                ipfs://QmREF…3Wvy
+              </span>
             </div>
           </div>
         </div>

@@ -208,8 +208,9 @@ export function InsightsClient() {
           <span className="text-[var(--color-text)]">Data source:</span> Mantle on-chain data captured in a
           committed snapshot (see the age badge above): the mETH exchange-rate oracle, USDY rate oracle, and
           Aave-on-Mantle reserves, plus each agent&apos;s on-chain forecast history and accuracy.{" "}
-          <span className="text-[var(--color-text)]">AI&apos;s role:</span> independent agents (a DeepSeek
-          reasoner and an ARIMA baseline) forecast each metric; their accuracy is scored on-chain via CRPS.{" "}
+          <span className="text-[var(--color-text)]">AI&apos;s role:</span> seven independent agents (a
+          DeepSeek reasoner, statistical baselines, and a 4-strategy quant swarm) forecast each metric;
+          their accuracy is scored on-chain via CRPS.{" "}
           <span className="text-[var(--color-text)]">Verifiable value:</span> every forecast, grade, and the
           resulting &quot;proven-AI&quot; view is recorded on Mantle and independently checkable.
         </p>

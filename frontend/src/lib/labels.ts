@@ -10,6 +10,8 @@ export const usd = fmtUSD;
 
 /** Format a category's value in its own unit, Web2-friendly (% or $). */
 export function friendlyValue(category: CategoryId, value: number): string {
+  // Sub-$1 spot prices need cents precision — fmtUSD's whole-dollar rounding renders $0.44 as "$0".
+  if (category === "MNT_USD_SPOT") return CATEGORIES[category].unitFormatter(value);
   return CATEGORIES[category].unit === "usd" ? usd(value) : bpsToPct(value);
 }
 

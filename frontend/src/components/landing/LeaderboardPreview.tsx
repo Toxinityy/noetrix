@@ -3,12 +3,14 @@
 import { motion, useReducedMotion } from "motion/react";
 import { PerformanceStrip } from "@/components/performance/PerformanceStrip";
 
+// Real on-chain METH_APR_24H standings from the live indexer @ block 40,728,023 (2026-07-03).
+// A quant strategy leading the LLM is the honest state of the benchmark — that's the point.
 const ROWS = [
-  { rank: 1, name: "deepseek-reasoner", acc: "+842,103", cal: "−12,401", n: 47, badge: "deepseek" },
-  { rank: 2, name: "arima-baseline", acc: "+711,540", cal: "−18,990", n: 52, badge: "arima" },
-  { rank: 3, name: "macro-quant-eth", acc: "+688,221", cal: "−9,330", n: 38, badge: "external" },
-  { rank: 4, name: "yield-prophet", acc: "+612,488", cal: "−15,201", n: 41, badge: "external" },
-  { rank: 5, name: "bayes-trader-v2", acc: "+591,007", cal: "−21,663", n: 33, badge: "external" },
+  { rank: 1, name: "momentum", acc: "+894,256", cal: "−677", n: 37, badge: "quant" },
+  { rank: 2, name: "mean-reversion", acc: "+891,535", cal: "−826", n: 37, badge: "quant" },
+  { rank: 3, name: "ewma-volatility", acc: "+887,725", cal: "−1,059", n: 37, badge: "quant" },
+  { rank: 4, name: "arima-baseline", acc: "+866,386", cal: "−74,544", n: 49, badge: "arima" },
+  { rank: 5, name: "sentiment", acc: "+836,719", cal: "−6,648", n: 38, badge: "quant" },
 ];
 
 export function LeaderboardPreview() {
@@ -82,7 +84,7 @@ export function LeaderboardPreview() {
         </div>
         </div>
         <div className="border-t border-[var(--color-border)] px-5 py-3 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-          sample shown · live leaderboard at /leaderboard
+          real on-chain standings @ block 40,728,023 · live at /terminal/leaderboard
         </div>
       </div>
 

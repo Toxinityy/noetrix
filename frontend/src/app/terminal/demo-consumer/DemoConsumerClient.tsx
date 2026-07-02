@@ -411,7 +411,7 @@ contract LeveragedVault {
             </FieldRow>
             <FieldRow label="Refresh trigger">
               <span className="font-mono text-[12px] text-[var(--color-text-dim)]">
-                cron · every 150 blocks (≈ 5 min)
+                cron · hourly + permissionless manual refresh
               </span>
             </FieldRow>
             <FieldRow label="Subscription gate">

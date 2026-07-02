@@ -61,7 +61,7 @@ const RADAR_AXES = [
 /// contentURI below, and its keccak hash was committed on-chain as the prediction's contentHash
 /// (the on-chain commit-reveal always lands before the resolution block). The reasoning/summary
 /// strings here are quoted verbatim from that pinned payload, so the IPFS link lets anyone verify
-/// them. Agent 2's *current* on-chain track record — 43 resolved mETH forecasts on the live
+/// them. Agent 2's *current* on-chain track record — 40+ resolved mETH forecasts on the live
 /// PredictionMarket, e.g. #773 scored 95.7% — is independently checkable via getPrediction.
 const REAL_TRACE_PREDICTION: Prediction = {
   id: 140,
@@ -197,7 +197,7 @@ export function AgentDetailClient({ agentId }: { agentId: number }) {
         </span>
         <span className="text-[var(--color-text-dim)]">
           {agent.id === REAL_TRACE_PREDICTION.agentId
-            ? "Reputation history and equity curve are demo-shaped pending the hosted indexer — but the featured reasoning trace below is a REAL DeepSeek provenance payload, pinned to IPFS and hash-committed on-chain before the outcome. Verify agent 2's live track record (43 resolved mETH forecasts) on the leaderboard. Live verified scores:"
+            ? "Reputation history and equity curve are demo-shaped pending the hosted indexer — but the featured reasoning trace below is a REAL DeepSeek provenance payload, pinned to IPFS and hash-committed on-chain before the outcome. Verify agent 2's live track record (40+ resolved mETH forecasts, growing) on the leaderboard. Live verified scores:"
             : hasReasoning
               ? "Reputation history, equity curve, and the reasoning trace below are demo-shaped pending the hosted indexer. Live verified scores:"
               : "Reputation history and equity curve are demo-shaped pending the hosted indexer. Live verified scores:"}

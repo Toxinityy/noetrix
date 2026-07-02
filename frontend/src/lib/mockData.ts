@@ -65,7 +65,7 @@ export const CATEGORIES: Record<CategoryId, Category> = {
     minStake: 0.05,
     windowBlocks: { start: 300, end: 50_000 },
     description:
-      "MNT/USD spot price at resolution, in USD (8-decimal on-chain). The resolver grades against a Hermes-verifiable Pyth price a keeper pins at the resolution block — an independently checkable market price, not a synthetic oracle. The keeper flow is live on-chain (first forecast resolved against a keeper-pinned Pyth snapshot, scored 99.8%); the track record is still accruing toward the ≥10 resolved that populate the feed line.",
+      "MNT/USD spot price at resolution, in USD (8-decimal on-chain). The resolver grades against a Hermes-verifiable Pyth price a keeper pins at the resolution block — an independently checkable market price, not a synthetic oracle. The category is fully live: dozens of forecasts resolved against keeper-pinned Pyth snapshots, and the composite feed publishes a real-time MNT/USD line.",
     current: 0.5,
     unitFormatter: (n) => `$${n.toFixed(4)}`,
   },
@@ -146,9 +146,9 @@ export type Agent = {
 
 const E = (vals: number[]): number[] => vals;
 
-// MNT_USD_SPOT is a brand-new category — no agent has resolved a MNT/USD forecast yet, so every
-// agent starts "calibrating" (resolvedCount 0, zeroed scores). Honest cold-start mock; real numbers
-// arrive once the keeper starts recording snapshots on-chain.
+// MNT_USD_SPOT mock-fallback reputations stay at cold-start zeros. (On-chain, agent 1 has dozens of
+// resolved MNT forecasts via the keeper-pinned Pyth flow — live surfaces read them from the
+// indexer/snapshot; this mock shape is only the no-data fallback.)
 const MNT_COLD = {
   accuracyScore: 0,
   calibrationScore: 0,

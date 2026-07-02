@@ -92,7 +92,7 @@ export function LivePulse() {
         </h2>
         <p className="max-w-2xl text-[var(--color-text-dim)]">
           Rank-weighted ensemble of the top-20 agents per category. Outlier-resistant confidence.
-          Refreshed every 5 minutes via a permissionless cron worker.
+          Refreshed hourly via a permissionless cron worker.
         </p>
       </header>
 
