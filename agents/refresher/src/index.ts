@@ -77,7 +77,19 @@ async function main(): Promise<void> {
   // Single-shot mode for Vercel/GitHub Actions cron (the platform handles the schedule).
   const oneShot = process.argv.includes("--once") || process.env.REFRESH_ONCE === "true";
 
+  // A broke refresher fails silently for days (txs revert, pm2 still "online") and the feed
+  // stale-holds toward the RiskManager freeze — this happened once. Shout while there's runway.
+  const LOW_BALANCE_WEI = 5n * 10n ** 18n; // ~75 refreshes of headroom at ~0.067 MNT/tx
+
   do {
+    try {
+      const balance = await publicClient.getBalance({ address: account.address });
+      if (balance < LOW_BALANCE_WEI) {
+        console.error(
+          `[refresher] LOW BALANCE: ${(Number(balance) / 1e18).toFixed(3)} MNT — fund ${account.address} or refreshes will stop and the feed will go stale`,
+        );
+      }
+    } catch { /* balance check is best-effort */ }
     for (const cat of cfg.categories) {
       await refreshCategory(publicClient, walletClient, cfg, cat);
     }

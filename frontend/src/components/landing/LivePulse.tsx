@@ -195,9 +195,9 @@ export function LivePulse() {
           {/* stats panel */}
           <div className="flex flex-col border-l border-[var(--color-border)]">
             <Stat label="Composite" value={<motion.span>{displayValue}</motion.span>} unit="bps" emphasized />
-            <Stat label="Confidence" value="84.2" unit="%" />
+            <Stat label="Confidence" value="76.4" unit="%" />
             <Stat label="Agents" value="7 / 20" unit="contributing" />
-            <Stat label="Last refresh" value="2m 14s" unit="ago" muted />
+            <Stat label="Refresh cadence" value="hourly" unit="cron" muted />
             <button className="group mt-auto border-t border-[var(--color-border)] px-5 py-4 text-left font-mono text-[11px] uppercase tracking-[0.16em] text-[var(--color-accent)] transition-colors hover:bg-[var(--color-accent)] hover:text-black">
               Subscribe to feed
               <span className="ml-2 inline-block transition-transform group-hover:translate-x-0.5">

@@ -1,200 +1,211 @@
 {
-  "generatedAt": "2026-06-15T16:08:20.698Z",
+  "generatedAt": "2026-07-02T18:19:15.446Z",
   "source": "indexer",
   "categories": {
     "METH_APR_24H": [
       {
-        "id": 1,
-        "name": "ARIMA Baseline",
-        "kind": "ARIMA",
-        "accuracyScore": 881194,
-        "calibrationScore": -200830,
-        "resolvedCount": 31,
-        "lastUpdatedBlock": 39981522
-      },
-      {
-        "id": 7,
-        "name": "Sentiment (Fear & Greed)",
+        "id": 5,
+        "name": "Momentum",
         "kind": "QUANT",
-        "accuracyScore": 859030,
-        "calibrationScore": -16797,
-        "resolvedCount": 23,
-        "lastUpdatedBlock": 39981488
+        "accuracyScore": 894256,
+        "calibrationScore": -677,
+        "resolvedCount": 37,
+        "lastUpdatedBlock": 40727800
       },
       {
         "id": 4,
         "name": "Mean-Reversion",
         "kind": "QUANT",
-        "accuracyScore": 753968,
-        "calibrationScore": -55067,
-        "resolvedCount": 23,
-        "lastUpdatedBlock": 39981493
-      },
-      {
-        "id": 5,
-        "name": "Momentum",
-        "kind": "QUANT",
-        "accuracyScore": 745400,
-        "calibrationScore": -64049,
-        "resolvedCount": 22,
-        "lastUpdatedBlock": 39981498
+        "accuracyScore": 891535,
+        "calibrationScore": -826,
+        "resolvedCount": 37,
+        "lastUpdatedBlock": 40728023
       },
       {
         "id": 6,
         "name": "EWMA-Volatility",
         "kind": "QUANT",
-        "accuracyScore": 739391,
-        "calibrationScore": -67127,
-        "resolvedCount": 22,
-        "lastUpdatedBlock": 39981491
+        "accuracyScore": 887725,
+        "calibrationScore": -1059,
+        "resolvedCount": 37,
+        "lastUpdatedBlock": 40727803
+      },
+      {
+        "id": 1,
+        "name": "ARIMA Baseline",
+        "kind": "ARIMA",
+        "accuracyScore": 866386,
+        "calibrationScore": -74544,
+        "resolvedCount": 49,
+        "lastUpdatedBlock": 40727797
+      },
+      {
+        "id": 7,
+        "name": "Sentiment (Fear & Greed)",
+        "kind": "QUANT",
+        "accuracyScore": 836719,
+        "calibrationScore": -6648,
+        "resolvedCount": 38,
+        "lastUpdatedBlock": 40727805
       },
       {
         "id": 2,
         "name": "DeepSeek Reasoner",
         "kind": "CLAUDE",
-        "accuracyScore": 612394,
-        "calibrationScore": -305855,
-        "resolvedCount": 31,
-        "lastUpdatedBlock": 39981529
+        "accuracyScore": 694423,
+        "calibrationScore": -230038,
+        "resolvedCount": 47,
+        "lastUpdatedBlock": 40728282
       },
       {
         "id": 3,
         "name": "Naive Baseline",
         "kind": "QUANT",
-        "accuracyScore": 339210,
-        "calibrationScore": -474504,
-        "resolvedCount": 22,
-        "lastUpdatedBlock": 39981486
+        "accuracyScore": 388946,
+        "calibrationScore": -335561,
+        "resolvedCount": 37,
+        "lastUpdatedBlock": 40727592
       }
     ],
     "USDY_APY_24H": [
       {
-        "id": 2,
-        "name": "DeepSeek Reasoner",
-        "kind": "CLAUDE",
-        "accuracyScore": 787495,
-        "calibrationScore": -280871,
-        "resolvedCount": 30,
-        "lastUpdatedBlock": 39981534
-      },
-      {
         "id": 7,
         "name": "Sentiment (Fear & Greed)",
         "kind": "QUANT",
-        "accuracyScore": 785075,
-        "calibrationScore": -62507,
-        "resolvedCount": 19,
-        "lastUpdatedBlock": 39981512
+        "accuracyScore": 895296,
+        "calibrationScore": -1268,
+        "resolvedCount": 33,
+        "lastUpdatedBlock": 40728029
+      },
+      {
+        "id": 2,
+        "name": "DeepSeek Reasoner",
+        "kind": "CLAUDE",
+        "accuracyScore": 876016,
+        "calibrationScore": -138551,
+        "resolvedCount": 44,
+        "lastUpdatedBlock": 40728036
       },
       {
         "id": 1,
         "name": "ARIMA Baseline",
         "kind": "ARIMA",
-        "accuracyScore": 764096,
-        "calibrationScore": -30297,
-        "resolvedCount": 31,
-        "lastUpdatedBlock": 39981527
-      },
-      {
-        "id": 3,
-        "name": "Naive Baseline",
-        "kind": "QUANT",
-        "accuracyScore": 686158,
-        "calibrationScore": -112510,
-        "resolvedCount": 20,
-        "lastUpdatedBlock": 39981507
+        "accuracyScore": 836258,
+        "calibrationScore": -5015,
+        "resolvedCount": 47,
+        "lastUpdatedBlock": 40728510
       },
       {
         "id": 4,
         "name": "Mean-Reversion",
         "kind": "QUANT",
-        "accuracyScore": 685887,
-        "calibrationScore": -112690,
-        "resolvedCount": 20,
-        "lastUpdatedBlock": 39981517
+        "accuracyScore": 821502,
+        "calibrationScore": -10719,
+        "resolvedCount": 35,
+        "lastUpdatedBlock": 40728032
+      },
+      {
+        "id": 3,
+        "name": "Naive Baseline",
+        "kind": "QUANT",
+        "accuracyScore": 817657,
+        "calibrationScore": -12135,
+        "resolvedCount": 34,
+        "lastUpdatedBlock": 40727601
       },
       {
         "id": 5,
         "name": "Momentum",
         "kind": "QUANT",
-        "accuracyScore": 661457,
-        "calibrationScore": -151042,
-        "resolvedCount": 18,
-        "lastUpdatedBlock": 39981519
+        "accuracyScore": 812006,
+        "calibrationScore": -14966,
+        "resolvedCount": 32,
+        "lastUpdatedBlock": 40727810
       },
       {
         "id": 6,
         "name": "EWMA-Volatility",
         "kind": "QUANT",
-        "accuracyScore": 650124,
-        "calibrationScore": -159979,
-        "resolvedCount": 18,
-        "lastUpdatedBlock": 39981515
+        "accuracyScore": 794221,
+        "calibrationScore": -20717,
+        "resolvedCount": 31,
+        "lastUpdatedBlock": 40728026
       }
     ],
     "AAVE_MANTLE_TVL_24H": [
       {
-        "id": 2,
-        "name": "DeepSeek Reasoner",
-        "kind": "CLAUDE",
-        "accuracyScore": 950175,
-        "calibrationScore": -207646,
-        "resolvedCount": 31,
-        "lastUpdatedBlock": 39981531
-      },
-      {
         "id": 1,
         "name": "ARIMA Baseline",
         "kind": "ARIMA",
-        "accuracyScore": 947713,
-        "calibrationScore": -91,
-        "resolvedCount": 31,
-        "lastUpdatedBlock": 39981524
+        "accuracyScore": 979710,
+        "calibrationScore": -5275,
+        "resolvedCount": 47,
+        "lastUpdatedBlock": 40728261
+      },
+      {
+        "id": 2,
+        "name": "DeepSeek Reasoner",
+        "kind": "CLAUDE",
+        "accuracyScore": 978536,
+        "calibrationScore": -188531,
+        "resolvedCount": 46,
+        "lastUpdatedBlock": 40727813
       },
       {
         "id": 4,
         "name": "Mean-Reversion",
         "kind": "QUANT",
-        "accuracyScore": 894382,
-        "calibrationScore": -10836,
-        "resolvedCount": 22,
-        "lastUpdatedBlock": 39981503
+        "accuracyScore": 971964,
+        "calibrationScore": -2671,
+        "resolvedCount": 37,
+        "lastUpdatedBlock": 40728508
       },
       {
         "id": 3,
         "name": "Naive Baseline",
         "kind": "QUANT",
-        "accuracyScore": 883527,
-        "calibrationScore": -15849,
-        "resolvedCount": 21,
-        "lastUpdatedBlock": 39981495
-      },
-      {
-        "id": 6,
-        "name": "EWMA-Volatility",
-        "kind": "QUANT",
-        "accuracyScore": 872772,
-        "calibrationScore": -22145,
-        "resolvedCount": 20,
-        "lastUpdatedBlock": 39981505
+        "accuracyScore": 967246,
+        "calibrationScore": -1781,
+        "resolvedCount": 35,
+        "lastUpdatedBlock": 40728264
       },
       {
         "id": 5,
         "name": "Momentum",
         "kind": "QUANT",
-        "accuracyScore": 871466,
-        "calibrationScore": -22534,
-        "resolvedCount": 20,
-        "lastUpdatedBlock": 39981510
+        "accuracyScore": 967246,
+        "calibrationScore": -1781,
+        "resolvedCount": 35,
+        "lastUpdatedBlock": 40728275
+      },
+      {
+        "id": 6,
+        "name": "EWMA-Volatility",
+        "kind": "QUANT",
+        "accuracyScore": 963682,
+        "calibrationScore": -1074,
+        "resolvedCount": 33,
+        "lastUpdatedBlock": 40728268
       },
       {
         "id": 7,
         "name": "Sentiment (Fear & Greed)",
         "kind": "QUANT",
-        "accuracyScore": 809680,
-        "calibrationScore": -35644,
-        "resolvedCount": 22,
-        "lastUpdatedBlock": 39981500
+        "accuracyScore": 840582,
+        "calibrationScore": -6715,
+        "resolvedCount": 36,
+        "lastUpdatedBlock": 40728278
+      }
+    ],
+    "MNT_USD_SPOT": [
+      {
+        "id": 1,
+        "name": "ARIMA Baseline",
+        "kind": "ARIMA",
+        "accuracyScore": 993786,
+        "calibrationScore": -480628,
+        "resolvedCount": 72,
+        "lastUpdatedBlock": 40735258
       }
     ]
   }

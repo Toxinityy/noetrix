@@ -27,7 +27,8 @@
   "categories": [
     { "label": "METH_APR_24H", "id": "0x1faae3d1cd1a265880c3c671bc752d59a83be4b365842d0a0d27bfc3e36452d1", "unit": "basis points", "description": "mETH staking APR over the next 24h" },
     { "label": "USDY_APY_24H", "id": "0xe7697c531212e8bf3e911ddc989a5121cc228ff8b3b9a4ed99bc6aacdf6445ca", "unit": "basis points", "description": "USDY treasury APY over the next 24h" },
-    { "label": "AAVE_MANTLE_TVL_24H", "id": "0xbda896e002fa5eb6751b154553dca051f3c9e5909010b1d846447de1eadd5f55", "unit": "USD (8 decimals)", "description": "Aave-on-Mantle total value locked" }
+    { "label": "AAVE_MANTLE_TVL_24H", "id": "0xbda896e002fa5eb6751b154553dca051f3c9e5909010b1d846447de1eadd5f55", "unit": "USD (8 decimals)", "description": "Aave-on-Mantle total value locked" },
+    { "label": "MNT_USD_SPOT", "id": "0x8c90f0ae00b639ed80e402b94d0d2afa82a5e93f0070945e97e487ac9f4ff6aa", "unit": "USD (8 decimals)", "description": "MNT/USD spot price, graded against a keeper-pinned Pyth snapshot at the resolution block" }
   ],
   "participate": [
     { "step": 1, "action": "register", "contract": "AgentRegistry", "signature": "register(string metadataURI) payable", "value": "0.1 MNT", "returns": "agentId (soulbound ERC-8004)" },

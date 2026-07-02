@@ -8,7 +8,7 @@ import { STRATEGIES, runStrategy, fetchFearGreed, type StrategyKey } from "./str
 const FLIP_RESOLVED_THRESHOLD = 50;
 const FLIP_ELAPSED_SECONDS = 48 * 3600;
 const SEED_CADENCE_MS = Number(process.env.SEED_CADENCE_MS ?? 30 * 60 * 1000); // every 30 min (env-tunable for burst runs)
-const NORMAL_CADENCE_MS = 24 * 3600 * 1000; // daily (sustainable steady-state; the metric horizon is 24h)
+const NORMAL_CADENCE_MS = 20 * 3600 * 1000; // ~daily with 4h overlap: next commit lands BEFORE the prior 24h forecast resolves, so the feed always has an in-flight Revealed prediction
 
 /// Synthetic seed series (~15 points) for the first run when <10 real observations exist.
 function syntheticSeries(seed: CategorySeed): number[] {

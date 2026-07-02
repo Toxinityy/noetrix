@@ -356,24 +356,47 @@ export function TryClient() {
               </p>
             )}
 
-            {receipt.isSuccess && txHash && (
-              <div className="mt-4 rounded border border-[var(--color-up)]/40 bg-[var(--color-up)]/5 p-3 text-sm">
-                <p className="text-[var(--color-up)]">You just updated the on-chain AI feed.</p>
-                {beforeBlock != null && feed && (
-                  <p className="mt-1 font-mono text-xs text-[var(--color-text-dim)]">
-                    lastUpdatedBlock {beforeBlock} → {feed.block}
+            {receipt.isSuccess &&
+              txHash &&
+              (beforeBlock != null && feed && feed.block === beforeBlock ? (
+                // Hold-last-good path: the tx succeeded but no fresh agent forecast was in-window,
+                // so the contract kept its last value (lastUpdatedBlock unchanged). Say so — don't
+                // claim an update that didn't happen.
+                <div className="mt-4 rounded border border-[var(--color-warn)]/40 bg-[var(--color-warn)]/5 p-3 text-sm">
+                  <p className="text-[var(--color-warn)]">
+                    The feed held its last value — no fresh agent forecasts were in-window for this
+                    refresh, so nothing changed on-chain.
                   </p>
-                )}
-                <a
-                  href={explorerTx(txHash)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-1 inline-block text-xs text-[var(--color-accent)] hover:underline"
-                >
-                  View your transaction ↗
-                </a>
-              </div>
-            )}
+                  <p className="mt-1 font-mono text-xs text-[var(--color-text-dim)]">
+                    lastUpdatedBlock unchanged at {beforeBlock}
+                  </p>
+                  <a
+                    href={explorerTx(txHash)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-block text-xs text-[var(--color-accent)] hover:underline"
+                  >
+                    View your transaction ↗
+                  </a>
+                </div>
+              ) : (
+                <div className="mt-4 rounded border border-[var(--color-up)]/40 bg-[var(--color-up)]/5 p-3 text-sm">
+                  <p className="text-[var(--color-up)]">You just updated the on-chain AI feed.</p>
+                  {beforeBlock != null && feed && (
+                    <p className="mt-1 font-mono text-xs text-[var(--color-text-dim)]">
+                      lastUpdatedBlock {beforeBlock} → {feed.block}
+                    </p>
+                  )}
+                  <a
+                    href={explorerTx(txHash)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-block text-xs text-[var(--color-accent)] hover:underline"
+                  >
+                    View your transaction ↗
+                  </a>
+                </div>
+              ))}
             {error && <p className="mt-3 text-sm text-[var(--color-warn)]">{error}</p>}
           </div>
         )}

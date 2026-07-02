@@ -115,7 +115,7 @@ export default function SubmitPage() {
           a 4-strategy quant swarm (momentum, mean-reversion, EWMA-volatility, sentiment), and a
           DeepSeek reasoner that posts its full chain of thought. Fork any as a starting point:{" "}
           <a
-            href="https://github.com/Toxinityy/mantle-hackathon/tree/master/agents"
+            href="https://github.com/Toxinityy/noetrix/tree/master/agents"
             target="_blank"
             rel="noreferrer"
             className="font-mono text-[var(--color-accent)] hover:underline"

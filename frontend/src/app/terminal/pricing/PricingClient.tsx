@@ -17,9 +17,9 @@ const TIERS = [
     tier: SUB_TIER.Pro,
     fallbackWei: parseEther("0.5"),
     features: [
-      "Calibration-weighted alpha signal across all markets",
-      "Smart-money-vs-crowd divergence + confidence bands",
-      "In-app anomaly + smart-money alerts",
+      "Unlocks the gated anomaly + smart-money alert feed on /insights",
+      "Calibration-weighted alpha signal across all markets (open in v1)",
+      "Smart-money-vs-crowd divergence + confidence bands (open in v1)",
     ],
   },
   {
@@ -270,7 +270,15 @@ export function PricingClient() {
         <p className="mt-4 font-mono text-[10px] uppercase leading-relaxed tracking-[0.14em] text-[var(--color-text-muted)]">
           Measured across all 9 bot wallets, 30 May → 2 Jul 2026 (Etherscan V2, chainId 5003). Gas paid in
           testnet MNT; $ values it at the mainnet MNT price (~$0.42) and the gas price the bots actually paid —
-          a mainnet-equivalent projection. Live on testnet · no signed customers yet.
+          a mainnet-equivalent projection. Live on testnet · no signed customers yet ·{" "}
+          <a
+            href="https://github.com/Toxinityy/noetrix/blob/master/scripts/gas-audit.mjs"
+            target="_blank"
+            rel="noreferrer"
+            className="text-[var(--color-accent)] hover:underline"
+          >
+            verify the measurement (script + wallet list)
+          </a>
         </p>
       </section>
 
