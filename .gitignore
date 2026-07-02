@@ -33,6 +33,13 @@ logs/
 # submission drafts (local only)
 docs/BUIDL.md
 
+# internal working docs + plans (local only — planning artifacts + presenter aids,
+# not part of the public deliverable; public docs PRD/DEPLOY/SUBMISSION/gitbook stay tracked)
+docs/superpowers/
+docs/DEMO_WORKFLOW.md
+docs/DEMO_SCRIPT.md
+docs/PREFLIGHT.md
+
 # editor/os
 .DS_Store
 Thumbs.db
