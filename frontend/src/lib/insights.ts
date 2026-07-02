@@ -211,6 +211,26 @@ export function signalTrackRecord(preds: TrackRecordInput[]): TrackRecord {
   return { hits, total: r.length, ratePct: r.length ? (hits / r.length) * 100 : 0, enoughData: r.length > 0 };
 }
 
+export interface GradeSummary {
+  medianPct: number;
+  count: number;
+  enoughData: boolean;
+}
+/**
+ * Median on-chain CRPS grade (score → 0–100% via accNorm) across resolved forecasts. Uses the
+ * IMMUTABLE stored score — the right trust metric for a CRPS-scored protocol. (Binary band-coverage is
+ * both wrong here — CRPS rewards sharp bands, so tight-but-accurate forecasts "miss" a coverage check —
+ * and unreliable, because the recomputed `outcome` drifts as the mock oracles are re-seeded daily.)
+ */
+export function gradeSummary(preds: { status: string; score: number | null }[]): GradeSummary {
+  const grades = preds
+    .filter((p) => p.status === "Resolved" && p.score != null)
+    .map((p) => accNorm(p.score as number) * 100);
+  if (grades.length === 0) return { medianPct: 0, count: 0, enoughData: false };
+  const sorted = [...grades].sort((a, b) => a - b);
+  return { medianPct: sorted[Math.floor(sorted.length / 2)], count: grades.length, enoughData: true };
+}
+
 export interface Anomaly {
   block: number;
   direction: "up" | "down";

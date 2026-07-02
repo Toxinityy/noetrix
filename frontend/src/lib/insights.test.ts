@@ -7,6 +7,7 @@ import {
   topFinding,
   topVsCrowdAccuracy,
   signalTrackRecord,
+  gradeSummary,
   anomalyTimeline,
   biggestDisagreement,
   isUsableBand,
@@ -109,6 +110,32 @@ describe("signalTrackRecord", () => {
     const t = signalTrackRecord([p(10, 20, 15, "Revealed"), p(10, 20, 15, "Resolved", false), p(10, 20, null)]);
     expect(t.total).toBe(0);
     expect(t.enoughData).toBe(false);
+  });
+});
+
+describe("gradeSummary", () => {
+  it("median CRPS grade over resolved forecasts (accNorm → %)", () => {
+    // score 1e6 → 100%, 0 → 50%, -1e6 → 0%; median of [100,50,0] = 50.
+    const g = gradeSummary([
+      { status: "Resolved", score: 1_000_000 },
+      { status: "Resolved", score: 0 },
+      { status: "Resolved", score: -1_000_000 },
+    ]);
+    expect(g.count).toBe(3);
+    expect(g.medianPct).toBeCloseTo(50, 5);
+    expect(g.enoughData).toBe(true);
+  });
+  it("ignores non-resolved and null scores", () => {
+    const g = gradeSummary([
+      { status: "Revealed", score: 1_000_000 },
+      { status: "Resolved", score: null },
+      { status: "Resolved", score: 800_000 }, // accNorm(8e5) = 0.9 → 90%
+    ]);
+    expect(g.count).toBe(1);
+    expect(g.medianPct).toBeCloseTo(90, 5);
+  });
+  it("enoughData false with no graded forecasts", () => {
+    expect(gradeSummary([{ status: "Revealed", score: null }]).enoughData).toBe(false);
   });
 });
 

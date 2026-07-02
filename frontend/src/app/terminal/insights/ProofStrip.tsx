@@ -2,7 +2,7 @@
 
 import { ShieldCheck } from "lucide-react";
 import { Panel } from "@/components/ui/Panel";
-import { topVsCrowdAccuracy, signalTrackRecord, MIN_RESOLVED_QUALIFIED } from "@/lib/insights";
+import { topVsCrowdAccuracy, gradeSummary } from "@/lib/insights";
 import type { InsightsData } from "@/lib/hooks";
 import { env } from "@/lib/env";
 
@@ -18,13 +18,8 @@ function Tile({ label, value, sub }: { label: string; value: string; sub: string
 
 export function ProofStrip({ data }: { data: InsightsData }) {
   const tvc = topVsCrowdAccuracy(data.board, 3);
-  const qualified = new Set(
-    data.board.filter((r) => r.resolvedCount >= MIN_RESOLVED_QUALIFIED).map((r) => r.id),
-  );
   const preds = data.category?.predictions ?? [];
-  const tr = signalTrackRecord(
-    preds.map((p) => ({ low: p.low, high: p.high, outcome: p.outcome, status: p.status, qualified: qualified.has(p.agentId) })),
-  );
+  const grade = gradeSummary(preds);
   const resolvedCount = preds.filter((p) => p.status === "Resolved").length;
 
   return (
@@ -47,9 +42,9 @@ export function ProofStrip({ data }: { data: InsightsData }) {
           sub="every forecast auto-graded against the real outcome, independently verifiable"
         />
         <Tile
-          label="Landed in range"
-          value={tr.enoughData ? `${tr.hits} of ${tr.total}` : "n/a"}
-          sub={tr.enoughData ? "top-AI forecasts where the real value fell inside the predicted band (sample growing)" : "track record builds as forecasts resolve"}
+          label="Median forecast grade"
+          value={grade.enoughData ? `${grade.medianPct.toFixed(0)}%` : "n/a"}
+          sub={grade.enoughData ? `on-chain accuracy across ${grade.count.toLocaleString("en-US")} graded forecasts — 100% = the AI nailed the real value` : "track record builds as forecasts resolve"}
         />
       </div>
       <div className="border-t border-[var(--color-border)] px-5 py-2.5">
