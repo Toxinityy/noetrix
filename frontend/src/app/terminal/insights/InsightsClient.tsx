@@ -20,6 +20,7 @@ import { AnomalyFeed } from "./AnomalyFeed";
 import { SubscriptionGateCard } from "./SubscriptionGateCard";
 import { YourMoveStrip } from "./YourMoveStrip";
 import { BacktestPanel } from "./BacktestPanel";
+import { StrategyBacktestPanel } from "./StrategyBacktestPanel";
 
 export function InsightsClient() {
   const [categoryId, setCategoryId] = React.useState<CategoryId>("METH_APR_24H");
@@ -193,7 +194,10 @@ export function InsightsClient() {
         <YourMoveStrip categoryId={categoryId} data={data} />
       </div>
 
-      {/* §6 backtest results */}
+      {/* §6 strategy backtest — headline proof (ensemble vs individuals, total return) */}
+      <StrategyBacktestPanel />
+
+      {/* §6b per-agent accuracy backtest */}
       <BacktestPanel />
 
       {/* "Tell us in your submission": judge + Web2 facing */}
