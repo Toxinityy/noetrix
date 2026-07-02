@@ -106,8 +106,9 @@ export function useLeaderboard(category: CategoryId): QueryView<LeaderRow[]> {
 export function useFeedHistory(category: CategoryId): QueryView<LiveFeedPoint[]> {
   const q = useQuery({
     queryKey: ["feed-history", category],
-    // At the ~100-block contract cadence, 500 points cover more than 24 hours.
-    queryFn: () => getFeedHistory(category, 500),
+    // 7-day window: at the ~5-min refresh cadence (~288/day) this covers ≈7 days; the client
+    // windows + collapses it to forecast-move points for display.
+    queryFn: () => getFeedHistory(category, 2100),
     enabled: hasIndexer,
     refetchInterval: REFRESH_MS,
   });

@@ -10,7 +10,7 @@ import { StatusPill } from "@/components/ui/StatusPill";
 import { CategoryTabs } from "@/components/ui/CategoryTabs";
 import { DataTable, type Column } from "@/components/ui/DataTable";
 import { Collapsible } from "@/components/ui/Collapsible";
-import { Sparkline } from "@/components/ui/Sparkline";
+import { FeedMiniChart } from "@/components/ui/FeedMiniChart";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -19,6 +19,7 @@ import { CATEGORIES, KIND_COLOR, KIND_GLYPH, type CategoryId, type AgentKind } f
 import { useLeaderboard, useFeedHistory } from "@/lib/hooks";
 import { ErrorState } from "@/components/ui/ErrorState";
 import type { LeaderRow } from "@/lib/indexer";
+import { DAY_BLOCKS, findLookbackPoint } from "@/lib/feedView";
 import { fmtScore, fmtBlock, fmtBps, fmtRelTime } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { useBlockNumber } from "wagmi";
@@ -66,9 +67,9 @@ export function LeaderboardClient() {
     ...board.data.map((a) => a.lastUpdatedBlock),
     0,
   );
-  const prevPoint = feedHistory[Math.max(0, feedHistory.length - 16)];
-  const delta = liveValue - (prevPoint?.value ?? liveValue);
-  const deltaPct = prevPoint?.value ? (delta / prevPoint.value) * 100 : 0;
+  const dayAgo = findLookbackPoint(feedHistory, DAY_BLOCKS) ?? feedHistory[0];
+  const delta = liveValue - (dayAgo?.value ?? liveValue);
+  const deltaPct = dayAgo?.value ? (delta / dayAgo.value) * 100 : 0;
 
   const sortedByAccuracy = React.useMemo(
     () => [...board.data].sort((a, b) => b.accuracyScore - a.accuracyScore),
@@ -275,15 +276,15 @@ export function LeaderboardClient() {
                   <span className={delta >= 0 ? "text-[var(--color-up)]" : "text-[var(--color-down)]"}>
                     {delta >= 0 ? "▲" : "▼"} {Math.abs(deltaPct).toFixed(2)}%
                   </span>
-                  <span className="text-[var(--color-text-muted)]">vs 16 blocks</span>
+                  <span className="text-[var(--color-text-muted)]">vs 24h</span>
                 </div>
               </div>
               <div className="hidden flex-1 sm:block">
-                <Sparkline
-                  data={feedHistory.map((p) => p.value)}
-                  width={520}
+                <FeedMiniChart
+                  data={feedHistory}
+                  unitFormatter={cat.unitFormatter}
+                  reducedMotion={reducedMotion ?? undefined}
                   height={92}
-                  fill="var(--color-accent)"
                 />
               </div>
             </div>

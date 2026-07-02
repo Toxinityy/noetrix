@@ -2,15 +2,7 @@
 
 import * as React from "react";
 import { motion, useReducedMotion } from "motion/react";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts";
+import { FeedMiniChart } from "@/components/ui/FeedMiniChart";
 import { useReadContract, useWriteContract } from "wagmi";
 import { decodeAbiParameters } from "viem";
 import { RefreshCw, Cpu, Zap, ShieldCheck, Plug, Check, X } from "lucide-react";
@@ -26,6 +18,7 @@ import {
   makeFeedHistory,
 } from "@/lib/mockData";
 import { useFeedHistory } from "@/lib/hooks";
+import { DAY_BLOCKS, findLookbackPoint } from "@/lib/feedView";
 import { env, hasFeed, explorerAddress } from "@/lib/env";
 import { categoryHash, compositeFeedAbi, demoConsumerAbi, DEMO_THRESHOLDS } from "@/lib/contracts";
 import { fmtBlock, fmtBps } from "@/lib/format";
@@ -173,9 +166,9 @@ export function DemoConsumerClient() {
 
   const chartHistory = liveHistory ?? history;
   const latest = liveLatest ?? chartHistory[chartHistory.length - 1];
-  const prev = chartHistory[Math.max(0, chartHistory.length - 8)];
-  const delta = latest.value - prev.value;
-  const deltaPct = prev.value ? (delta / prev.value) * 100 : 0;
+  const dayAgo = findLookbackPoint(chartHistory, DAY_BLOCKS) ?? chartHistory[0];
+  const delta = latest.value - (dayAgo?.value ?? latest.value);
+  const deltaPct = dayAgo?.value ? (delta / dayAgo.value) * 100 : 0;
 
   const tabs = Object.values(CATEGORIES).map((c) => ({
     id: c.id,
@@ -280,45 +273,17 @@ contract LeveragedVault {
                     {delta >= 0 ? "▲" : "▼"} {Math.abs(deltaPct).toFixed(2)}%
                   </span>
                   <span className="text-[var(--color-text-muted)]">
-                    vs last 8 refresh ticks
+                    vs 24h
                   </span>
                 </div>
               </div>
               <div className="hidden flex-1 sm:block">
-                <div className="h-[140px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart
-                      data={chartHistory}
-                      margin={{ top: 8, right: 6, left: 0, bottom: 0 }}
-                    >
-                      <CartesianGrid
-                        stroke="var(--color-border)"
-                        strokeDasharray="2 2"
-                        vertical={false}
-                      />
-                      <XAxis dataKey="block" hide />
-                      <YAxis hide domain={["dataMin - 10", "dataMax + 10"]} />
-                      <Tooltip
-                        contentStyle={{
-                          background: "var(--color-bg)",
-                          border: "1px solid var(--color-border-strong)",
-                          fontFamily: "var(--font-mono)",
-                          fontSize: 11,
-                        }}
-                        labelFormatter={(v) => `block #${fmtBlock(Number(v))}`}
-                        formatter={(v) => [cat.unitFormatter(Number(v)), "feed"]}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        stroke="var(--color-accent)"
-                        strokeWidth={1.6}
-                        dot={false}
-                        isAnimationActive={!reducedMotion}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+                <FeedMiniChart
+                  data={chartHistory}
+                  unitFormatter={cat.unitFormatter}
+                  reducedMotion={reducedMotion ?? undefined}
+                  height={140}
+                />
               </div>
             </div>
 

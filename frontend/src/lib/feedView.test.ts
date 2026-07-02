@@ -1,5 +1,46 @@
 import { describe, expect, it } from "vitest";
-import { findLookbackPoint, feedSourceLabel, formatRawFeedFields, onChainFeedSnapshot } from "./feedView";
+import {
+  findLookbackPoint,
+  feedSourceLabel,
+  formatRawFeedFields,
+  onChainFeedSnapshot,
+  forecastMoves,
+  windowFeedHistory,
+  WEEK_BLOCKS,
+} from "./feedView";
+
+const pt = (block: number, value: number) => ({ block, value, confidence: 8000, contributors: 5 });
+
+describe("forecastMoves", () => {
+  it("collapses held-flat repeats to the value-change points and keeps the latest", () => {
+    const history = [pt(1, 300), pt(2, 300), pt(3, 340), pt(4, 340), pt(5, 340)];
+    // 300 (first), 340 (change at block 3), 340 (latest, block 5 — kept so the line reaches now)
+    expect(forecastMoves(history).map((p) => p.block)).toEqual([1, 3, 5]);
+  });
+
+  it("keeps every point when each value differs", () => {
+    const history = [pt(1, 300), pt(2, 310), pt(3, 305)];
+    expect(forecastMoves(history)).toHaveLength(3);
+  });
+});
+
+describe("windowFeedHistory", () => {
+  it("drops points before a >1-day gap (stopped-bot outage)", () => {
+    const history = [pt(1_000, 300), pt(2_000, 305), pt(1_000_000, 320), pt(1_010_000, 325)];
+    // gap 2_000 → 1_000_000 exceeds a day → window starts at the recent cluster
+    expect(windowFeedHistory(history).map((p) => p.block)).toEqual([1_000_000, 1_010_000]);
+  });
+
+  it("caps a dense contiguous run to the most recent 7 days", () => {
+    const latest = 10_000_000;
+    const history = [
+      pt(latest - WEEK_BLOCKS - 5_000, 300), // older than 7d → trimmed
+      pt(latest - 1_000, 320),
+      pt(latest, 325),
+    ];
+    expect(windowFeedHistory(history).map((p) => p.block)).toEqual([latest - 1_000, latest]);
+  });
+});
 
 describe("findLookbackPoint", () => {
   it("selects the point closest to a 24-hour block lookback", () => {

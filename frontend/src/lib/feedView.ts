@@ -4,6 +4,45 @@ import type { CategoryId } from "@/lib/mockData";
 import { fmtBlock } from "@/lib/format";
 
 export const DAY_BLOCKS = 43_200;
+export const WEEK_BLOCKS = 7 * DAY_BLOCKS; // ≈ 7 days on 2s Mantle blocks
+
+/**
+ * Window a raw feed series for display: (1) drop everything before the last >1-day gap (a stopped-bot
+ * outage, not the ~5-min refresh cadence — otherwise a dead zone flattens the whole view), then
+ * (2) cap to the most recent `spanBlocks` (default 7 days). Every returned point is still a real
+ * on-chain snapshot; we just frame the visible range. Falls back to the full contiguous run if the
+ * cap leaves < 2 points.
+ */
+export function windowFeedHistory(
+  history: LiveFeedPoint[],
+  spanBlocks: number = WEEK_BLOCKS,
+): LiveFeedPoint[] {
+  if (history.length < 2) return history;
+  let start = 0;
+  for (let i = 1; i < history.length; i++) {
+    if (history[i].block - history[i - 1].block > DAY_BLOCKS) start = i;
+  }
+  const run = history.slice(start);
+  const cutoff = run[run.length - 1].block - spanBlocks;
+  const capped = run.filter((p) => p.block >= cutoff);
+  return capped.length >= 2 ? capped : run;
+}
+
+/**
+ * Collapse held-flat repeats to just the value-change points — the blocks where a new agent forecast
+ * actually moved the composite ensemble. Those points ARE the real forecast moves (rendered as dots);
+ * a smoothed line spans the held gaps between them, so the chart reads as a trend instead of a
+ * staircase of re-published identical values. The latest point is always kept so the line reaches now.
+ */
+export function forecastMoves(history: LiveFeedPoint[]): LiveFeedPoint[] {
+  const pts: LiveFeedPoint[] = [];
+  for (let i = 0; i < history.length; i++) {
+    if (i === 0 || history[i].value !== pts[pts.length - 1].value) pts.push(history[i]);
+  }
+  const last = history[history.length - 1];
+  if (last && pts[pts.length - 1] !== last) pts.push(last);
+  return pts;
+}
 
 export function findLookbackPoint(
   history: LiveFeedPoint[],

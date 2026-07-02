@@ -38,14 +38,32 @@ app.get("/leaderboard", async (c) => {
   const limit = Math.min(Number(c.req.query("limit") ?? 20), 100);
   if (!category) return c.json({ error: "category required" }, 400);
 
+  const hash = categoryHash(category);
   const rows = await db
     .select()
     .from(schema.reputations)
-    .where(eq(schema.reputations.categoryId, categoryHash(category)))
+    .where(eq(schema.reputations.categoryId, hash))
     .orderBy(desc(schema.reputations.accuracyScore))
     .limit(limit);
 
-  return c.json(serialize({ category, count: rows.length, leaderboard: rows }));
+  // Latest PREDICTION block per agent for this category. Reputation.lastUpdatedBlock only advances
+  // on resolution (~24h later), so on its own an actively-forecasting agent reads as stale. Expose
+  // the most recent commit so the frontend can show "last updated" as of the agent's last forecast.
+  const preds = await db
+    .select({ agentId: schema.predictions.agentId, commitBlock: schema.predictions.commitBlock })
+    .from(schema.predictions)
+    .where(eq(schema.predictions.categoryId, hash));
+  const lastPredByAgent = new Map<string, bigint>();
+  for (const p of preds) {
+    const cur = lastPredByAgent.get(p.agentId) ?? 0n;
+    if (p.commitBlock > cur) lastPredByAgent.set(p.agentId, p.commitBlock);
+  }
+  const leaderboard = rows.map((r) => ({
+    ...r,
+    lastPredictionBlock: lastPredByAgent.get(r.agentId) ?? 0n,
+  }));
+
+  return c.json(serialize({ category, count: leaderboard.length, leaderboard }));
 });
 
 // GET /agent/:id
@@ -112,7 +130,7 @@ app.get("/category/:id", async (c) => {
 // GET /feed/:category/history?limit=
 app.get("/feed/:category/history", async (c) => {
   const hash = categoryHash(c.req.param("category"));
-  const limit = Math.min(Number(c.req.query("limit") ?? 100), 500);
+  const limit = Math.min(Number(c.req.query("limit") ?? 100), 2200);
 
   const rows = await db
     .select()

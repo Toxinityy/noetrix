@@ -65,6 +65,7 @@ interface RepRow {
   calibrationScore: string;
   resolvedCount: string;
   lastUpdatedBlock: string;
+  lastPredictionBlock?: string;
 }
 
 export async function getLeaderboard(category: CategoryId, limit = 50): Promise<LeaderRow[]> {
@@ -81,7 +82,9 @@ export async function getLeaderboard(category: CategoryId, limit = 50): Promise<
       accuracyScore: num(r.accuracyScore),
       calibrationScore: num(r.calibrationScore),
       resolvedCount: num(r.resolvedCount),
-      lastUpdatedBlock: num(r.lastUpdatedBlock),
+      // "Last updated" = latest activity: a new forecast (commit) OR a resolution, whichever is newer.
+      // Reputation.lastUpdatedBlock alone only moves on resolution, so active agents looked stale.
+      lastUpdatedBlock: Math.max(num(r.lastUpdatedBlock), num(r.lastPredictionBlock ?? 0)),
     };
   });
 }

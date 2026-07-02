@@ -24,8 +24,8 @@ import { friendlyValue } from "@/lib/labels";
 import { cn } from "@/lib/cn";
 import { useRouter } from "next/navigation";
 import { useFeedHistory, useLeaderboard, useOnChainFeedSnapshot } from "@/lib/hooks";
-import type { LeaderRow, LiveFeedPoint } from "@/lib/indexer";
-import { DAY_BLOCKS, feedSourceLabel, findLookbackPoint } from "@/lib/feedView";
+import type { LeaderRow } from "@/lib/indexer";
+import { DAY_BLOCKS, WEEK_BLOCKS, feedSourceLabel, findLookbackPoint, forecastMoves, windowFeedHistory } from "@/lib/feedView";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 type Contributor = {
@@ -44,43 +44,25 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
   // Never draw the curated wave on a page presented as a real feed.
   const history = feed.source === "mock" ? [] : feed.data;
 
-  // Chart the most-recent contiguous run. If the refresher was stopped for a stretch (a multi-day
-  // gap between consecutive on-chain updates — refresh cadence is ~150 blocks, so >1 day is an
-  // outage, not a cadence), the older points sit behind a dead zone that would flatten the whole
-  // view. Slice from just after the last such gap: every point is still real, we just window to
-  // "since the feed resumed" instead of spanning a stopped-bot hole. No gap → nothing trimmed.
-  const chartHistory = React.useMemo(() => {
-    if (history.length < 2) return history;
-    let start = 0;
-    for (let i = 1; i < history.length; i++) {
-      if (history[i].block - history[i - 1].block > DAY_BLOCKS) start = i;
-    }
-    return history.slice(start);
-  }, [history]);
+  // User-selectable chart window: 24h or 7d.
+  const [span, setSpan] = React.useState<"24h" | "7d">("24h");
+  const spanBlocks = span === "7d" ? WEEK_BLOCKS : DAY_BLOCKS;
+
+  // Window to the recent contiguous run, capped to the selected span (drops stopped-bot dead zones).
+  const chartHistory = React.useMemo(() => windowFeedHistory(history, spanBlocks), [history, spanBlocks]);
   const trimmed = chartHistory.length < history.length;
 
-  // The feed re-publishes every ~few minutes but the ensemble only moves when an agent posts a new
-  // forecast — so the raw series is long held-flat runs punctuated by jumps (the staircase). Collapse
-  // each run to the block where the value actually changed: those points ARE the real forecast moves
-  // (kept as dots), and a smoothed line spans the held gaps between them. Always keep the latest point
-  // so the line reaches "now". Every dot is still a real on-chain value at its real block.
-  const predictionPoints = React.useMemo(() => {
-    const pts: LiveFeedPoint[] = [];
-    for (let i = 0; i < chartHistory.length; i++) {
-      if (i === 0 || chartHistory[i].value !== pts[pts.length - 1].value) pts.push(chartHistory[i]);
-    }
-    const last = chartHistory[chartHistory.length - 1];
-    if (last && pts[pts.length - 1] !== last) pts.push(last);
-    return pts;
-  }, [chartHistory]);
+  // Collapse held-flat repeats to the real forecast-move points (dots); smooth line spans the gaps.
+  const predictionPoints = React.useMemo(() => forecastMoves(chartHistory), [chartHistory]);
 
   // Plain-English value: % for yields, compact $ for big USD totals (scannable headlines/axes).
   const scanValue = (v: number) => (cat.unit === "usd" ? fmtUSDCompact(v) : friendlyValue(categoryId, v));
 
+  // Headline delta is always 24h (independent of the chart window toggle).
   const latest = history[history.length - 1];
-  const yesterday = findLookbackPoint(history, DAY_BLOCKS);
-  const delta = latest && yesterday ? latest.value - yesterday.value : null;
-  const deltaPct = delta !== null && yesterday?.value ? (delta / yesterday.value) * 100 : null;
+  const dayAgo = findLookbackPoint(history, DAY_BLOCKS);
+  const delta = latest && dayAgo ? latest.value - dayAgo.value : null;
+  const deltaPct = delta !== null && dayAgo?.value ? (delta / dayAgo.value) * 100 : null;
 
   // When the indexer (history) is offline we still read the live composite value straight
   // from the chain, so the headline KPIs show real data instead of going blank. The chart,
@@ -300,13 +282,37 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
           caption="composite feed"
           title="Weighted value history"
           right={
-            <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
-              {history.length > 0
-                ? trimmed
-                  ? `${predictionPoints.length} forecast moves · since feed resumed`
-                  : `${predictionPoints.length} forecast moves`
-                : "history unavailable"}
-            </span>
+            <div className="flex items-center gap-3">
+              <div
+                className="flex overflow-hidden rounded border border-[var(--color-border)] font-mono text-[10px] uppercase tracking-[0.14em]"
+                role="group"
+                aria-label="Chart timeframe"
+              >
+                {(["24h", "7d"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSpan(s)}
+                    aria-pressed={span === s}
+                    className={cn(
+                      "px-2 py-1 transition-colors focus-visible:outline-none",
+                      span === s
+                        ? "bg-[var(--color-accent)]/15 text-[var(--color-accent)]"
+                        : "text-[var(--color-text-muted)] hover:text-[var(--color-text-dim)]",
+                    )}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+                {history.length > 0
+                  ? trimmed
+                    ? `${predictionPoints.length} forecast moves · since feed resumed`
+                    : `${predictionPoints.length} forecast moves`
+                  : "history unavailable"}
+              </span>
+            </div>
           }
         />
         <PanelBody className="pb-3 pt-2">
@@ -358,9 +364,9 @@ export function FeedClient({ categoryId }: { categoryId: CategoryId }) {
                   labelFormatter={(v) => `block #${fmtBlock(Number(v))}`}
                   formatter={(v) => [scanValue(Number(v)), "feed"]}
                 />
-                {yesterday && (
+                {dayAgo && (
                   <ReferenceLine
-                    y={yesterday.value}
+                    y={dayAgo.value}
                     stroke="var(--color-border-strong)"
                     strokeDasharray="3 3"
                     label={{
